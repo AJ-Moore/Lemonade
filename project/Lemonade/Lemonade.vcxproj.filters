@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\platform">
+      <UniqueIdentifier>{3a006b3c-2c2c-4a44-9838-3e9a482f0f82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\platform\core">
+      <UniqueIdentifier>{6cd11801-d594-41bc-b3e6-b9f73995b12a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\platform\core\WindowManager">
+      <UniqueIdentifier>{71e348b4-dc15-4d7c-8303-07fae8debb4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\platform\core\Renderer">
+      <UniqueIdentifier>{af33a544-2730-499a-ab92-4cbf6a68eea4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\platform\core\Time">
+      <UniqueIdentifier>{67b32ca8-d9f4-414a-a2c8-e64c9ada4d69}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\platform\core\Services">
+      <UniqueIdentifier>{04283fdf-527f-42e0-97ee-7b035a83a5d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\platform\ogl">
+      <UniqueIdentifier>{b79870f0-67d3-4f81-bdfb-adeb8997bd11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\platform\vulkan">
+      <UniqueIdentifier>{7b144e49-a0b8-44ea-b689-f8d361060c08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\platform\dx12">
+      <UniqueIdentifier>{b6e7244e-befc-45ed-9cc0-9b3efd5ae969}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Lemonade.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\LCommon.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\platform\core\Renderer\Transform.h">
+      <Filter>Source Files\platform\core\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\platform\core\LObject.h">
+      <Filter>Source Files\platform\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\platform\core\Time\Time.h">
+      <Filter>Source Files\platform\core\Time</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\platform\core\Services\LService.h">
+      <Filter>Source Files\platform\core\Services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\platform\core\Services\Services.h">
+      <Filter>Source Files\platform\core\Services</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\platform\core\Renderer\Tansform.cpp">
+      <Filter>Source Files\platform\core\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\platform\core\Services\Services.cpp">
+      <Filter>Source Files\platform\core\Services</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\platform\core\Time\Time.cpp">
+      <Filter>Source Files\platform\core\Time</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
