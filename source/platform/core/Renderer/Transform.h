@@ -5,12 +5,11 @@
 
 namespace Lemonade
 {
-	/** Transform */
 	class LEMONADE_API Transform : public LObject {
 	public:
 		Transform();
 		Transform(glm::mat4 mat);
-		virtual ~Transform();
+		virtual ~Transform() {}
 
 		/// Initialisation method, called during object initialisation 
 		virtual bool Init();
@@ -64,7 +63,7 @@ namespace Lemonade
 		glm::vec3 GetRight();
 
 		/// Get the up vector for this transformation 
-		glm::vec3 GetUp(); 
+		glm::vec3 GetUp();
 
 		/// Get the rotation in euler angles for this transformation, returns angle as radians.
 		glm::vec3 GetEulerRotation();
@@ -72,7 +71,7 @@ namespace Lemonade
 		/// Get the rotation 
 		glm::quat GetRotation();
 
-		/// Get the world matrix read only, returns a const reference
+		/// Get the world matrix read only
 		const glm::mat4& GetWorldMatrix();
 
 		void SetLocal(glm::mat4 mat);
@@ -82,13 +81,13 @@ namespace Lemonade
 		static void MakeParent(std::shared_ptr<Transform> transform, std::shared_ptr<Transform> parent);
 
 		/// Unparent child from transform
-		std::shared_ptr<Transform> RemoveChild(Transform* child); 
+		std::shared_ptr<Transform> RemoveChild(Transform* child);
 
 		/// Returns the parent transform of this transform, or nullptr if not set
 		Transform* GetParentTransform() const;
 
 		/// Returns the entity this transform is associated with
-		//UEntity* getParentEntity();
+		Entity* GetParentEntity() const { return m_entity; }
 
 		/// Does this transform have any children 
 		const bool HasChildren() const { return !m_children.empty(); }
@@ -97,14 +96,14 @@ namespace Lemonade
 		const std::vector<std::shared_ptr<Transform>>& GetChildren() const { return m_children; }
 
 		/// Return the last modified datestamp 
-		Datestamp GetDatestamp() const { return m_datestamp; }
+		double GetDatestamp() const { return m_datestamp; }
 
 	protected:
 		/// Calculates the local transformation matrix from the position, rotation and scale
-		void UpdateLocalTransform(); 
+		void UpdateLocalTransform();
 
 		/// Called to recalculate the absolute transformation within the world
-		void UpdateGlobalTransform(); 
+		void UpdateGlobalTransform();
 
 	private:
 		/// Vec3 position 
@@ -127,7 +126,7 @@ namespace Lemonade
 
 		/// Datestamp when this transform was last calulcated, using the time this frame was started
 		/// Used to determine if the trasform has already been calculated for the current frame
-		Datestamp m_datestamp = 0;
+		double m_datestamp = 0;
 
 		/// Is the transform dirty and needs to be recalculated
 		bool m_bDirty;
@@ -136,7 +135,7 @@ namespace Lemonade
 		Transform* m_parent = nullptr;
 
 		/// The entity this transform is attached to.
-		//UEntity* m_entity = nullptr;
+		Entity* m_entity = nullptr;
 
 		/// A list of all the children attached to this transform
 		std::vector<std::shared_ptr<Transform>> m_children;

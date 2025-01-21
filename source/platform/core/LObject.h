@@ -1,10 +1,12 @@
 #pragma once
 
 #include <LCommon.h>
+#include <platform/core/Interface/IManagedObject.h>
 
 namespace Lemonade
 {
-	class LEMONADE_API LObject
+	/** Base game object class from which Components & other render engine objects are derived. */
+	class LEMONADE_API LObject : protected IManagedObject
 	{
 	public:
 		virtual ~LObject() {}
@@ -13,13 +15,7 @@ namespace Lemonade
 		const std::string& GetName() const { return m_name; }
 
 		CitrusCore::UID UID;
-
-	protected:
-		virtual bool Init() = 0;
-		virtual void Update() = 0;
-		virtual void Render() {}
-
 	private:
-		std::string m_name;
+		std::string m_name = "LemonObject";
 	};
 }
