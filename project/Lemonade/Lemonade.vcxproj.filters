@@ -40,6 +40,9 @@
     <Filter Include="Source Files\platform\dx12">
       <UniqueIdentifier>{b6e7244e-befc-45ed-9cc0-9b3efd5ae969}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\platform\core\Interface">
+      <UniqueIdentifier>{d3832058-1de0-427b-b3dd-6d95dca71be9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -68,6 +71,9 @@
     </ClInclude>
     <ClInclude Include="..\..\source\platform\core\Services\Services.h">
       <Filter>Source Files\platform\core\Services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\platform\core\Interface\IManagedObject.h">
+      <Filter>Source Files\platform\core\Interface</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
