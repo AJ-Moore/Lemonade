@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Common.h>
+#include <CCCommon.h>
 
 struct Colour
 {
@@ -23,4 +23,13 @@ enum class TextureClamp
 	Clamp,
 	Repeat,
 	None
+};
+
+enum class TextureFormat
+{
+	LEMONADE_UNKNOWN = 0,
+	LEMONADE_RGBA8888 = 1,
+	LEMONADE_BGRA8888 = 2,
+	LEMONADE_RGB888 = 3,
+	LEMONADE_BGR888 = 4,
 };

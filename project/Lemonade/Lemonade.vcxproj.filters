@@ -13,35 +13,50 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\platform">
+    <Filter Include="Source Files\Platform">
       <UniqueIdentifier>{3a006b3c-2c2c-4a44-9838-3e9a482f0f82}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\platform\core">
+    <Filter Include="Source Files\Platform\core">
       <UniqueIdentifier>{6cd11801-d594-41bc-b3e6-b9f73995b12a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\platform\core\WindowManager">
+    <Filter Include="Source Files\Platform\core\WindowManager">
       <UniqueIdentifier>{71e348b4-dc15-4d7c-8303-07fae8debb4d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\platform\core\Renderer">
+    <Filter Include="Source Files\Platform\core\Renderer">
       <UniqueIdentifier>{af33a544-2730-499a-ab92-4cbf6a68eea4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\platform\core\Time">
+    <Filter Include="Source Files\Platform\core\Renderer\Materials">
+      <UniqueIdentifier>{786bd45a-c750-483c-9d6d-0517380ec011}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\core\Time">
       <UniqueIdentifier>{67b32ca8-d9f4-414a-a2c8-e64c9ada4d69}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\platform\core\Services">
+    <Filter Include="Source Files\Platform\core\Services">
       <UniqueIdentifier>{04283fdf-527f-42e0-97ee-7b035a83a5d1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\platform\ogl">
+    <Filter Include="Source Files\Platform\core\Interface">
+      <UniqueIdentifier>{d3832058-1de0-427b-b3dd-6d95dca71be9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\core\Resources">
+      <UniqueIdentifier>{011369d0-4d9e-4cb8-b032-b08005050a03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\ogl">
       <UniqueIdentifier>{b79870f0-67d3-4f81-bdfb-adeb8997bd11}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\platform\vulkan">
+    <Filter Include="Source Files\Platform\vulkan">
       <UniqueIdentifier>{7b144e49-a0b8-44ea-b689-f8d361060c08}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\platform\dx12">
+    <Filter Include="Source Files\Platform\dx12">
       <UniqueIdentifier>{b6e7244e-befc-45ed-9cc0-9b3efd5ae969}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\platform\core\Interface">
-      <UniqueIdentifier>{d3832058-1de0-427b-b3dd-6d95dca71be9}</UniqueIdentifier>
+    <Filter Include="Source Files\Platform\ogl\Renderer">
+      <UniqueIdentifier>{df5266d7-69f7-45d5-bbdb-dd3aefbe3983}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\core\Renderer\RenderBlock">
+      <UniqueIdentifier>{947a8721-87bd-492d-b3b2-d687e79cf67f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\core\Renderer\Pipeline">
+      <UniqueIdentifier>{4e051372-6980-411b-8a38-9d128ce846aa}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -58,22 +73,52 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\platform\core\Renderer\Transform.h">
-      <Filter>Source Files\platform\core\Renderer</Filter>
+      <Filter>Source Files\Platform\core\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\platform\core\LObject.h">
-      <Filter>Source Files\platform\core</Filter>
+      <Filter>Source Files\Platform\core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\platform\core\Time\Time.h">
-      <Filter>Source Files\platform\core\Time</Filter>
+      <Filter>Source Files\Platform\core\Time</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\platform\core\Services\LService.h">
-      <Filter>Source Files\platform\core\Services</Filter>
+      <Filter>Source Files\Platform\core\Services</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\platform\core\Services\Services.h">
-      <Filter>Source Files\platform\core\Services</Filter>
+      <Filter>Source Files\Platform\core\Services</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\platform\core\Interface\IManagedObject.h">
-      <Filter>Source Files\platform\core\Interface</Filter>
+      <Filter>Source Files\Platform\core\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\platform\core\Resources\GraphicsResources.h">
+      <Filter>Source Files\Platform\core\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\platform\core\Renderer\Materials\ATexture.h">
+      <Filter>Source Files\Platform\core\Renderer\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\platform\core\Renderer\Materials\TextureType.h">
+      <Filter>Source Files\Platform\core\Renderer\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\platform\core\Renderer\Materials\TextureUtils.h">
+      <Filter>Source Files\Platform\core\Renderer\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\platform\ogl\Renderer\Texture.h">
+      <Filter>Source Files\Platform\ogl\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\platform\core\Renderer\RenderBlock\ARenderBlock.h">
+      <Filter>Source Files\Platform\core\Renderer\RenderBlock</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\platform\core\Renderer\Pipeline\Camera.h">
+      <Filter>Source Files\Platform\core\Renderer\Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\platform\core\Renderer\Pipeline\Renderer.h">
+      <Filter>Source Files\Platform\core\Renderer\Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\platform\core\Renderer\Pipeline\Viewport.h">
+      <Filter>Source Files\Platform\core\Renderer\Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\platform\core\Renderer\Pipeline\Window.h">
+      <Filter>Source Files\Platform\core\Renderer\Pipeline</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -84,13 +129,34 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\platform\core\Renderer\Tansform.cpp">
-      <Filter>Source Files\platform\core\Renderer</Filter>
+      <Filter>Source Files\Platform\core\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\platform\core\Services\Services.cpp">
-      <Filter>Source Files\platform\core\Services</Filter>
+      <Filter>Source Files\Platform\core\Services</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\platform\core\Time\Time.cpp">
-      <Filter>Source Files\platform\core\Time</Filter>
+      <Filter>Source Files\Platform\core\Time</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\platform\core\Renderer\Materials\TextureType.cpp">
+      <Filter>Source Files\Platform\core\Renderer\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\platform\core\Renderer\Materials\ATexture.cpp">
+      <Filter>Source Files\Platform\core\Renderer\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\platform\ogl\Renderer\Texture.cpp">
+      <Filter>Source Files\Platform\ogl\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\platform\core\Renderer\Pipeline\Renderer.cpp">
+      <Filter>Source Files\Platform\core\Renderer\Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\platform\core\Renderer\Pipeline\Viewport.cpp">
+      <Filter>Source Files\Platform\core\Renderer\Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\platform\core\Renderer\Pipeline\Window.cpp">
+      <Filter>Source Files\Platform\core\Renderer\Pipeline</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
