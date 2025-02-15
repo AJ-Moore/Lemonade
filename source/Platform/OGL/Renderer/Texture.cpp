@@ -38,33 +38,6 @@ namespace Lemonade
 		glActiveTexture(GL_TEXTURE0 + textureUnit);
 		glBindTexture(GL_TEXTURE_2D, m_textureId);
 	}
-
-	int Texture::GetNativeTextureFormat(TextureFormat format);
-	{
-		if (surface == nullptr)
-		{
-			Citrus::Logger::Log(Citrus::Logger::ERROR, "Unable to get texture format.");
-			return GL_RGBA;
-		}
-
-        switch (surface->format) {
-            case SDL_PIXELFORMAT_RGB24:
-                return GL_RGB;
-            case SDL_PIXELFORMAT_RGBA8888:
-                return GL_RGBA;
-            case SDL_PIXELFORMAT_ABGR8888:
-                return GL_ABGR_EXT;
-            case SDL_PIXELFORMAT_BGR24:
-                return GL_BGR;
-            case SDL_PIXELFORMAT_BGRA8888:
-                return GL_BGRA;
-            case SDL_PIXELFORMAT_RGB565:
-                return GL_RGB; 
-        default:
-            Citrus::Logger::Log(Citrus::Logger::ERROR, "Texture unsupported format: %s", SDL_GetPixelFormatName(surface->format));
-            return -1;
-        }
-	}
 }
 
 #endif 

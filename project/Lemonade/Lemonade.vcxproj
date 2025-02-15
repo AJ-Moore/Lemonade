@@ -179,10 +179,11 @@
     <ClInclude Include="..\..\source\Lemonade.h" />
     <ClInclude Include="..\..\source\platform\core\Interface\IManagedObject.h" />
     <ClInclude Include="..\..\source\platform\core\LObject.h" />
+    <ClInclude Include="..\..\source\Platform\Core\Renderer\Core\AGraphicsContext.h" />
     <ClInclude Include="..\..\source\platform\core\Renderer\Materials\ATexture.h" />
     <ClInclude Include="..\..\source\platform\core\Renderer\Materials\TextureType.h" />
     <ClInclude Include="..\..\source\platform\core\Renderer\Materials\TextureUtils.h" />
-    <ClInclude Include="..\..\source\platform\core\Renderer\Pipeline\Camera.h" />
+    <ClInclude Include="..\..\source\Platform\Core\Renderer\Pipeline\LCamera.h" />
     <ClInclude Include="..\..\source\platform\core\Renderer\Pipeline\Renderer.h" />
     <ClInclude Include="..\..\source\platform\core\Renderer\Pipeline\Viewport.h" />
     <ClInclude Include="..\..\source\platform\core\Renderer\Pipeline\Window.h" />
@@ -192,7 +193,12 @@
     <ClInclude Include="..\..\source\platform\core\Services\LService.h" />
     <ClInclude Include="..\..\source\platform\core\Services\Services.h" />
     <ClInclude Include="..\..\source\platform\core\Time\Time.h" />
+    <ClInclude Include="..\..\source\Platform\Core\WindowManager\AWindow.h" />
+    <ClInclude Include="..\..\source\Platform\Core\WindowManager\AWindowManager.h" />
     <ClInclude Include="..\..\source\platform\ogl\Renderer\Texture.h" />
+    <ClInclude Include="..\..\source\Platform\Vulkan\Renderer\LVulkanDevice.h" />
+    <ClInclude Include="..\..\source\Platform\Vulkan\WindowManager\LWindow.h" />
+    <ClInclude Include="..\..\source\Platform\Vulkan\WindowManager\LWindowManager.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
@@ -205,7 +211,10 @@
     <ClCompile Include="..\..\source\platform\core\Renderer\Tansform.cpp" />
     <ClCompile Include="..\..\source\platform\core\Services\Services.cpp" />
     <ClCompile Include="..\..\source\platform\core\Time\Time.cpp" />
+    <ClCompile Include="..\..\source\Platform\Core\WindowManager\AWindow.cpp" />
+    <ClCompile Include="..\..\source\Platform\Core\WindowManager\AWindowManager.cpp" />
     <ClCompile Include="..\..\source\platform\ogl\Renderer\Texture.cpp" />
+    <ClCompile Include="..\..\source\Platform\Vulkan\Renderer\LVulkanDevice.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

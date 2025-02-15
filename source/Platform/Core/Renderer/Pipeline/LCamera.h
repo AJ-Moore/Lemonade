@@ -1,10 +1,10 @@
 #pragma once
 
-#include <Core/Component.h>
+#include <Core/LObject.h>
 
-namespace CraftyBlocks
+namespace Lemonade
 {
-	class Camera : public Component
+	class LCamera : public LObject
 	{
 	public:
 		const glm::mat4& GetViewMatrix() const { return m_viewMat; }

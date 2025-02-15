@@ -7,6 +7,8 @@
 #endif
 
 #define RENDERER_OPENGL
+#define RENDERER_VULKAN
+#define RENDERER_DX12
 
 // C++ Standard Library Includes
 #include <string>
@@ -30,6 +32,10 @@
 
 #if defined(RENDERER_OPENGL)
 #include <GL/glew.h>
+#endif
+
+#if defined(RENDERER_OPENGL) || defined(RENDERER_VULKAN) || defined(RENDERER_DX12)
+#define USING_SDL
 #endif
 
 namespace Citrus = CitrusCore;

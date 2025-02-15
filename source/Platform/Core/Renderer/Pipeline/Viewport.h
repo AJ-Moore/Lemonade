@@ -1,13 +1,12 @@
 #pragma once
 
-#include <Common.h>
-#include <Core/GameObject.h>
-#include <Util/Rect.h>
-#include <Renderer/Camera.h>
+#include <LCommon.h>
+#include <Core/LObject.h>
+#include <Core/Renderer/Pipeline/LCamera.h>
 
-namespace CraftyBlocks
+namespace Lemonade
 {
-	class Viewport : public GameObject
+	class Viewport : public LObject
 	{
 		friend class Window;
 	protected:
@@ -16,7 +15,7 @@ namespace CraftyBlocks
 		virtual void Update();
 		virtual void Render();
 	private:
-		uRect m_viewRect = uRect(0, 0, 1920, 1080);
-		std::vector<Camera> m_cameras;
+		Citrus::Rect m_viewRect = Citrus::Rect(0, 0, 1920, 1080);
+		std::vector<LCamera> m_cameras;
 	};
 }

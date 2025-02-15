@@ -1,35 +1,39 @@
 #include "Viewport.h"
 #include <Core/Services/Services.h>
+#include <Core/Renderer/Pipeline/Renderer.h>
 
-bool CraftyBlocks::Viewport::Init()
+namespace Lemonade
 {
-	return false;
-}
-
-void CraftyBlocks::Viewport::Unload()
-{
-}
-
-void CraftyBlocks::Viewport::Update()
-{
-}
-
-void CraftyBlocks::Viewport::Render()
-{
-	Renderer* renderer = Services::GetRenderer();
-
-	for (auto& camera : m_cameras)
+	bool Viewport::Init()
 	{
-		if (renderer->IsShadowPass())
+		return false;
+	}
+
+	void Viewport::Unload()
+	{
+	}
+
+	void Viewport::Update()
+	{
+	}
+
+	void Viewport::Render()
+	{
+		Renderer* renderer = Services::GetRenderer();
+
+		for (auto& camera : m_cameras)
 		{
-			// Override viewport size
-			glViewport(0, 0, renderer->GetShadowMapSize(), renderer->GetShadowMapSize());
-			glScissor(0, 0, renderer->GetShadowMapSize(), renderer->GetShadowMapSize());
-		}
-		else
-		{
-			glViewport(0, 0, m_viewRect.Width, m_viewRect.Height);
-			glScissor(0, 0, m_viewRect.Width, m_viewRect.Height);
+			if (renderer->IsShadowPass())
+			{
+				// Override viewport size
+				glViewport(0, 0, renderer->GetShadowMapSize(), renderer->GetShadowMapSize());
+				glScissor(0, 0, renderer->GetShadowMapSize(), renderer->GetShadowMapSize());
+			}
+			else
+			{
+				glViewport(0, 0, m_viewRect.Width, m_viewRect.Height);
+				glScissor(0, 0, m_viewRect.Width, m_viewRect.Height);
+			}
 		}
 	}
 }

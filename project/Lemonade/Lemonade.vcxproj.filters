@@ -58,6 +58,27 @@
     <Filter Include="Source Files\Platform\core\Renderer\Pipeline">
       <UniqueIdentifier>{4e051372-6980-411b-8a38-9d128ce846aa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Platform\core\Renderer\Geometry">
+      <UniqueIdentifier>{03a0f724-4c57-43a1-b54a-cf82d6033469}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\core\Renderer\Lighting">
+      <UniqueIdentifier>{380b174d-fc8a-4950-b87c-9c6f7c2d9cec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\core\Renderer\Animation">
+      <UniqueIdentifier>{e3a29703-7b3e-4e06-8ad0-f2d40481d183}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\core\Renderer\Core">
+      <UniqueIdentifier>{b14608d1-0a63-44d2-8b2f-613ceb08d2fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\vulkan\Renderer">
+      <UniqueIdentifier>{0cced42a-21fe-4596-b1ef-6c362eed1ada}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\ogl\WindowManager">
+      <UniqueIdentifier>{8cf875ea-422a-4993-976e-70f5eca412fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\vulkan\WindowManager">
+      <UniqueIdentifier>{dd9ee04b-6bc4-43a6-8e7e-d5cc40f3ca4d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -108,9 +129,6 @@
     <ClInclude Include="..\..\source\platform\core\Renderer\RenderBlock\ARenderBlock.h">
       <Filter>Source Files\Platform\core\Renderer\RenderBlock</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\platform\core\Renderer\Pipeline\Camera.h">
-      <Filter>Source Files\Platform\core\Renderer\Pipeline</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\source\platform\core\Renderer\Pipeline\Renderer.h">
       <Filter>Source Files\Platform\core\Renderer\Pipeline</Filter>
     </ClInclude>
@@ -119,6 +137,27 @@
     </ClInclude>
     <ClInclude Include="..\..\source\platform\core\Renderer\Pipeline\Window.h">
       <Filter>Source Files\Platform\core\Renderer\Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Platform\Core\WindowManager\AWindow.h">
+      <Filter>Source Files\Platform\core\WindowManager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Platform\Core\WindowManager\AWindowManager.h">
+      <Filter>Source Files\Platform\core\WindowManager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Platform\Core\Renderer\Pipeline\LCamera.h">
+      <Filter>Source Files\Platform\core\Renderer\Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Platform\Core\Renderer\Core\AGraphicsContext.h">
+      <Filter>Source Files\Platform\core\Renderer\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Platform\Vulkan\Renderer\LVulkanDevice.h">
+      <Filter>Source Files\Platform\vulkan\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Platform\Vulkan\WindowManager\LWindowManager.h">
+      <Filter>Source Files\Platform\vulkan\WindowManager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Platform\Vulkan\WindowManager\LWindow.h">
+      <Filter>Source Files\Platform\vulkan\WindowManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -154,6 +193,15 @@
     </ClCompile>
     <ClCompile Include="..\..\source\platform\core\Renderer\Pipeline\Window.cpp">
       <Filter>Source Files\Platform\core\Renderer\Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Platform\Core\WindowManager\AWindow.cpp">
+      <Filter>Source Files\Platform\core\WindowManager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Platform\Core\WindowManager\AWindowManager.cpp">
+      <Filter>Source Files\Platform\core\WindowManager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Platform\Vulkan\Renderer\LVulkanDevice.cpp">
+      <Filter>Source Files\Platform\vulkan\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

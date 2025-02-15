@@ -1,35 +1,29 @@
 
-#include <UCommon.h>
-#include <Renderer/WindowManager/UWindowManager.h>
+#include <LCommon.h>
+#include <Core/WindowManager/AWindowManager.h>
+#include <Geometry/Rect.h>
 
-namespace UpsilonEngine {
+namespace Lemonade {
 
-	UWindowManager::UWindowManager()
+	AWindowManager::AWindowManager()
 	{
-		setName("UWindowManager");
+		SetName("AWindowManager");
 	}
 
-	UWindowManager::~UWindowManager() {
+	AWindowManager::~AWindowManager() {
 
 	}
 
-	/** */
-	UWindow* UWindowManager::addWindow(String ConfigFile)
+	LWindow* AWindowManager::AddWindow(CitrusCore::Rect<uint32> WindowRect, std::string windowName) 
 	{
-		UWindow* _window = new UWindow(); 
-		return _window;
-	}
-
-	UWindow* UWindowManager::addWindow(Rect<uint32> WindowRect, String WindowName) 
-	{
-		UWindow* window = new UWindow();
+		LWindow* window = new LWindow();
 		window->m_windowRect = WindowRect; 
 		window->m_windowCaption = WindowName; 
 		addWindow(window);
 		return window;
 	}
 
-	void UWindowManager::addWindow(UWindow* window) 
+	void AWindowManager::AddWindow(std::shared_ptr<LWindow> window) 
 	{
 		m_windows.emplace(window->uuid.getID(), window);
 		window->setParent(this);
@@ -39,12 +33,12 @@ namespace UpsilonEngine {
 		}
 	}
 
-	UWindow * UWindowManager::getMainWindow(){
+	LWindow * AWindowManager::getMainWindow(){
 		return this->defaultWindow;
 	}
 
 	/** Initialises all the windows and the GL Context.*/
-	bool UWindowManager::init()
+	bool AWindowManager::init()
 	{
 #ifdef RENDERER_OPENGL
 #if __APPLE__
@@ -81,7 +75,7 @@ namespace UpsilonEngine {
 
 		//Initialise these at some other point ???
 		LogInfo("Initialising window manager, windows.");
-		std::map<uint32, UWindow*>::iterator iter; 
+		std::map<uint32, LWindow*>::iterator iter; 
 		for (auto& window : m_windows) {
 			if (!window.second->init())
 			{
@@ -94,10 +88,10 @@ namespace UpsilonEngine {
 		return true; 
 	}
 
-	bool UWindowManager::load() {
+	bool AWindowManager::load() {
 		bool _return = true;
 
-		this->defaultWindow = new UWindow();
+		this->defaultWindow = new LWindow();
 		
 		if (!this->defaultWindow->load("config.cfg"))
 		{
@@ -106,7 +100,7 @@ namespace UpsilonEngine {
 
 		this->addWindow(this->defaultWindow);
 
-		std::map<uint32, UWindow*>::iterator iter;
+		std::map<uint32, LWindow*>::iterator iter;
 		for (iter = this->m_windows.begin(); iter != this->m_windows.end(); iter++) {
 			if (!iter->second->load()) {
 				return false;
@@ -115,15 +109,15 @@ namespace UpsilonEngine {
 		return _return;
 	}
 
-	void UWindowManager::update() {
+	void AWindowManager::update() {
 
-		std::map<uint32, UWindow*>::iterator iter;
+		std::map<uint32, LWindow*>::iterator iter;
 		for (iter = this->m_windows.begin(); iter != this->m_windows.end(); iter++) {
 			iter->second->update();
 		}
 	}
 
-	void UWindowManager::unload() {
+	void AWindowManager::unload() {
 #ifdef RENDERER_OPENGL
 		SDL_GL_DeleteContext(this->glContext);
 		
@@ -135,7 +129,7 @@ namespace UpsilonEngine {
 #endif
 	}
 
-	void UWindowManager::render() {
+	void AWindowManager::render() {
 
 #ifdef RENDERER_OPENGL
 		SDL_GL_MakeCurrent(this->defaultWindow->m_sdlWindow, this->glContext);

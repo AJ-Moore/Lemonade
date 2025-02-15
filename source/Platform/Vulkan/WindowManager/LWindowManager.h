@@ -1,0 +1,19 @@
+#pragma once
+#include <LCommon.h>
+#ifdef RENDERER_VULKAN
+
+#include <Vulkan/Renderer/LVulkanDevice.h>
+#include <Core/WindowManager/AWindowManager.h>
+
+namespace Lemonade
+{
+	class LEMONADE_API LWindowManager : public AWindowManager {
+	public:
+		virtual ~LWindowManager();
+		LVulkanDevice* GetVulkanDevice() { return &m_vulkanDevice; }
+	private:
+		LVulkanDevice m_vulkanDevice;
+	};
+}
+
+#endif

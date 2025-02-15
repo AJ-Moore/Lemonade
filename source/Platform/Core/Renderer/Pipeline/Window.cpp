@@ -1,6 +1,6 @@
 #include "Window.h"
 
-namespace CraftyBlocks
+namespace Lemonade 
 {
 	bool Window::Init()
 	{
