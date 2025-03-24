@@ -8,7 +8,7 @@
 #include <Core/WindowManager/AWindowManager.h>
 
 namespace Lemonade {
-	class LEMONADE_API AWindow : public LObject {
+	class LEMONADE_API LWindow : public LObject {
 		friend class LWindowManager; 
 		friend class LRenderer;
 	public: 
@@ -41,7 +41,7 @@ namespace Lemonade {
 	private:
 		void InitFramebuffer();
 		void ToggleFullscreen(float value);
-		void SetParent(AWindowManager* windowManager) { m_windowManager = windowManager; }
+		void SetParent(LWindowManager* windowManager) { m_windowManager = windowManager; }
 
 		CitrusCore::Rect<uint32> m_windowRect = CitrusCore::Rect<uint32>(50, 50, 800, 600);
 
@@ -57,7 +57,7 @@ namespace Lemonade {
 		/// The camera linked with this window, acts as a view into the scene
 		LCamera* m_viewCamera = nullptr;
 		LRenderer* m_renderer = nullptr;
-		AWindowManager* m_windowManager = nullptr; 
+		LWindowManager* m_windowManager = nullptr; 
 
 		std::string	m_windowCaption = "Game";
 		bool	m_fullscreen = false;

@@ -1,8 +1,6 @@
 #pragma once
 
-#include <Core/Component.h>
-
-namespace CraftyBlocks
+namespace Lemonade
 {
 	enum class LightType : uint
 	{

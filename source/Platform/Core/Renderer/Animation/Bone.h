@@ -1,10 +1,10 @@
 #pragma once
 
-#include <Common.h>
+#include <LCommon.h>
 #include <vector>
 #include <memory>
 
-namespace CraftyBlocks
+namespace Lemonade
 {
 	class Bone {
 	public:

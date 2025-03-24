@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef _WIN32 || _WIN64
+#if defined(_WIN32) || defined(_WIN64)
 #define LEMONADE_API __declspec(dllexport)
 #else
 #define LEMONADE_API __attribute__((visibility("default")))
@@ -31,11 +31,9 @@
 #endif
 
 #if defined(RENDERER_OPENGL)
-#include <GL/glew.h>
+#include <GL/gl.h>
 #endif
 
 #if defined(RENDERER_OPENGL) || defined(RENDERER_VULKAN) || defined(RENDERER_DX12)
 #define USING_SDL
 #endif
-
-namespace Citrus = CitrusCore;

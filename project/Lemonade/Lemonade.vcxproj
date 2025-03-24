@@ -195,10 +195,10 @@
     <ClInclude Include="..\..\source\platform\core\Time\Time.h" />
     <ClInclude Include="..\..\source\Platform\Core\WindowManager\AWindow.h" />
     <ClInclude Include="..\..\source\Platform\Core\WindowManager\AWindowManager.h" />
+    <ClInclude Include="..\..\source\Platform\OGL\Renderer\Core\LGraphicsContext.h" />
     <ClInclude Include="..\..\source\platform\ogl\Renderer\Texture.h" />
+    <ClInclude Include="..\..\source\Platform\Vulkan\Renderer\Core\LGraphicsContext.h" />
     <ClInclude Include="..\..\source\Platform\Vulkan\Renderer\LVulkanDevice.h" />
-    <ClInclude Include="..\..\source\Platform\Vulkan\WindowManager\LWindow.h" />
-    <ClInclude Include="..\..\source\Platform\Vulkan\WindowManager\LWindowManager.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>

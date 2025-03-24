@@ -1,5 +1,6 @@
 #include "ATexture.h"
 #include <filesystem>
+#include <Core/Renderer/Materials/TextureType.h>
 
 namespace Lemonade
 {
@@ -29,7 +30,7 @@ namespace Lemonade
 	bool ATexture::LoadResource(std::string path)
 	{
 		Log(Citrus::Logger::INFO, "Loading texture [%s]", path.c_str());
-		SDL_Surface* image = nullptr;
+		SDL_Surface* surface = nullptr;
 		bool bTextureLoadOK = false;
 
 		std::filesystem::path fsPath = std::filesystem::path(path);
@@ -41,7 +42,7 @@ namespace Lemonade
 		}
 
 		try {
-			image = IMG_Load(fsPath.generic_string().c_str());
+			surface = IMG_Load(fsPath.generic_string().c_str());
 			bTextureLoadOK = true;
 		}
 		catch (std::exception e)
@@ -50,7 +51,7 @@ namespace Lemonade
 			bTextureLoadOK = false;
 		}
 
-		if (image == nullptr)
+		if (surface == nullptr)
 		{
 			bTextureLoadOK = false;
 			Log(Citrus::Logger::ERROR, "Error whilst loading texture [%s].", SDL_GetError());
@@ -65,36 +66,40 @@ namespace Lemonade
 			Citrus::Log(Citrus::Logger::VERBOSE, "Texture loaded successfully: [%s]", fsPath.generic_string().c_str());
 		}
 
-		m_imageFormat = GetTextureFormat(image);
+		// check format supported
+		m_textureFormat = GetTextureFormat(surface);
 
-		glTexImage2D(GL_TEXTURE_2D,
-			0,//Mipmap Level
-			m_imageFormat, //bit per pixel
-			image->w,
-			image->h,
-			0,//texture border 	
-			m_imageFormat,
-			GL_UNSIGNED_BYTE,
-			image->pixels);
+		// Not supported, log and convert to RGBA
+		if (TextureData::GetNativeTextureFormat(m_textureFormat) == -1)
+		{
+			Citrus::Log(Citrus::Logger::WARN, "Unsupported texture format, format being converted to RGBA");
+			SDL_Surface* original = surface;
+
+			SDL_ConvertSurface(surface, SDL_PixelFormat::SDL_PIXELFORMAT_RGBA8888);
+			SDL_DestroySurface(original);
+			m_textureFormat = TextureFormat::LEMONADE_RGBA8888;
+		}
+
+		LoadNativeTextureFromSurface(surface);
 
 		if (m_bStorePixelData)
 		{
-			if (m_imageFormat == GL_RGB || m_imageFormat == GL_RGBA)
+			if (m_textureFormat == TextureFormat::LEMONADE_RGB888 || m_textureFormat == TextureFormat::LEMONADE_RGBA8888)
 			{
 				m_pixelData.clear();
 
-				int increment = (m_imageFormat == GL_RGB) ? 3 : 4;
-				unsigned char* pixels = static_cast<unsigned char*>(image->pixels);
+				int increment = (m_textureFormat == TextureFormat::LEMONADE_RGB888) ? 3 : 4;
+				unsigned char* pixels = static_cast<unsigned char*>(surface->pixels);
 
-				for (int i = 0; i < image->w * image->h * increment; i += increment)
+				for (int i = 0; i < surface->w * surface->h * increment; i += increment)
 				{
 					float r = pixels[i + 0];
 					float g = pixels[i + 1];
 					float b = pixels[i + 2];
 					float a = 1;
-					if (m_imageFormat == GL_RGBA)
+					if (m_textureFormat == TextureFormat::LEMONADE_RGBA8888)
 					{
-						float a = ((unsigned char*)image->pixels)[i + 3];
+						float a = ((unsigned char*)surface->pixels)[i + 3];
 					}
 
 					m_pixelData.push_back(Colour(r, g, b, a));
@@ -106,12 +111,12 @@ namespace Lemonade
 			}
 		}
 
-		/// Retain some useful informastion 
-		m_width = image->w;
-		m_height = image->h;
+		m_width = surface->w;
+		m_height = surface->h;
 
-		SDL_FreeSurface(image);
-		LogGraphicsErrors();
+		SDL_DestroySurface(surface);
+		// TODO - graphics error logging.
+		//LogGraphicsErrors();
 		return true;
 	}
 

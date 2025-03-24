@@ -7,7 +7,7 @@
 
 namespace Lemonade
 {
-	class LEMONADE_API LWindowManager : public AWindowManager {
+	class LEMONADE_API LWindowManager : public LWindowManager {
 	public:
 		virtual ~LWindowManager();
 		LVulkanDevice* GetVulkanDevice() { return &m_vulkanDevice; }

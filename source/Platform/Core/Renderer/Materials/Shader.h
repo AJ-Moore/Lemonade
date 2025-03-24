@@ -1,6 +1,7 @@
 #pragma once
 
-#include <Core/ResourceManager/Resource.h>
+#include "Resources/AResource.h"
+#include <Resources/Resource.h>
 
 namespace CraftyBlocks
 {
@@ -12,7 +13,7 @@ namespace CraftyBlocks
 		Geometry
 	};
 
-	class Shader : Resource
+	class Shader : <Shader>
 	{
 	protected:
 		virtual bool LoadResource(std::string path) override;

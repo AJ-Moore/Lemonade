@@ -5,40 +5,37 @@
 
 namespace Lemonade {
 
-	AWindowManager::AWindowManager()
+	LWindowManager::LWindowManager()
 	{
 		SetName("AWindowManager");
 	}
 
-	AWindowManager::~AWindowManager() {
+	LWindowManager::~LWindowManager() {
 
 	}
 
-	LWindow* AWindowManager::AddWindow(CitrusCore::Rect<uint32> WindowRect, std::string windowName) 
+	std::shared_ptr<LWindow> LWindowManager::AddWindow(CitrusCore::Rect<uint32> WindowRect, std::string windowCaption) 
 	{
-		LWindow* window = new LWindow();
+		std::shared_ptr<LWindow> window = std::make_shared<LWindow>();
 		window->m_windowRect = WindowRect; 
-		window->m_windowCaption = WindowName; 
-		addWindow(window);
+		window->m_windowCaption = windowCaption;
+		AddWindow(window);
 		return window;
 	}
 
-	void AWindowManager::AddWindow(std::shared_ptr<LWindow> window) 
+	void LWindowManager::AddWindow(std::shared_ptr<LWindow> window) 
 	{
-		m_windows.emplace(window->uuid.getID(), window);
-		window->setParent(this);
-		if (m_bDoneInit)
+		m_windows.emplace(window->GetUID().GetID(), window);
+		window->SetParent(this);
+
+		if (HasbeenInitialised())
 		{
-			window->init();
+			window->Init();
 		}
 	}
 
-	LWindow * AWindowManager::getMainWindow(){
-		return this->defaultWindow;
-	}
-
 	/** Initialises all the windows and the GL Context.*/
-	bool AWindowManager::init()
+	bool LWindowManager::Init()
 	{
 #ifdef RENDERER_OPENGL
 #if __APPLE__
@@ -55,7 +52,7 @@ namespace Lemonade {
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 		// Create the GL Context, using the default window.
-		this->glContext = SDL_GL_CreateContext(defaultWindow->m_sdlWindow);
+		this->glContext = SDL_GL_CreateContext(m_defaultWindow->m_sdlWindow);
 
 		// Initialise glew 
 		glewInit();
@@ -88,7 +85,7 @@ namespace Lemonade {
 		return true; 
 	}
 
-	bool AWindowManager::load() {
+	bool LWindowManager::load() {
 		bool _return = true;
 
 		this->defaultWindow = new LWindow();
@@ -109,7 +106,7 @@ namespace Lemonade {
 		return _return;
 	}
 
-	void AWindowManager::update() {
+	void LWindowManager::update() {
 
 		std::map<uint32, LWindow*>::iterator iter;
 		for (iter = this->m_windows.begin(); iter != this->m_windows.end(); iter++) {
@@ -117,7 +114,7 @@ namespace Lemonade {
 		}
 	}
 
-	void AWindowManager::unload() {
+	void LWindowManager::unload() {
 #ifdef RENDERER_OPENGL
 		SDL_GL_DeleteContext(this->glContext);
 		
@@ -129,11 +126,11 @@ namespace Lemonade {
 #endif
 	}
 
-	void AWindowManager::render() {
+	void LWindowManager::render() {
 
 #ifdef RENDERER_OPENGL
-		SDL_GL_MakeCurrent(this->defaultWindow->m_sdlWindow, this->glContext);
-		SDL_GL_SwapWindow(this->defaultWindow->m_sdlWindow);
+		SDL_GL_MakeCurrent(m_defaultWindow->m_sdlWindow, this->glContext);
+		SDL_GL_SwapWindow(m_defaultWindow->m_sdlWindow);
 #endif
 
 		for (auto& window : m_windows)

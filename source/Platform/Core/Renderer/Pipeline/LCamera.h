@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/LObject.h>
+#include <Platform/Core/LObject.h>
 
 namespace Lemonade
 {

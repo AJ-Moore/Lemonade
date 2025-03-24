@@ -1,11 +1,11 @@
 #pragma once
 
-#include <Common.h>
+#include <LCommon.h>
 #include <memory>
 #include <vector>
-#include <Renderer/BoneAnim.h>
+#include <Platform/Core/Renderer/Animation/BoneAnim.h>
 
-namespace CraftyBlocks
+namespace Lemonade
 {
 	class Animation
 	{

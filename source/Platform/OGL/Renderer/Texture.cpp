@@ -28,6 +28,19 @@ namespace Lemonade
 		return -1;
 	}
 
+	void Texture::LoadNativeTextureFromSurface(SDL_Surface* surface)
+	{
+		glTexImage2D(GL_TEXTURE_2D,
+			0,//Mipmap Level
+			m_imageFormat, //bit per pixel
+			surface->w,
+			surface->h,
+			0,//texture border 	
+			m_imageFormat,
+			GL_UNSIGNED_BYTE,
+			surface->pixels);
+	}
+
 	void Texture::Bind()
 	{
 		glBindTexture(GL_TEXTURE_2D, m_textureId);

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Common.h>
+#include <LCommon.h>
 #include <vector>
 
-namespace CraftyBlocks
+namespace Lemonade
 {
 	enum class AnimBehaviour
 	{

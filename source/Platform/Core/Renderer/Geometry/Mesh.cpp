@@ -1,19 +1,20 @@
-#include <Renderer/Mesh.h>
+#include <Platform/Core/Renderer/Geometry/Mesh.h>
+#include <Util/Logger.h>
 
-namespace CraftyBlocks
+namespace Lemonade
 {
 	void Mesh::CalculateNormalsPerFace()
 	{
 		if (m_vertices == nullptr)
 		{
-			Log(Logger::ERROR, "Unable to calculate face normals, no vertices found in mesh.");
+			CitrusCore::Logger::Log(CitrusCore::Logger::ERROR, "Unable to calculate face normals, no vertices found in mesh.");
 			return;
 		}
 
 		if (m_vertices->size() % 3 != 0)
 		{
 			// Invalid.
-			Log(Logger::ERROR, "Invalid number of vertices.");
+			CitrusCore::Logger::Log(CitrusCore::Logger::ERROR, "Invalid number of vertices.");
 			return;
 		}
 
@@ -39,13 +40,13 @@ namespace CraftyBlocks
 
 		if (m_faceNormals == nullptr || m_vertices == nullptr)
 		{
-			Log(Logger::ERROR, "Error calculating normals.");
+			CitrusCore::Logger::Log(CitrusCore::Logger::ERROR, "Error calculating normals.");
 			return;
 		}
 
 		if (m_faceNormals->size() != m_vertices->size() / 3)
 		{
-			Log(Logger::ERROR, "Error calculating normals, mismatch.");
+			CitrusCore::Logger::Log(CitrusCore::Logger::ERROR, "Error calculating normals, mismatch.");
 			return;
 		}
 
@@ -113,7 +114,7 @@ namespace CraftyBlocks
 		if (m_drawMode < PrimitiveMode::TRIANGLES)
 		{
 			// Not supported
-			Log(Logger::ERROR, "Unsupported type generating tangenets.");
+			CitrusCore::Logger::Log(CitrusCore::Logger::ERROR, "Unsupported type generating tangenets.");
 			return;
 		}
 
@@ -129,7 +130,7 @@ namespace CraftyBlocks
 			{
 				m_uvs = std::make_shared<std::vector<glm::vec2>>();
 
-				Log(Logger::WARN, "Planar fallback no uvs found.");
+				CitrusCore::Logger::Log(CitrusCore::Logger::WARN, "Planar fallback no uvs found.");
 				for (int p = 0; p < m_vertices->size(); p++)
 				{
 					m_uvs->push_back(glm::vec2(m_vertices->at(p).x, m_vertices->at(p).z) * m_defaultPlanarScale);

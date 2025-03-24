@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Common.h>
+#include <LCommon.h>
 
-namespace CraftyBlocks {
+namespace Lemonade {
 
 	/** Flags used for identifing primitive mode information - Matches OpenGL equivilent. */
 	enum class PrimitiveMode : uint32 {

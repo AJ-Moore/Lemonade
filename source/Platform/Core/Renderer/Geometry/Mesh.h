@@ -1,13 +1,13 @@
 #pragma once 
 
-#include <Common.h>
+#include <LCommon.h>
 #include <memory>
 #include <vector>
-#include <Renderer/PrimitiveMode.h>
-#include <Renderer/Bone.h>
-#include <Renderer/Animation.h>
+#include <Platform/Core/Renderer/Geometry/PrimitiveMode.h>
+#include <Platform/Core/Renderer/Animation/Bone.h>
+#include <Platform/Core/Renderer/Animation/Animation.h>
 
-namespace CraftyBlocks
+namespace Lemonade
 {
 	constexpr int Vec3Size() { return sizeof(glm::vec3) / sizeof(float); };
 	constexpr int Vec4Size() { return sizeof(glm::vec4) / sizeof(float); };

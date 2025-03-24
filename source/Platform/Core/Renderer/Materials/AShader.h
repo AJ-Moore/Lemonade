@@ -1,12 +1,12 @@
 #pragma once
 
-#include <Common.h>
-#include <Core/GameObject.h>
-#include <Renderer/Shader.h>
+#include <Base/Object.h>
+#include <Resources/AResource.h>
+#include <LCommon.h>
 
 namespace CraftyBlocks
 {
-	class AShader : public GameObject
+	class AShader : public CitrusCore::AResource<AShader>
 	{
 	public:
 		virtual void Bind() = 0;

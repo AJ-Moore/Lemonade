@@ -79,6 +79,12 @@
     <Filter Include="Source Files\Platform\vulkan\WindowManager">
       <UniqueIdentifier>{dd9ee04b-6bc4-43a6-8e7e-d5cc40f3ca4d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Platform\vulkan\Renderer\Core">
+      <UniqueIdentifier>{d23e1bca-490f-405a-aaf9-487b1f7d0960}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\ogl\Renderer\Core">
+      <UniqueIdentifier>{5710f275-ef77-469b-ad06-e6e88d418ead}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -153,11 +159,11 @@
     <ClInclude Include="..\..\source\Platform\Vulkan\Renderer\LVulkanDevice.h">
       <Filter>Source Files\Platform\vulkan\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\Platform\Vulkan\WindowManager\LWindowManager.h">
-      <Filter>Source Files\Platform\vulkan\WindowManager</Filter>
+    <ClInclude Include="..\..\source\Platform\OGL\Renderer\Core\LGraphicsContext.h">
+      <Filter>Source Files\Platform\ogl\Renderer\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\Platform\Vulkan\WindowManager\LWindow.h">
-      <Filter>Source Files\Platform\vulkan\WindowManager</Filter>
+    <ClInclude Include="..\..\source\Platform\Vulkan\Renderer\Core\LGraphicsContext.h">
+      <Filter>Source Files\Platform\vulkan\Renderer\Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -12,10 +12,9 @@ namespace Lemonade
 	public:
 		virtual void Bind();
 		virtual void Bind(uint textureUnit);
-		virtual int GetNativeTextureFormat(TextureFormat format);
-
+		virtual void LoadNativeTextureFromSurface(SDL_Surface* surface);
 	private:
-		uint m_textureId;
+		GLint m_textureId;
 	};
 }
 

@@ -1,7 +1,7 @@
 #include "AShader.h"
-#include <Common.h>
+#include <LCommon.h>
 
-namespace CraftyBlocks
+namespace Lemonade
 {
 	const std::unordered_map<std::string, ShaderType> AShader::m_shaderTypeLookup =
 	{
