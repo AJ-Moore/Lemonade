@@ -1,9 +1,12 @@
+#include "Util/Logger.h"
 #include <unordered_map>
-#include <Core/Renderer/Materials/TextureType.h>
+#include <Platform/Core/Renderer/Materials/TextureType.h>
 #include <LCommon.h>
 
 namespace Lemonade
 {
+	using CitrusCore::Logger;
+
 	const std::unordered_map<std::string, TextureType> TextureData::m_textureLookup =
 	{
 		{"None", TextureType::None},
@@ -90,7 +93,7 @@ namespace Lemonade
 			}
 		}
 		
-		Citrus::Log(Citrus::Logger::ERROR, "Key not found, missing type in bind lookup!");
+		Logger::Log(Logger::ERROR, "Key not found, missing type in bind lookup!");
 
 		// Might seem unintuitive but in most cases it's safer to fallback to UTexture_2D
 		return "UTexture_2D";

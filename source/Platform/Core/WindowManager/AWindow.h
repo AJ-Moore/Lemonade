@@ -3,24 +3,29 @@
 #include <LCommon.h>
 #include <Util/UID.h>
 #include <Geometry/Rect.h>
-#include <Core/LObject.h>
-#include <Core/Renderer/Pipeline/LCamera.h>
-#include <Core/WindowManager/AWindowManager.h>
+#include <Platform/Core/LObject.h>
+#include <Platform/Core/Renderer/Pipeline/LCamera.h>
+#include <Platform/Core/Renderer/Pipeline/AViewport.h>
+#include <Platform/Core/WindowManager/AWindowManager.h>
+#include <unordered_set>
 
 namespace Lemonade {
-	class LEMONADE_API LWindow : public LObject {
+
+	using CitrusCore::Rect;
+
+	class LEMONADE_API AWindow : public LObject {
 		friend class LWindowManager; 
 		friend class LRenderer;
 	public: 
-		LWindow();
-		virtual ~LWindow(); 
+		AWindow();
+		virtual ~AWindow(); 
 		LCamera* GetActiveCamera() const;
 		void SetActiveCamera(LCamera* Camera);
 		void AddCamera(std::shared_ptr<LCamera> camera) { m_cameras[camera->GetUID().GetID()] = camera; }
 		void SetPostProcessCamera(std::shared_ptr<LCamera> camera) { m_postProcessingCamera = camera; }
 		void RemoveCamera(std::shared_ptr<LCamera> camera);
 
-		const Citrus::Rect<uint32>& GetWindowRect() const { return m_windowRect; }
+		const Rect<uint32>& GetWindowRect() const { return m_windowRect; }
 		int GetWidth() const { return m_windowRect.Width; }
 		int GetHeight() const { return m_windowRect.Height; }
 
@@ -49,11 +54,6 @@ namespace Lemonade {
 		SDL_Window* m_sdlWindow = nullptr;
 #endif
 
-#ifdef RENDERER_VULKAN
-		VkInstance m_vkInstance = nullptr;
-		VkSurfaceKHR m_vkSurface = VK_NULL_HANDLE;
-#endif
-
 		/// The camera linked with this window, acts as a view into the scene
 		LCamera* m_viewCamera = nullptr;
 		LRenderer* m_renderer = nullptr;
@@ -65,6 +65,7 @@ namespace Lemonade {
 		bool 	m_sizeable = false;
 
 		std::unordered_map<uint64, std::shared_ptr<LCamera>> m_cameras;
+		std::unordered_set<std::shared_ptr<AViewport>> m_viewports;
 
 		std::shared_ptr<LCamera> m_postProcessingCamera;
 

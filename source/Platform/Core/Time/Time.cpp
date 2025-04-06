@@ -4,7 +4,7 @@
 #if defined(RENDERER_OPENGL) || defined(RENDERER_VULKAN)
 
 #include <SDL2/SDL_timer.h>
-#include <platform/core/Time/Time.h>
+#include <Platform/Core/Time/Time.h>
 
 namespace Lemonade
 {

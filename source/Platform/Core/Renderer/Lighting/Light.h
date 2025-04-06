@@ -1,8 +1,11 @@
 #pragma once
 
+#include <Types.h>
+#include <Platform/Core/LObject.h>
+
 namespace Lemonade
 {
-	enum class LightType : uint
+	enum class LightType : uint32
 	{
 		None = 0,
 		Point = 1,
@@ -10,7 +13,7 @@ namespace Lemonade
 		Direction = 3,
 	};
 
-	class Light : public Component
+	class Light : public LObject
 	{
 	public:
 		LightType GetLightType() const { return m_lightType; }

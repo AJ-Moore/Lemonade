@@ -7,8 +7,8 @@ SET(PROJECT_NAME "Lemonade")
 # Project name and language
 project(${PROJECT_NAME} CXX)
 
-# Set C++17 standard
-set(CMAKE_CXX_STANDARD 17)
+# Set C++20 standard
+set(CMAKE_CXX_STANDARD 20)
 
 # add dependencies
 include(cmake/CPM.cmake)
@@ -32,6 +32,13 @@ CPMAddPackage(
 
 # GLM
 CPMAddPackage("gh:g-truc/glm#1.0.1")
+
+# JSON
+CPMAddPackage(
+    NAME JSON    
+    GIT_REPOSITORY https://github.com/nlohmann/Json.git
+    GIT_TAG v3.11.3
+)
 
 # GLEW
 ##CPMAddPackage(
@@ -57,10 +64,11 @@ add_library(${PROJECT_NAME} ${SOURCES})
 
 # Include library headers 
 target_include_directories(${PROJECT_NAME} PUBLIC 
-    ${GLEW_SOURCE_DIR}/glew/include
+    #${GLEW_SOURCE_DIR}/glew/include
+    ${JSON_SOURCE_DIR}/include
 )
 
-message("Glew includes located at: '${GLEW_SOURCE_DIR}/glew/include'")
+#message("Json includes located at: '${JSON_SOURCE_DIR}/include'")
 
 # Include headers
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source)

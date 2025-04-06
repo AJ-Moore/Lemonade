@@ -1,19 +1,22 @@
 #include "Renderer.h"
 
-bool CraftyBlocks::Renderer::Init()
-{
-    SetName("Renderer");
-    return true;
+namespace Lemonade {
+    bool Renderer::Init()
+    {
+        SetName("Renderer");
+        return true;
+    }
+    
+    void Renderer::Unload()
+    {
+    }
+    
+    void Renderer::Update()
+    {
+    }
+    
+    void Renderer::Render()
+    {
+    }
 }
 
-void CraftyBlocks::Renderer::Unload()
-{
-}
-
-void CraftyBlocks::Renderer::Update()
-{
-}
-
-void CraftyBlocks::Renderer::Render()
-{
-}

@@ -2,7 +2,7 @@
 #include <LCommon.h>
 #ifdef RENDERER_VULKAN
 
-#include <Vulkan/Renderer/LVulkanDevice.h>
+#include <Platform/Vulkan/Renderer/LVulkanDevice.h>
 #include <Core/WindowManager/AWindowManager.h>
 
 namespace Lemonade

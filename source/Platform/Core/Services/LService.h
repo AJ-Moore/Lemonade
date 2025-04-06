@@ -1,12 +1,13 @@
 #pragma once
 
 #include <LCommon.h>
-#include <Base/Object.h>
+#include <Platform/Core/LObject.h>
 
 namespace Lemonade
 {
-	class LEMONADE_API LService : public CitrusCore::Object
+	class LEMONADE_API LService : public LObject
 	{
+		friend class Services;
 	public:
 		virtual ~LService() {}
 	protected:

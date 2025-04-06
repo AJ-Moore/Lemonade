@@ -1,22 +1,38 @@
 #pragma once
 
+#include <Platform/Core/LObject.h>
 #include <LCommon.h>
-#include <platform/core/Time/Time.h>
+#include <Platform/Core/Time/Time.h>
+#include <Platform/Core/Renderer/Pipeline/Renderer.h>
+#include <memory>
+#include <unordered_map>
 
 namespace Lemonade
 {
-	class LEMONADE_API Services
+	using CitrusCore::UID;
+
+	class LEMONADE_API Services : public LObject
 	{
 	public:
-		Time* GetTimeService() { return m_timeService; }
-
+		Services() = default;
+		static Services& GetInstance();
+		static std::shared_ptr<Time> GetTime() { return GetInstance().m_time; }
+		static std::shared_ptr<Renderer> GetRenderer() { return GetInstance().m_renderer; }
+	
+		// Delete the methods we don't want to allow
+		Services(Services const&) = delete; // Copy constructor
+		void operator=(Services const&) = delete; // Copy assignment operator
 	protected:
-		virtual void Init();
+		virtual bool Init();
+		virtual void Unload();
 		virtual void Update();
 		virtual void Render();
 
 	private:
+		std::unordered_map<UID, std::shared_ptr<LService>> m_services;
+
 		bool m_bRunning = false;
-		Time* m_timeService;
+		std::shared_ptr<Time> m_time;
+		std::shared_ptr<Renderer> m_renderer;
 	};
 }

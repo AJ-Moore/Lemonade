@@ -5,8 +5,9 @@
 
 namespace Lemonade
 {
+
 	/** Time class - for time keeping. */
-	class LEMONADE_API Time : public LService {
+	class LEMONADE_API Time : public LService{
 	public:
 		Time();
 
@@ -26,12 +27,17 @@ namespace Lemonade
 		/// Returns the time in milliseconds since the program was started
 		uint32 GetTicks();
 
+		void SetTimeScale(double scale) { m_timeScale = scale; }
+
+	protected:
+
 		virtual bool Init() override;
 
 		/// Called by the game once per frame
 		virtual void Update() override;
 
-		void SetTimeScale(double scale) { m_timeScale = scale; }
+		virtual void Render() override {}
+		virtual void Unload() override {}
 
 	private:
 		/// The time passed (in milliseconds) since the last update. 

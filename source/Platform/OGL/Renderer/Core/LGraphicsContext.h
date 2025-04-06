@@ -1,7 +1,6 @@
 #pragma once
 
-#include <Core/Renderer/Core/AGraphicsContext.h>#
-#include <Vulkan/Renderer/LVulkanDevice.h>
+#include <Platform/Core/Renderer/Core/AGraphicsContext.h>
 
 namespace Lemonade
 {
@@ -9,6 +8,11 @@ namespace Lemonade
 	{
 	public:
 		const SDL_GLContext& getContext() const { return m_glContext; }
+	protected:
+		virtual bool Init () override;
+		virtual void Update() override; 
+		virtual void Unload() override;
+		virtual void Render() override;
 	private:
 		SDL_GLContext m_glContext;
 	};

@@ -1,19 +1,11 @@
 #pragma once
 
-#include "Resources/AResource.h"
-#include <Resources/Resource.h>
+#include <Platform/Core/Renderer/Materials/AShader.h>
+#include <Resources/AResource.h>
 
-namespace CraftyBlocks
+namespace Lemonade
 {
-	enum class ShaderType
-	{
-		None,
-		Fragment,
-		Vertex,
-		Geometry
-	};
-
-	class Shader : <Shader>
+	class Shader : AShader
 	{
 	protected:
 		virtual bool LoadResource(std::string path) override;

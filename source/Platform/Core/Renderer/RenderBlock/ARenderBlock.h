@@ -1,18 +1,18 @@
 #pragma once
 
-#include <Common.h>
-#include <Core/Interface/IManagedObject.h>
-#include <Renderer/Transform.h>
-#include <Renderer/Mesh.h>
-#include <Renderer/Material.h>
-#include <Renderer/PrimitiveMode.h>
+#include <LCommon.h>
+#include <Platform/Core/LObject.h>
+#include <Platform/Core/Renderer/Transform.h>
+#include <Platform/Core/Renderer/Geometry/Mesh.h>
+#include <Platform/Core/Renderer/Materials/Material.h>
+#include <Platform/Core/Renderer/Geometry/PrimitiveMode.h>
 
 namespace Lemonade
 {
 	class Renderer;
 
 	/** Render Block */
-	class LEMONADE_API ARenderBlock : public IManagedObject
+	class LEMONADE_API ARenderBlock : public LObject
 	{
 		friend class URenderLayer;
 		friend class URenderer;

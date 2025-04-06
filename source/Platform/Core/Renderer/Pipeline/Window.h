@@ -1,14 +1,14 @@
 #pragma once
 
-#include <Common.h>
-#include <Renderer/Viewport.h>
+#include <LCommon.h>
+#include <Platform/Core/Renderer/Pipeline/AViewport.h>
 #include <unordered_set>
-#include <Util/Rect.h>
-#include <Core/Services/Service.h>
+#include <Geometry/Rect.h>
+#include <Platform/Core/Services/LService.h>
 
-namespace CraftyBlocks
+namespace Lemonade
 {
-	class Window : public Service
+	class Window : public LService
 	{
 	public:
 		const SDL_GLContext& GetContext() const { return m_glContext; }
@@ -21,8 +21,8 @@ namespace CraftyBlocks
 
 		SDL_Window* m_sdlWindow = nullptr;
 		SDL_GLContext m_glContext;
-		std::unordered_set<std::shared_ptr<Viewport>> m_viewports;
-		uRect m_windowRect = uRect(0,0,1920,1080);
+		std::unordered_set<std::shared_ptr<AViewport>> m_viewports;
+		Recti m_windowRect = Recti(0,0,1920,1080);
 		std::string m_windowCaption = "CraftyBlocks";
 	};
 }

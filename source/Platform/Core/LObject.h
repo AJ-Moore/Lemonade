@@ -1,7 +1,6 @@
 #pragma once
 
 #include <LCommon.h>
-#include <platform/core/Interface/IManagedObject.h>
 #include <Util/Logger.h>
 #include <Base/Object.h>
 

@@ -19,7 +19,7 @@ namespace Lemonade
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	#endif 
 
-		m_sdlWindow = SDL_CreateWindow(m_windowCaption.c_str(), m_windowRect.X, m_windowRect.Y, m_windowRect.Width, m_windowRect.Height, SDL_WINDOW_OPENGL);
+		m_sdlWindow = SDL_CreateWindow(m_windowCaption.c_str(), m_windowRect.X, m_windowRect.Y, SDL_WINDOW_OPENGL);
 		m_glContext = SDL_GL_CreateContext(m_sdlWindow);
 
 		return true;

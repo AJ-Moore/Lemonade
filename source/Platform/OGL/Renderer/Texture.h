@@ -1,7 +1,7 @@
 #pragma once
 
 #include <LCommon.h>
-#include <platform/core/Renderer/Materials/ATexture.h>
+#include <Platform/Core/Renderer/Materials/ATexture.h>
 
 #ifdef RENDERER_OPENGL
 
@@ -13,8 +13,9 @@ namespace Lemonade
 		virtual void Bind();
 		virtual void Bind(uint textureUnit);
 		virtual void LoadNativeTextureFromSurface(SDL_Surface* surface);
+		virtual void LoadNativeTextureFromPixels(const std::vector<Colour>& data);
 	private:
-		GLint m_textureId;
+		GLuint m_textureId;
 	};
 }
 

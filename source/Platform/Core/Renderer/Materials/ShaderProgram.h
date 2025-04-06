@@ -1,10 +1,11 @@
 #pragma once
 
-#include <Renderer/AShader.h>
+#include "Resources/AResource.h"
+#include <Platform/Core/Renderer/Materials/AShader.h>
 
-namespace CraftyBlocks
+namespace Lemonade
 {
-	class ShaderProgram : public AShader
+	class ShaderProgram : public CitrusCore::AResource<ShaderProgram>
 	{
 	public:
 		virtual void Bind();

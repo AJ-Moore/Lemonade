@@ -1,23 +1,29 @@
 #include "Material.h"
+#include "Platform/Core/Renderer/Materials/ATexture.h"
 #include <fstream>
 #include <filesystem>
-#include <Renderer/TextureType.h>
-#include <Common.h>
+#include <Platform/Core/Renderer/Materials/TextureUtils.h>
+#include <Platform/Core/Renderer/Materials/TextureType.h>
+#include <LCommon.h>
 
-namespace CraftyBlocks
+#include <nlohmann/json.hpp>
+
+namespace Lemonade
 {
+	using namespace nlohmann;
+
     void Material::Bind()
     {
     }
 
-    ShaderProgram* Material::GetShader() const
+    ResourcePtr<ShaderProgram> Material::GetShader() const
     {
-        return m_shader.get();
+        return m_shader;
     }
 
-    Texture* Material::GetTexture() const
+    ResourcePtr<ATexture> Material::GetTexture() const
     {
-        return nullptr;
+        return m_texture;
     }
 
     bool Material::LoadResource(std::string path)
@@ -26,7 +32,7 @@ namespace CraftyBlocks
 
 		if (!ifStream.good())
 		{
-			Log(Logger::WARN, "Unable to load material [%s].", path.c_str());
+			Logger::Log(Logger::WARN, "Unable to load material [%s].", path.c_str());
 			return false;
 		}
 
@@ -66,8 +72,8 @@ namespace CraftyBlocks
 				if (shaderIt != shadersJson.end())
 				{
 					std::string shaderPath = shaderIt.value().get<std::string>();
-					Log(Logger::VERBOSE, "Loading shader [%s]", shaderPath);
-					ShaderType shaderType = ShaderProgram::GetShaderType(shaderPath);
+					Logger::Log(Logger::VERBOSE, "Loading shader [%s]", shaderPath.c_str());
+					ShaderType shaderType = AShader::GetShaderType(shaderPath);
 				}
 			}
 		}
@@ -82,7 +88,7 @@ namespace CraftyBlocks
 			for (json::iterator it = texturesJson.begin(); it != texturesJson.end(); ++it)
 			{
 				std::string textureTypeStr = it.key().c_str();
-				Log(Logger::VERBOSE,"Loading texture [%s]", textureTypeStr.c_str());
+				Logger::Log(Logger::VERBOSE,"Loading texture [%s]", textureTypeStr.c_str());
 
 			}
 		}

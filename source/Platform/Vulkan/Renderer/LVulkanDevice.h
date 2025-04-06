@@ -2,7 +2,7 @@
 
 #include <LCommon.h>
 #ifdef RENDERER_VULKAN
-#include <Core/LObject.h>
+#include <Platform/Core/LObject.h>
 
 namespace Lemonade
 {

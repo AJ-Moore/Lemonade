@@ -1,6 +1,6 @@
 #include "ShaderProgram.h"
 
-namespace CraftyBlocks
+namespace Lemonade
 {
     void ShaderProgram::Bind()
     {

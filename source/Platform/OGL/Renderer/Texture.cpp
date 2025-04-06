@@ -1,9 +1,10 @@
 
+#include <GL/gl.h>
 #include <LCommon.h>
 
 #ifdef RENDERER_OPENGL
-#include <platform/ogl/Renderer/Texture.h>
-#include <Core/Renderer/Materials/TextureType.h>
+#include <Platform/OGL/Renderer/Texture.h>
+#include <Platform/Core/Renderer/Materials/TextureType.h>
 
 namespace Lemonade
 {
@@ -30,15 +31,50 @@ namespace Lemonade
 
 	void Texture::LoadNativeTextureFromSurface(SDL_Surface* surface)
 	{
+		if (m_textureId > 0)
+		{
+			glDeleteTextures(1, &m_textureId);
+		}
+		
+		glBindTexture(GL_TEXTURE_2D, m_textureId);
+		GLint internalFormat = TextureData::GetNativeTextureFormat(GetTextureFormat());
+
 		glTexImage2D(GL_TEXTURE_2D,
 			0,//Mipmap Level
-			m_imageFormat, //bit per pixel
+			internalFormat, //bit per pixel
 			surface->w,
 			surface->h,
 			0,//texture border 	
-			m_imageFormat,
+			internalFormat,
 			GL_UNSIGNED_BYTE,
 			surface->pixels);
+	}
+
+	void Texture::LoadNativeTextureFromPixels(const std::vector<Colour>& data)
+	{
+		if (m_textureId > 0)
+		{
+			glDeleteTextures(1, &m_textureId);
+		}
+
+		// create the surface from our pixel data!
+		GLvoid* pixelDat = (GLvoid*)(&data.front());
+		int dimensions = (int)sqrt(data.size());
+
+		glBindTexture(GL_TEXTURE_2D, m_textureId);
+
+		glTexImage2D(GL_TEXTURE_2D,
+			0,//Mipmap Level
+			GL_RGBA, //bit per pixel
+			dimensions,
+			dimensions,
+			0,//texture border 	
+			GL_RGBA,
+			GL_UNSIGNED_BYTE,
+			pixelDat);
+
+		m_width = dimensions;
+		m_height = dimensions;
 	}
 
 	void Texture::Bind()

@@ -3,18 +3,20 @@
 #include <LCommon.h>
 #ifdef RENDERER_VULKAN
 
-#include <Vulkan/Renderer/LVulkanDevice.h>
-#include <Core/WindowManager/AWindowManager.h>
-#include <Core/WindowManager/AWindow.h>
+#include <Platform/Vulkan/Renderer/LVulkanDevice.h>
+#include <Platform/Core/WindowManager/AWindow.h>
 
 namespace Lemonade
 {
 	class LEMONADE_API LWindow : public AWindow {
 	public:
-		virtual ~LWindowManager();
-		LVulkanDevice* GetVulkanDevice() { return &m_vulkanDevice; }
+		virtual ~LWindow(){}
+		const VkSurfaceKHR& GetVkSurface() const { return m_vkSurface; }
+	protected:
+		virtual void Unload();
 	private:
-		LVulkanDevice m_vulkanDevice;
+		VkSurfaceKHR m_vkSurface = VK_NULL_HANDLE;
+		
 	};
 }
 

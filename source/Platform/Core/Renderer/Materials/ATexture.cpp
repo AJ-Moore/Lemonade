@@ -1,14 +1,17 @@
 #include "ATexture.h"
+#include <Util/Logger.h>
 #include <filesystem>
-#include <Core/Renderer/Materials/TextureType.h>
+#include <Platform/Core/Renderer/Materials/TextureType.h>
 
 namespace Lemonade
 {
+	using CitrusCore::Logger;
+
 	TextureFormat ATexture::GetTextureFormat(SDL_Surface* surface) const
 	{
 		if (surface == nullptr)
 		{
-			Citrus::Logger::Log(Citrus::Logger::ERROR, "Unable to get texture format.");
+			Logger::Log(Logger::ERROR, "Unable to get texture format.");
 			return TextureFormat::LEMONADE_UNKNOWN;
 		}
 
@@ -22,14 +25,14 @@ namespace Lemonade
 		case SDL_PIXELFORMAT_BGR24:
 			return TextureFormat::LEMONADE_BGR888;
 		default:
-			Citrus::Logger::Log(Citrus::Logger::ERROR, "Texture unsupported format: %s", SDL_GetPixelFormatName(surface->format));
+			Logger::Log(Logger::ERROR, "Texture unsupported format: %s", SDL_GetPixelFormatName(surface->format));
 			return TextureFormat::LEMONADE_UNKNOWN;
 		}
 	}
 
 	bool ATexture::LoadResource(std::string path)
 	{
-		Log(Citrus::Logger::INFO, "Loading texture [%s]", path.c_str());
+		Logger::Log(Logger::INFO, "Loading texture [%s]", path.c_str());
 		SDL_Surface* surface = nullptr;
 		bool bTextureLoadOK = false;
 
@@ -37,7 +40,7 @@ namespace Lemonade
 
 		if (!std::filesystem::exists(fsPath))
 		{
-			Log(Citrus::Logger::WARN, "Unable to find texture at path [%s]", path);
+			Logger::Log(Logger::WARN, "Unable to find texture at path [%s]", path);
 			return false;
 		}
 
@@ -47,14 +50,14 @@ namespace Lemonade
 		}
 		catch (std::exception e)
 		{
-			Log(Citrus::Logger::ERROR, "Exception was thrown whilst trying to load texture [%s].", fsPath.generic_string().c_str());
+			Logger::Log(Logger::ERROR, "Exception was thrown whilst trying to load texture [%s].", fsPath.generic_string().c_str());
 			bTextureLoadOK = false;
 		}
 
 		if (surface == nullptr)
 		{
 			bTextureLoadOK = false;
-			Log(Citrus::Logger::ERROR, "Error whilst loading texture [%s].", SDL_GetError());
+			Logger::Log(Logger::ERROR, "Error whilst loading texture [%s].", SDL_GetError());
 			// Use default texture, return 
 			// reminder that the texture needs assigning in platform native code
 			//m_textureID = CreatePinkBlackTexture();
@@ -63,7 +66,7 @@ namespace Lemonade
 		}
 		else
 		{
-			Citrus::Log(Citrus::Logger::VERBOSE, "Texture loaded successfully: [%s]", fsPath.generic_string().c_str());
+			Logger::Log(Logger::VERBOSE, "Texture loaded successfully: [%s]", fsPath.generic_string().c_str());
 		}
 
 		// check format supported
@@ -72,7 +75,7 @@ namespace Lemonade
 		// Not supported, log and convert to RGBA
 		if (TextureData::GetNativeTextureFormat(m_textureFormat) == -1)
 		{
-			Citrus::Log(Citrus::Logger::WARN, "Unsupported texture format, format being converted to RGBA");
+			Logger::Log(Logger::WARN, "Unsupported texture format, format being converted to RGBA");
 			SDL_Surface* original = surface;
 
 			SDL_ConvertSurface(surface, SDL_PixelFormat::SDL_PIXELFORMAT_RGBA8888);
@@ -107,7 +110,7 @@ namespace Lemonade
 			}
 			else
 			{
-				Log(Citrus::Logger::WARN, "Unsupported texture format.");
+				Logger::Log(Logger::WARN, "Unsupported texture format.");
 			}
 		}
 
@@ -120,12 +123,14 @@ namespace Lemonade
 		return true;
 	}
 
-	GLuint Texture::CreatePinkBlackTexture()
+	void ATexture::LoadPinkBlackTexture()
 	{
-		GLuint texture;
-		glGenTextures(1, &texture);
+		if (m_bPinkBlackTextureLoaded)
+		{
+			return;
+		}
 
-		Log(Logger::VERBOSE, "Creating pink black debug texture.");
+		Logger::Log(Logger::VERBOSE, "Creating pink black debug texture.");
 
 		// Write pink/ black missing texture 64X64
 		for (int i = 0; i < 16; ++i)
@@ -144,27 +149,7 @@ namespace Lemonade
 		}
 
 		m_textureFilter = TextureFilter::NearestNeighbour;
-
-		// create the surface from our pixel data!
-		GLvoid* pixelDat = (GLvoid*)(&m_pixelData.front());
-		int dimensions = (int)sqrt(m_pixelData.size());
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
-
-		glTexImage2D(GL_TEXTURE_2D,
-			0,//Mipmap Level
-			GL_RGBA, //bit per pixel
-			dimensions,
-			dimensions,
-			0,//texture border 	
-			GL_RGBA,
-			GL_UNSIGNED_BYTE,
-			pixelDat);
-
-		m_width = dimensions;
-		m_height = dimensions;
-
-		return texture;
+		LoadNativeTextureFromPixels(m_pixelData);
+		m_bPinkBlackTextureLoaded = true;
 	}
 }

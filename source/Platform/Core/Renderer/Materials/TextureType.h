@@ -1,6 +1,6 @@
 #pragma once
 
-#include <platform/core/Renderer/Materials/TextureUtils.h>
+#include <Platform/Core/Renderer/Materials/TextureUtils.h>
 
 namespace Lemonade
 {

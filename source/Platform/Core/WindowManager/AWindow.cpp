@@ -1,10 +1,12 @@
 
 
-#include <Core/WindowManager/AWindow.h>
+#include <Platform/Core/WindowManager/LWindow.h>
 #include <LCommon.h>
 #include "../../Util/Config.h"
 #include "../../Core/SceneManager/UScene.h"
 #include "../../Core/UServiceLocator.h"
+#include "Platform/Core/Renderer/Pipeline/LCamera.h"
+#include "Util/Logger.h"
 
 #ifdef RENDERER_PS5 
 #include <Renderer/RenderTargets/Platform/PS5/URenderTarget_ps5.h>
@@ -23,20 +25,15 @@
 
 
 namespace Lemonade {
-	LWindow::LWindow() 
-	{
 
-	}
+	using CitrusCore::Logger;
 
-	LWindow::~LWindow() {
-	}
-
-	UCamera* LWindow::GetActiveCamera() const 
+	LCamera* LWindow::GetActiveCamera() const 
 	{
 		return m_viewCamera;
 	}
 
-	void LWindow::setActiveCamera(UCamera* Camera){
+	void LWindow::setActiveCamera(LCamera* Camera){
 		m_viewCamera = Camera;
 	}
 
@@ -48,49 +45,9 @@ namespace Lemonade {
 		}
 	}
 
-#ifdef RENDERER_PS5
-	void* allocMem(size_t	size, void* userData)
-	{
-		return sceLibcMspaceMalloc((SceLibcMspace)userData, size);
-	}
-
-	void freeMem(void* ptr, void* userData)
-	{
-		sceLibcMspaceFree((SceLibcMspace)userData, ptr);
-	}
-#endif
-
 	bool LWindow::Init() 
 	{
-#ifdef RENDERER_OPENGL
-#if __APPLE__
-		const char* glsl_version = "#version 150";
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-#else
-		const char* glsl_version = "#version 460";
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
-#endif
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-#endif 
 
-		// Setup Platform/Renderer bindings
-#ifdef RENDERER_OPENGL
-		ImGui_ImplSDL2_InitForOpenGL(m_sdlWindow, m_windowManager->getContext());
-		ImGui_ImplOpenGL3_Init(glsl_version);
-#elif defined(RENDERER_VULKAN)
-		ImGui_ImplSDL2_InitForVulkan(m_sdlWindow);
-#elif defined(RENDERER_PS5)
-		
-		ImFont* font = ImGuiLibFont::AddSystemFont(io.Fonts, (float)48);
-		ImGui_ImplSampleUtil_Init(nullptr, nullptr, new sce::PS5Utils::System::UserIdManager(), false);
-
-
-		LogError("Imgui not initialismed for target platform.");
-#endif
 
 		initFramebuffer();
 
@@ -148,6 +105,8 @@ namespace Lemonade {
 			SDL_SetWindowSize(m_sdlWindow, m_windowRect.Width, m_windowRect.Height);
 			SDL_SetWindowFullscreen(m_sdlWindow, 0);
 		}
+#else 
+		Logger::Log(Logger::ERROR, "Fullscreen not implemented on non SDL platform");
 #endif
 	}
 
@@ -193,7 +152,7 @@ namespace Lemonade {
 		LogError("window not initialised for platform!");
 #endif
 
-#if defined(RENDERER_OPENGL) || defined(RENDERER_VULKAN)
+#if defined (USING_SDL)
 		SDL_SetWindowBordered(m_sdlWindow, (m_windowBorder) ? SDL_TRUE : SDL_FALSE);
 		SDL_SetWindowBordered(m_sdlWindow, SDL_TRUE);
 		SDL_SetWindowResizable(m_sdlWindow, SDL_TRUE);
@@ -209,10 +168,6 @@ namespace Lemonade {
 
 	void LWindow::unload()
 	{
-#ifdef RENDERER_VULKAN
-		vkDestroySurfaceKHR(m_vkInstance, m_vkSurface, nullptr);
-		vkDestroyInstance(m_vkInstance, nullptr);
-#endif
 	}
 
 	bool LWindow::load(String ConfigFile)
@@ -235,6 +190,15 @@ namespace Lemonade {
 	{
 		float depthRange = 1.0f / (float)m_cameras.size();
 		float index = 0; 
+
+		for (auto& viewport : m_viewports)
+		{
+	#ifdef RENDERER_OPENGL
+			SDL_GL_MakeCurrent(m_sdlWindow, m_glContext);
+	#endif
+			SDL_GL_SwapWindow(m_sdlWindow);
+			viewport->Render();
+		}
 
 		for (auto camera : m_cameras)
 		{
