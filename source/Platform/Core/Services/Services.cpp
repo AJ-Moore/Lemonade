@@ -1,5 +1,7 @@
 
+#include <Platform/Core/WindowManager/LWindowManager.h>
 #include <Platform/Core/Services/Services.h>
+#include <memory>
 
 namespace Lemonade
 {
@@ -12,12 +14,14 @@ namespace Lemonade
     bool Services::Init()
     {
         m_time = std::make_shared<Time>();
-        m_renderer = std::make_shared<Renderer>();
-        //m_window = std::make_shared<Window>();
+        m_renderer = std::make_shared<LRenderer>();
+        m_context = std::make_shared<LGraphicsContext>();
+        m_windowManager = std::make_shared<LWindowManager>();
 
         m_services.emplace(m_time->GetUID(), m_time);
         m_services.emplace(m_renderer->GetUID(), m_renderer);
-        //m_services.emplace(m_window->GetUID(), m_window);
+        m_services.emplace(m_context->GetUID(), m_context);
+        m_services.emplace(m_windowManager->GetUID(), m_windowManager);
 
         for (auto& service : m_services)
         {

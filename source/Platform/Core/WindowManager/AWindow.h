@@ -1,17 +1,19 @@
 #pragma once
 
+#include "Platform/Core/Renderer/Pipeline/LRenderer.h"
 #include <LCommon.h>
 #include <Util/UID.h>
 #include <Geometry/Rect.h>
 #include <Platform/Core/LObject.h>
 #include <Platform/Core/Renderer/Pipeline/LCamera.h>
 #include <Platform/Core/Renderer/Pipeline/AViewport.h>
-#include <Platform/Core/WindowManager/AWindowManager.h>
 #include <unordered_set>
 
 namespace Lemonade {
 
 	using CitrusCore::Rect;
+
+	class LEMONADE_API LWindowManager;
 
 	class LEMONADE_API AWindow : public LObject {
 		friend class LWindowManager; 
@@ -29,10 +31,7 @@ namespace Lemonade {
 		int GetWidth() const { return m_windowRect.Width; }
 		int GetHeight() const { return m_windowRect.Height; }
 
-#ifdef RENDERER_VULKAN
-		const VkInstance& getVkInstance() const { return m_vkInstance; }
-		const VkSurfaceKHR& getVkSurface() const { return m_vkSurface; }
-#endif
+		virtual void ToggleFullscreen(bool value);
 
 	protected:
 		virtual bool Init();
@@ -43,26 +42,20 @@ namespace Lemonade {
 		virtual void Render();
 		virtual void RenderImGUI();
 
-	private:
-		void InitFramebuffer();
-		void ToggleFullscreen(float value);
-		void SetParent(LWindowManager* windowManager) { m_windowManager = windowManager; }
+		bool m_fullscreen = false;
+		bool m_windowBorder = false; 
+		bool m_sizeable = false;
 
 		CitrusCore::Rect<uint32> m_windowRect = CitrusCore::Rect<uint32>(50, 50, 800, 600);
-
-#if defined(RENDERER_OPENGL) || defined(RENDERER_VULKAN)
-		SDL_Window* m_sdlWindow = nullptr;
-#endif
+		std::string	m_windowCaption = "Game";
+	private:
+		void InitFramebuffer();
+		void SetParent(LWindowManager* windowManager) { m_windowManager = windowManager; }
 
 		/// The camera linked with this window, acts as a view into the scene
 		LCamera* m_viewCamera = nullptr;
 		LRenderer* m_renderer = nullptr;
 		LWindowManager* m_windowManager = nullptr; 
-
-		std::string	m_windowCaption = "Game";
-		bool	m_fullscreen = false;
-		bool	m_windowBorder = false; 
-		bool 	m_sizeable = false;
 
 		std::unordered_map<uint64, std::shared_ptr<LCamera>> m_cameras;
 		std::unordered_set<std::shared_ptr<AViewport>> m_viewports;
@@ -70,6 +63,6 @@ namespace Lemonade {
 		std::shared_ptr<LCamera> m_postProcessingCamera;
 
 		// Render Target/ framebuffer 
-		std::shared_ptr<ARenderTarget>  m_geometryBuffer;
+		//std::shared_ptr<ARenderTarget>  m_geometryBuffer;
 	};
 }

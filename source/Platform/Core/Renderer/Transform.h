@@ -9,7 +9,7 @@ namespace Lemonade
 	public:
 		Transform();
 		Transform(glm::mat4 mat);
-		virtual ~Transform() {}
+		virtual ~Transform();
 
 		/// Initialisation method, called during object initialisation 
 		virtual bool Init();
@@ -87,7 +87,7 @@ namespace Lemonade
 		Transform* GetParentTransform() const;
 
 		/// Returns the entity this transform is associated with
-		Entity* GetParentEntity() const { return m_entity; }
+		// Entity* GetParentEntity() const { return m_entity; }
 
 		/// Does this transform have any children 
 		const bool HasChildren() const { return !m_children.empty(); }
@@ -135,7 +135,7 @@ namespace Lemonade
 		Transform* m_parent = nullptr;
 
 		/// The entity this transform is attached to.
-		Entity* m_entity = nullptr;
+		//Entity* m_entity = nullptr;
 
 		/// A list of all the children attached to this transform
 		std::vector<std::shared_ptr<Transform>> m_children;

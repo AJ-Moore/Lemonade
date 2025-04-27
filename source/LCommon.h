@@ -8,7 +8,7 @@
 
 #define RENDERER_OPENGL
 #define RENDERER_VULKAN
-#define RENDERER_DX12
+//#define RENDERER_DX12
 
 // C++ Standard Library Includes
 #include <string>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Platform/Core/Renderer/Pipeline/Viewport.h>
+#include <Platform/Core/Renderer/Pipeline/AViewport.h>
 #include <Platform/Core/Services/LService.h>
 #include <Platform/Core/Renderer/Pipeline/LCamera.h>
 #include <Platform/Core/Renderer/Lighting/Light.h>
@@ -8,7 +8,7 @@
 
 namespace Lemonade
 {
-	class LEMONADE_API Renderer : public LService
+	class LEMONADE_API LRenderer : public LService
 	{
 		friend class AViewport;
 	public: 

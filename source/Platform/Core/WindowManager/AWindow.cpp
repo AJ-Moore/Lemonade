@@ -1,8 +1,8 @@
 
 
-#include <Platform/Core/WindowManager/LWindow.h>
+#include <Platform/Core/WindowManager/AWindow.h>
 #include <LCommon.h>
-#include "../../Util/Config.h"
+#include <Util/Config.h>
 #include "../../Core/SceneManager/UScene.h"
 #include "../../Core/UServiceLocator.h"
 #include "Platform/Core/Renderer/Pipeline/LCamera.h"
@@ -28,16 +28,16 @@ namespace Lemonade {
 
 	using CitrusCore::Logger;
 
-	LCamera* LWindow::GetActiveCamera() const 
+	LCamera* AWindow::GetActiveCamera() const 
 	{
 		return m_viewCamera;
 	}
 
-	void LWindow::setActiveCamera(LCamera* Camera){
+	void AWindow::SetActiveCamera(LCamera* Camera){
 		m_viewCamera = Camera;
 	}
 
-	void LWindow::removeCamera(SharedPtr<UCamera> camera)
+	void AWindow::removeCamera(SharedPtr<UCamera> camera)
 	{
 		if (m_cameras.find(camera->UUID.getID()) != m_cameras.end())
 		{
@@ -45,7 +45,7 @@ namespace Lemonade {
 		}
 	}
 
-	bool LWindow::Init() 
+	bool AWindow::Init() 
 	{
 
 
@@ -53,64 +53,44 @@ namespace Lemonade {
 
 		auto input = UServiceLocator::getInstance()->getInputManager();
 #ifdef RENDERER_OPENGL
-		input->addBind(SDL_SCANCODE_F, &LWindow::ToggleFullscreen, this);
+		input->addBind(SDL_SCANCODE_F, &AWindow::ToggleFullscreen, this);
 #endif
 
 		return true;
 	}
 
-	void LWindow::InitFramebuffer()
+	void AWindow::InitFramebuffer()
 	{
-		LogInfo("Initialising framebuffer.");
+		Logger::Log(Logger::INFO, "Initialising framebuffer.");
 		Rect<uint32> windowRect = m_windowRect;
 
-		LogGLErrors();
-		m_geometryBuffer = std::make_shared<URenderTarget>(glm::vec2(windowRect.Width, windowRect.Height));
-		LogGLErrors();
-
-		m_geometryBuffer->setColourAttachments({ 
-			UColourAttachment::UP_COLOR_ATTACHMENT0, 
-			UColourAttachment::UP_COLOR_ATTACHMENT1, 
-			UColourAttachment::UP_COLOR_ATTACHMENT2, 
-			UColourAttachment::UP_COLOR_ATTACHMENT3, 
-			UColourAttachment::UP_COLOR_ATTACHMENT4,
-			UColourAttachment::UP_COLOR_ATTACHMENT5,
-			UColourAttachment::UP_COLOR_ATTACHMENT6 }, true);
-
-		m_geometryBuffer->addDepthAttachment();
+		//LogGLErrors();
+		//m_geometryBuffer = std::make_shared<URenderTarget>(glm::vec2(windowRect.Width, windowRect.Height));
+		//LogGLErrors();
+//
+		//m_geometryBuffer->setColourAttachments({ 
+		//	UColourAttachment::UP_COLOR_ATTACHMENT0, 
+		//	UColourAttachment::UP_COLOR_ATTACHMENT1, 
+		//	UColourAttachment::UP_COLOR_ATTACHMENT2, 
+		//	UColourAttachment::UP_COLOR_ATTACHMENT3, 
+		//	UColourAttachment::UP_COLOR_ATTACHMENT4,
+		//	UColourAttachment::UP_COLOR_ATTACHMENT5,
+		//	UColourAttachment::UP_COLOR_ATTACHMENT6 }, true);
+//
+		//m_geometryBuffer->addDepthAttachment();
 	}
 
-	void AWindow::ToggleFullscreen(float value)
+	void AWindow::ToggleFullscreen(bool value)
 	{
 		if (!value)
 		{
 			return;
 		}
 
-#if defined(USING_SDL)
-		m_fullscreen = !m_fullscreen;
-
-		if (m_fullscreen)
-		{
-			SDL_DisplayMode mode;
-			SDL_GetDesktopDisplayMode(0, &mode);
-			SDL_SetWindowSize(m_sdlWindow, mode.w, mode.h);
-			m_windowRect = Rect<uint32>(0, 0, mode.w, mode.h);
-			m_geometryBuffer->setDimensions(glm::ivec2(mode.w, mode.h));
-
-			SDL_SetWindowFullscreen(m_sdlWindow, SDL_WINDOW_FULLSCREEN);
-		}
-		else
-		{
-			SDL_SetWindowSize(m_sdlWindow, m_windowRect.Width, m_windowRect.Height);
-			SDL_SetWindowFullscreen(m_sdlWindow, 0);
-		}
-#else 
-		Logger::Log(Logger::ERROR, "Fullscreen not implemented on non SDL platform");
-#endif
+		Logger::Log(Logger::ERROR, "Fullscreen not implemented on platform");
 	}
 
-	bool LWindow::load() 
+	bool AWindow::load() 
 	{
 		m_renderer = UServiceLocator::getInstance()->getRenderer();
 
@@ -166,11 +146,11 @@ namespace Lemonade {
 		return true;
 	}
 
-	void LWindow::unload()
+	void AWindow::unload()
 	{
 	}
 
-	bool LWindow::load(String ConfigFile)
+	bool AWindow::load(String ConfigFile)
 	{
 		Config _config;
 
@@ -186,7 +166,7 @@ namespace Lemonade {
 		return load();
 	}
 
-	void LWindow::render() 
+	void AWindow::render() 
 	{
 		float depthRange = 1.0f / (float)m_cameras.size();
 		float index = 0; 
@@ -253,7 +233,7 @@ namespace Lemonade {
 
 	}
 
-	void LWindow::DrawImGUIFullscreenWindow()
+	void AWindow::DrawImGUIFullscreenWindow()
 	{
 		// Creates a full screen dock space 
 		// if (IsEditorMode)
@@ -261,7 +241,7 @@ namespace Lemonade {
 
 	}
 
-	void LWindow::RenderImGUI()
+	void AWindow::RenderImGUI()
 	{
 	}
 }

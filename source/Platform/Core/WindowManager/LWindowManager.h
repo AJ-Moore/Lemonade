@@ -3,12 +3,14 @@
 #include <Geometry/Rect.h>
 #include <LCommon.h>
 #include <Platform/Core/Services/LService.h>
-#include <Platform/Core/WindowManager/LWindow.h>
+#include <Platform/Core/WindowManager/AWindow.h>
 
 #ifdef RENDERER_OPENGL
 #include <Platform/OGL/Renderer/Core/LGraphicsContext.h>
+#include <Platform/OGL/WindowManager/LWindow.h>
 #elif RENDERER_VULKAN 
 #include <Platform/Vulkan/Renderer/Core/LGraphicsContext.h>
+#include <Platform/Vulkan/WindowManager/LWindow.h>
 #endif
 
 namespace Lemonade

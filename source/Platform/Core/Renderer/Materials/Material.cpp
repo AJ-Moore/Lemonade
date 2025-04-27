@@ -16,7 +16,7 @@ namespace Lemonade
     {
     }
 
-    ResourcePtr<ShaderProgram> Material::GetShader() const
+    ResourcePtr<AShaderProgram> Material::GetShader() const
     {
         return m_shader;
     }

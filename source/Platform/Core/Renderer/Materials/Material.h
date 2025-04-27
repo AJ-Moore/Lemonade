@@ -3,9 +3,8 @@
 #include "Resources/AResource.h"
 #include "Resources/ResourceHandle.h"
 #include "Util/Logger.h"
-#include <Platform/Core/Renderer/Materials/ShaderProgram.h>
+#include <Platform/Core/Renderer/Materials/AShaderProgram.h>
 #include <Platform/Core/Renderer/Materials/ATexture.h>
-#include <memory>
 
 namespace Lemonade
 {
@@ -17,15 +16,13 @@ namespace Lemonade
 	public: 
 		void Bind();
 
-		ResourcePtr<ShaderProgram> GetShader() const;
+		ResourcePtr<AShaderProgram> GetShader() const;
 		ResourcePtr<ATexture> GetTexture() const;
 	protected: 
 		virtual bool LoadResource(std::string path) override;
 	private:
-		ResourcePtr<ShaderProgram> m_shader;
+		ResourcePtr<AShaderProgram> m_shader;
 		ResourcePtr<ATexture> m_texture;
-		//std::unique_ptr<ShaderProgram> m_shader;
-		//std::shared_ptr<Texture> m_texture;
 
 		TextureFilter m_textureFilter = TextureFilter::Linear;
 		TextureClamp m_textureClamp = TextureClamp::Clamp;

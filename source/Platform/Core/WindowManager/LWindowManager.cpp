@@ -1,13 +1,12 @@
-
 #include <LCommon.h>
-#include <Core/WindowManager/AWindowManager.h>
+#include <Platform/Core/WindowManager/LWindowManager.h>
 #include <Geometry/Rect.h>
 
 namespace Lemonade {
 
 	LWindowManager::LWindowManager()
 	{
-		SetName("AWindowManager");
+		SetName("LWindowManager");
 	}
 
 	LWindowManager::~LWindowManager() {
@@ -25,7 +24,7 @@ namespace Lemonade {
 
 	void LWindowManager::AddWindow(std::shared_ptr<LWindow> window) 
 	{
-		m_windows.emplace(window->GetUID().GetID(), window);
+		m_windows.emplace(window->GetUID(), window);
 		window->SetParent(this);
 
 		if (HasbeenInitialised())

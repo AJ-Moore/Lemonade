@@ -1,11 +1,12 @@
 #pragma once
 
+#include <Platform/Core/Services/LService.h>
 #include <LCommon.h>
 #include <Platform/Core/LObject.h>
 
 namespace Lemonade
 {
-	class LEMONADE_API AGraphicsContext : public LObject
+	class LEMONADE_API AGraphicsContext : public LService
 	{
 	public:
 		virtual ~AGraphicsContext() {}

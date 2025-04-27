@@ -1,7 +1,7 @@
 #include "AViewport.h"
 #include <Platform/Core/Renderer/Pipeline/LCamera.h>
 #include <Platform/Core/Services/Services.h>
-#include <Platform/Core/Renderer/Pipeline/Renderer.h>
+#include <Platform/Core/Renderer/Pipeline/LRenderer.h>
 #include <memory>
 
 namespace Lemonade

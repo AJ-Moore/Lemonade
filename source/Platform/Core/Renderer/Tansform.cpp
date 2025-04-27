@@ -1,4 +1,6 @@
-#include <platform/core/Renderer/Transform.h>
+#include "Platform/Core/Services/Services.h"
+#include <Platform/Core/Renderer/Transform.h>
+#include <memory>
 //#include "../Core/UServiceLocator.h"
 //#include "../Entity/UEntity.h"
 
@@ -161,11 +163,11 @@ namespace Lemonade
 		return m_localTransform;
 	}
 
-	void Transform::MakeParent(std::shared_ptr<Transform> Transform, std::shared_ptr<Transform> parent)
+	void Transform::MakeParent(std::shared_ptr<Transform> transform, std::shared_ptr<Transform> parent)
 	{
-		parent->m_children.push_back(Transform);
+		parent->m_children.push_back(transform);
 		parent->m_bDirty = true;
-		Transform->m_parent = parent.get();
+		transform->m_parent = parent.get();
 	}
 
 	std::shared_ptr<Transform> Transform::RemoveChild(Transform* child)
@@ -176,7 +178,7 @@ namespace Lemonade
 
 		for (std::shared_ptr<Transform> transform : m_children)
 		{
-			if (transform->UID == child->UID)
+			if (transform->GetUID() == child->GetUID())
 			{
 				transformToReturn = transform;
 				bFound = true; 
@@ -214,7 +216,7 @@ namespace Lemonade
 
 	void Transform::UpdateGlobalTransform()
 	{
-		double time = UServiceLocator::getInstance()->getTimeService()->getTimeElapsed(); 
+		double time = Services::GetTime()->GetTimeElapsed(); 
 
 		// Check datestamp to see if it was updated this frame.
 		if ((m_datestamp != time) || m_bDirty)
@@ -228,9 +230,9 @@ namespace Lemonade
 				m_globalTransform = m_localTransform;
 				m_worldPosition = glm::vec3(m_globalTransform[3]);
 				m_bDirty = false; 
-				if (m_entity != nullptr) {
-					m_entity->onTransformChanged();
-				}
+				//if (m_entity != nullptr) {
+				//	m_entity->onTransformChanged();
+				//}
 
 				return;
 			}
@@ -240,9 +242,9 @@ namespace Lemonade
 			m_worldPosition = glm::vec3(m_globalTransform[3]);
 
 			// Called when the entitys transform is updated
-			if (m_entity != nullptr) {
-				m_entity->onTransformChanged();
-			}
+			//if (m_entity != nullptr) {
+			//	m_entity->onTransformChanged();
+			//}
 
 			m_bDirty = false;
 		}
