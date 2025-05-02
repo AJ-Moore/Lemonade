@@ -6,7 +6,7 @@
 #define LEMONADE_API __attribute__((visibility("default")))
 #endif
 
-#define RENDERER_OPENGL
+//#define RENDERER_OPENGL
 #define RENDERER_VULKAN
 //#define RENDERER_DX12
 

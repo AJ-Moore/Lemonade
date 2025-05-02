@@ -1,9 +1,9 @@
 #pragma once
 
 #include <LCommon.h>
+#ifdef RENDERER_OPENGL
 #include <Platform/Core/Renderer/Materials/ATexture.h>
 
-#ifdef RENDERER_OPENGL
 
 namespace Lemonade
 {

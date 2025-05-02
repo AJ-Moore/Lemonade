@@ -6,6 +6,7 @@ namespace Lemonade
 {
 	class LCamera : public LObject
 	{
+		friend class AWindow;
 	public:
 		const glm::mat4& GetViewMatrix() const { return m_viewMat; }
 		const glm::mat4& GetProjMatrix() const { return m_projMat; }
@@ -15,5 +16,10 @@ namespace Lemonade
 		glm::mat4 m_projMat;
 		glm::mat4 m_viewProjMatrix;
 		glm::mat4 m_orthographic;
+		bool m_orthographicMode = false;
+
+		void calculateProjMatrix(float Width, float height);
+		void calculateViewMatrix(); 
+		void calculateViewProjMatrix(); 
 	};
 }

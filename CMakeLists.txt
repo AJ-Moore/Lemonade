@@ -16,6 +16,9 @@ include(cmake/CPM.cmake)
 # Find OpenGL package
 find_package(OpenGL REQUIRED)
 
+# Find Vulkan package
+find_package(Vulkan REQUIRED)
+
 # SDL3 Package
 CPMAddPackage(
     NAME sdl
@@ -79,6 +82,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3_image::SDL3_image
     glm::glm
     OpenGL::GL
+    Vulkan::Vulkan
+    #${Vulkan_LIBRARIES}
     #Trying to stick to modern GL 3.x + glew/ glu should not be required
     #glew
     CitrusCore

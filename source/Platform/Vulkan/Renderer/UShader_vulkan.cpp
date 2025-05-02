@@ -1,5 +1,5 @@
 
-#include <UCommon.h>
+
 #ifdef RENDERER_VULKAN
 #include <Renderer/Platform/Vulkan/UShader_Vulkan.h>
 #include <iostream>

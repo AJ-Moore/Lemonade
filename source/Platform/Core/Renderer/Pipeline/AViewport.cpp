@@ -21,11 +21,11 @@ namespace Lemonade
 
 	void AViewport::Render()
 	{
-		std::shared_ptr<Renderer> renderer = Services::GetRenderer();
+		std::shared_ptr<LRenderer> renderer = Services::GetRenderer();
 
 		for (auto& camera : m_cameras)
 		{
-			renderer->SetActiveCamera(camera);
+			renderer->SetActiveCamera(camera.get());
 
 			if (renderer->IsShadowPass())
 			{
@@ -35,8 +35,8 @@ namespace Lemonade
 			}
 			else
 			{
-				glViewport(0, 0, m_viewRect.Width, m_viewRect.Height);
-				glScissor(0, 0, m_viewRect.Width, m_viewRect.Height);
+				SetViewport(0, 0, m_viewRect.Width, m_viewRect.Height);
+				SetScissor(0, 0, m_viewRect.Width, m_viewRect.Height);
 			}
 		}
 	}

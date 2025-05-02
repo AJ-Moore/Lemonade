@@ -94,5 +94,6 @@ namespace Lemonade
 		}
 
 		delete[] buffer;
+		return true;
     }
 }

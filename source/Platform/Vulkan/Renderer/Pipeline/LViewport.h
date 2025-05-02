@@ -1,7 +1,7 @@
 #pragma once
 #include <LCommon.h>
 
-#ifdef RENDERER_OPENGL
+#ifdef RENDERER_VULKAN
 
 #include <Platform/Core/Renderer/Pipeline/AViewport.h>
 

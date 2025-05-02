@@ -12,23 +12,24 @@ namespace Lemonade
 		VkApplicationInfo app = {
 			VK_STRUCTURE_TYPE_APPLICATION_INFO, // sType
 			nullptr,                            // pNext
-			m_windowCaption.c_str(),            // pApplicationName
+			"Game",            // pApplicationName
 			0,                                  // applicationVersion
-			"Upsilon",				            // pEngineName
-			0,                                  // engineVersion
-			VK_API_VERSION_1_3                  // apiVersion
+			"Lemonade",				            // pEngineName
+			VK_MAKE_VERSION(0, 9, 0),                                  // engineVersion
+			VK_API_VERSION_1_4             // apiVersion
 		};
 
-        VkInstanceCreateInfo inst_info = {};
-		inst_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-		inst_info.pNext = nullptr;
-		inst_info.flags = 0;
-		inst_info.pApplicationInfo = &app;
-		inst_info.enabledLayerCount = 0;
-		inst_info.ppEnabledLayerNames = reinterpret_cast<const char* const*>(0);
-		inst_info.enabledExtensionCount = 0;
-		inst_info.ppEnabledExtensionNames = reinterpret_cast<const char* const*>("");
+        VkInstanceCreateInfo createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+		createInfo.pNext = nullptr;
+		createInfo.flags = 0;
+		createInfo.pApplicationInfo = &app;
+		createInfo.enabledLayerCount = 0;
+		createInfo.ppEnabledLayerNames = nullptr;
+		createInfo.enabledExtensionCount = 0;
+		createInfo.ppEnabledExtensionNames = nullptr;
 
-		vkCreateInstance(&inst_info, nullptr, &m_vkInstance);
+		vkCreateInstance(&createInfo, nullptr, &m_vkInstance);
+		return true;
     }
 }

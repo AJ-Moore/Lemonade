@@ -1,17 +1,19 @@
 #pragma once
 
+#include "Platform/Core/Services/LService.h"
 #include "Platform/Core/WindowManager/LWindowManager.h"
-#include "Platform/OGL/Renderer/Core/LGraphicsContext.h"
 #include <Platform/Core/LObject.h>
 #include <LCommon.h>
 #include <Platform/Core/Time/Time.h>
 #include <Platform/Core/Renderer/Pipeline/LRenderer.h>
 #include <memory>
+#include <queue>
 #include <unordered_map>
 
 #if defined(RENDERER_OGL)
-
+#include "Platform/OGL/Renderer/Core/LGraphicsContext.h"
 #elif defined(RENDERER_VULKAN)
+#include "Platform/Vulkan/Renderer/Core/LGraphicsContext.h"
 #endif
 
 namespace Lemonade
@@ -20,6 +22,7 @@ namespace Lemonade
 
 	class LEMONADE_API Services : public LObject
 	{
+		friend class LemonadeRE;
 	public:
 		Services() = default;
 		static Services& GetInstance();
@@ -31,6 +34,8 @@ namespace Lemonade
 		// Delete the methods we don't want to allow
 		Services(Services const&) = delete; // Copy constructor
 		void operator=(Services const&) = delete; // Copy assignment operator
+
+		void AddService(std::shared_ptr<LService> service);
 	protected:
 		virtual bool Init();
 		virtual void Unload();
@@ -38,6 +43,7 @@ namespace Lemonade
 		virtual void Render();
 
 	private:
+		std::queue<std::shared_ptr<LService>> m_awaitingInitialisation;
 		std::unordered_map<UID, std::shared_ptr<LService>> m_services;
 
 		bool m_bRunning = false;

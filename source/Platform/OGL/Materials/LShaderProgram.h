@@ -1,6 +1,8 @@
-
-#include <GLES2/gl2.h>
+#pragma once 
 #include <LCommon.h>
+
+#ifdef RENDERER_OPENGL
+#include <GLES2/gl2.h>
 #include <Platform/Core/Renderer/Materials/AShaderProgram.h>
 
 namespace Lemonade
@@ -13,3 +15,5 @@ namespace Lemonade
         GLint m_shaderProgram = 0;
     };
 }
+
+#endif 

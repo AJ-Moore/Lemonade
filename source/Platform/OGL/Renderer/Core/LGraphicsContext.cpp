@@ -1,10 +1,12 @@
+#include "Platform/Core/Services/Services.h"
 #include <Platform/OGL/Renderer/Core/LGraphicsContext.h>
+
+#ifdef RENDERER_OPENGL
 
 namespace Lemonade
 {
     bool LGraphicsContext::Init() 
     {
-        #ifdef RENDERER_OPENGL
 #if __APPLE__
 		const char* glsl_version = "#version 150";
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
@@ -17,7 +19,6 @@ namespace Lemonade
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
 #endif
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-#endif 
 
 		// Setup Platform/Renderer bindings
 #ifdef RENDERER_OPENGL
@@ -35,16 +36,26 @@ namespace Lemonade
 		LogError("Imgui not initialismed for target platform.");
 #endif
 
+		auto windowManager = Services::GetWindowManager();
+		m_glContext = SDL_GL_CreateContext(windowManager->GetMainWindow()->GetSDLWindow());
+
+		// Set any initial graphics state.
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
         return true;
     }
 
     void LGraphicsContext::Update(){
 
     } 
-    void LGraphicsContext::Unload(){
-
+    void LGraphicsContext::Unload()
+	{
+		SDL_GL_DestroyContext(m_glContext);
     }
     void LGraphicsContext::Render(){
 
     }
 }
+
+#endif 

@@ -8,11 +8,14 @@ namespace Lemonade
 {
     class LEMONADE_API LSDLWindow : public AWindow
     {
+    public:
+        SDL_Window* GetSDLWindow() { return m_window; }
     protected:
-        virtual bool Init();
+        virtual bool Init() override;
+        virtual void Unload() override;
+        virtual void Render() override;
 
         virtual void ToggleFullscreen(bool value) override;
-        SDL_Window* GetSDLWindow() { return m_window; }
     private:
         SDL_Window* m_window;
     };

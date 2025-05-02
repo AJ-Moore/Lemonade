@@ -4,11 +4,12 @@
 #include <LCommon.h>
 #include <Platform/Core/Services/LService.h>
 #include <Platform/Core/WindowManager/AWindow.h>
+#include <memory>
 
 #ifdef RENDERER_OPENGL
 #include <Platform/OGL/Renderer/Core/LGraphicsContext.h>
 #include <Platform/OGL/WindowManager/LWindow.h>
-#elif RENDERER_VULKAN 
+#elif defined(RENDERER_VULKAN)
 #include <Platform/Vulkan/Renderer/Core/LGraphicsContext.h>
 #include <Platform/Vulkan/WindowManager/LWindow.h>
 #endif
@@ -28,15 +29,18 @@ namespace Lemonade
 		/// Returns a reference to the default persistant window.
 		std::shared_ptr<LWindow> GetMainWindow() { return m_defaultWindow; }
 
+		const std::vector<std::shared_ptr<LWindow>> GetWindows() { return m_windows; }
+
 	protected:
-		virtual bool Init() = 0;
+		virtual bool Init();
 		virtual void Unload();
 		virtual void Update();
 		virtual void Render();
+		bool Load();
 
 	private:
 		LGraphicsContext m_graphicsContext;
-		std::unordered_map<uint32, std::shared_ptr<LWindow>> m_windows;
+		std::vector<std::shared_ptr<LWindow>> m_windows;
 		std::shared_ptr<LWindow> m_defaultWindow;
 	};
 }

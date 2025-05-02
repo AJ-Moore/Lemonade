@@ -1,5 +1,4 @@
 #pragma once
-#include <UCommon.h>
 
 #ifdef RENDERER_VULKAN
 #include <Renderer/ARenderBlock.h>

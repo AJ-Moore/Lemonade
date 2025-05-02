@@ -3,15 +3,12 @@
 
 namespace Lemonade
 {
-	class LEMONADE_API Lemonade
+	class LEMONADE_API LemonadeRE
 	{
 	public:
 		void Init();
-
-	private:
-
 		void Update();
-		void Render();
+		void Unload(); 
 
 		bool m_bRunning = false;
 	};

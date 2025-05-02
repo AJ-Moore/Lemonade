@@ -3,6 +3,7 @@
 #include <LCommon.h>
 #ifdef RENDERER_VULKAN
 #include <Platform/Core/LObject.h>
+#include <vector>
 
 namespace Lemonade
 {

@@ -1,6 +1,11 @@
+#include "SDL3/SDL_init.h"
 #include <LCommon.h>
+#include <Platform/Core/Renderer/Materials/Material.h>
+#include <Platform/OGL/WindowManager/LWindow.h>
 #include <Platform/Core/WindowManager/LWindowManager.h>
 #include <Geometry/Rect.h>
+#include <Util/Logger.h>
+#include <memory>
 
 namespace Lemonade {
 
@@ -24,7 +29,7 @@ namespace Lemonade {
 
 	void LWindowManager::AddWindow(std::shared_ptr<LWindow> window) 
 	{
-		m_windows.emplace(window->GetUID(), window);
+		m_windows.push_back(window);
 		window->SetParent(this);
 
 		if (HasbeenInitialised())
@@ -36,109 +41,87 @@ namespace Lemonade {
 	/** Initialises all the windows and the GL Context.*/
 	bool LWindowManager::Init()
 	{
-#ifdef RENDERER_OPENGL
-#if __APPLE__
-		const char* glsl_version = "#version 150";
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-#else
-		const char* glsl_version = "#version 460";
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
-#endif
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
 		// Create the GL Context, using the default window.
-		this->glContext = SDL_GL_CreateContext(m_defaultWindow->m_sdlWindow);
+		//this->glContext = SDL_GL_CreateContext(m_defaultWindow->m_sdlWindow);
 
 		// Initialise glew 
-		glewInit();
+		//glewInit();
 
-		// Set any initial graphics state.
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		#ifdef USING_SDL
+		{
+			if (!SDL_Init(SDL_INIT_VIDEO)) {
+				Logger::Log(Logger::ERROR, "Failed to initialise SDL.");
+				return false;
+			}
+		}
+		#endif
 
-#elif defined(RENDERER_PS5)
-		LogError("TODO - ps5 graphics initialisation");
-#elif defined(RENDERER_VULKAN)		
-		m_vulkanDevice.init();
-		LogError("TODO - vulkan graphics initialisation");
-#else 
-		LogError("Graphics platform not supported?");
-#endif
+		if (!Load())
+		{
+			Logger::Log(Logger::ERROR, "Loading default window failed.");
+			return false;
+		}
 
 		//Initialise these at some other point ???
-		LogInfo("Initialising window manager, windows.");
-		std::map<uint32, LWindow*>::iterator iter; 
-		for (auto& window : m_windows) {
-			if (!window.second->init())
+		Logger::Log(Logger::INFO, "Initialising window manager, windows.");
+
+		for (auto& window : m_windows)
+		{
+			if (!window->Init())
 			{
 				//We should do something more useful here probably?!
-				LogError("Initialising window failed.");
+				Logger::Log(Logger::ERROR, "Initialising window failed.");
 			}
 		}
 
-		m_bDoneInit = true;
 		return true; 
 	}
 
-	bool LWindowManager::load() {
+	bool LWindowManager::Load()
+	{
 		bool _return = true;
 
-		this->defaultWindow = new LWindow();
+		m_defaultWindow = std::make_shared<LWindow>();
 		
-		if (!this->defaultWindow->load("config.cfg"))
+		if (!m_defaultWindow->Load("config.cfg"))
 		{
 			return false;
 		}
 
-		this->addWindow(this->defaultWindow);
+		AddWindow(m_defaultWindow);
 
-		std::map<uint32, LWindow*>::iterator iter;
-		for (iter = this->m_windows.begin(); iter != this->m_windows.end(); iter++) {
-			if (!iter->second->load()) {
+		for (const auto& window : m_windows)
+		{
+			if (!window->Load())
+			{
 				return false;
 			}
 		}
+
 		return _return;
 	}
 
-	void LWindowManager::update() {
-
-		std::map<uint32, LWindow*>::iterator iter;
-		for (iter = this->m_windows.begin(); iter != this->m_windows.end(); iter++) {
-			iter->second->update();
+	void LWindowManager::Update()
+	{
+		for (const auto& window : m_windows)
+		{
+			window->Update();
 		}
 	}
 
-	void LWindowManager::unload() {
-#ifdef RENDERER_OPENGL
-		SDL_GL_DeleteContext(this->glContext);
-		
-		// Destroy windows
-		for (auto& window : m_windows)
+	void LWindowManager::Unload()
+	{
+		for (const auto& window : m_windows)
 		{
-			SDL_DestroyWindow(window.second->m_sdlWindow);
+			window->Unload();
 		}
-#endif
 	}
 
-	void LWindowManager::render() {
-
-#ifdef RENDERER_OPENGL
-		SDL_GL_MakeCurrent(m_defaultWindow->m_sdlWindow, this->glContext);
-		SDL_GL_SwapWindow(m_defaultWindow->m_sdlWindow);
-#endif
-
+	void LWindowManager::Render()
+	{
 		for (auto& window : m_windows)
 		{
-#ifdef RENDERER_OPENGL
-			SDL_GL_MakeCurrent(window.second->m_sdlWindow, this->glContext);
-			SDL_GL_SwapWindow(window.second->m_sdlWindow);
-#endif
-			window.second->render();
+			window->Render();
 		}
 	}
 

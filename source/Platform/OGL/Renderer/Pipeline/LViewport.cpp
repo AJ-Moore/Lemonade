@@ -1,3 +1,6 @@
+#include <LCommon.h>
+
+#ifdef RENDERER_OPENGL
 
 #include <GL/gl.h>
 #include <Platform/OGL/Renderer/Pipeline/LViewport.h>
@@ -19,3 +22,4 @@ namespace Lemonade
         glDepthRange(near, far);
     }
 }
+#endif 

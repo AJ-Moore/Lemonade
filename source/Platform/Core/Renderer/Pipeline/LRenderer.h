@@ -10,9 +10,10 @@ namespace Lemonade
 {
 	class LEMONADE_API LRenderer : public LService
 	{
+		friend class AWindow;
 		friend class AViewport;
 	public: 
-		std::shared_ptr<LCamera> GetActiveCamera() const { return m_activeCamera; }
+		LCamera* GetActiveCamera() const { return m_activeCamera; }
 		bool IsShadowPass() { return m_bIsShadowPass; }
 		Light* GetActiveLight() const { return m_activeLight; }
 		float GetShadowMapSize() const { return m_shadowMapSize; }
@@ -22,10 +23,10 @@ namespace Lemonade
 		virtual void Update();
 		virtual void Render();
 
-		void SetActiveCamera(std::shared_ptr<LCamera> camera) {m_activeCamera = camera;}
+		void SetActiveCamera(LCamera* camera) {m_activeCamera = camera;}
 	private:
 		float m_shadowMapSize = 512.0f;
-		std::shared_ptr<LCamera> m_activeCamera;
+		LCamera* m_activeCamera;
 		bool m_bIsShadowPass = false;
 		Light* m_activeLight = nullptr;
 	};

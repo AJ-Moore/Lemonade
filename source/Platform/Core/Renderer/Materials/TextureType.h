@@ -1,5 +1,6 @@
 #pragma once
 
+#include "LCommon.h"
 #include <Platform/Core/Renderer/Materials/TextureUtils.h>
 
 namespace Lemonade
@@ -35,7 +36,7 @@ namespace Lemonade
 		None
 	};
 
-	class TextureData
+	class LEMONADE_API TextureData
 	{
 	public:
 		TextureData() = delete;

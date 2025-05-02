@@ -11,7 +11,7 @@ namespace Lemonade
 
 	class AViewport : public LObject
 	{
-		friend class Window;
+		friend class AWindow;
 	protected:
 		virtual bool Init();
 		virtual void Unload();

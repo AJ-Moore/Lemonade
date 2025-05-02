@@ -13,6 +13,8 @@ namespace Lemonade
 	protected:
 		virtual void Unload();
 		virtual bool Init();
+		virtual void Update(){}
+		virtual void Render(){}
 	private: 
 		LVulkanDevice m_vulkanDevice;
 		VkInstance m_vkInstance = nullptr;

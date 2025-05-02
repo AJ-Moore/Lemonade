@@ -9,6 +9,7 @@
 namespace Lemonade
 {
 	class LEMONADE_API LWindow : public LSDLWindow {
+		friend class LWindowManager; 
 	public:
 		virtual ~LWindow(){}
 		const VkSurfaceKHR& GetVkSurface() const { return m_vkSurface; }
@@ -16,7 +17,8 @@ namespace Lemonade
 		virtual void Unload();
 		virtual bool Init();
 	private:
-		VkSurfaceKHR m_vkSurface = VK_NULL_HANDLE;		
+		VkSurfaceKHR m_vkSurface = VK_NULL_HANDLE;
+		VkAllocationCallbacks allocationCallbacks;		
 	};
 }
 

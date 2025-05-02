@@ -19,8 +19,8 @@ namespace Lemonade {
 		friend class LWindowManager; 
 		friend class LRenderer;
 	public: 
-		AWindow();
-		virtual ~AWindow(); 
+		AWindow(){}
+		virtual ~AWindow(){}
 		LCamera* GetActiveCamera() const;
 		void SetActiveCamera(LCamera* Camera);
 		void AddCamera(std::shared_ptr<LCamera> camera) { m_cameras[camera->GetUID().GetID()] = camera; }

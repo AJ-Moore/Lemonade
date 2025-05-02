@@ -45,6 +45,6 @@ namespace Lemonade
 		std::string m_fragShaderFile;
 		std::string m_vertShaderFile;
 		std::string m_geometryShaderFile;
-		GLuint m_shaderProgram = 0;
+		//GLuint m_shaderProgram = 0;
 	};
 }

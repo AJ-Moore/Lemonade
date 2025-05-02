@@ -1,10 +1,14 @@
-
+#include "Platform/Vulkan/Renderer/LVulkanDevice.h"
 #include <LCommon.h>
+#include <Util/Logger.h>
 
 #ifdef RENDERER_VULKAN
-#include "LVulkanDevice.h"
+
 //#include <vulkan/vk_enum_string_helper.h>
-#include <vulkan/vulkan_to_string.hpp>
+//#include <vulkan/vulkan_to_string.hpp>
+#include <Platform/Core/Services/Services.h>
+
+using Logger = CitrusCore::Logger;
 
 namespace Lemonade
 {
@@ -21,7 +25,7 @@ namespace Lemonade
 	{
 		if (!CreateVulkanDevice())
 		{
-			LogError("Failed to create Vulkan device!");
+			Logger::Log(Logger::ERROR, "Failed to create Vulkan device!");
 			return false;
 		}
 		return true;
@@ -35,11 +39,15 @@ namespace Lemonade
 	{
 	}
 
+	void LVulkanDevice::Render() 
+	{
+	}
+
 	int LVulkanDevice::CreateDeviceQueue(VkDeviceQueueCreateInfo& queueCreateInfo, VkQueueFlagBits queue, bool presentation = false)
 	{
 		VkBool32 supportsPresent = false;
 		bool checkPresentation = false;
-		const VkSurfaceKHR& surface = UServiceLocator::getInstance()->getWindowManager()->getMainWindow()->getVkSurface();
+		const VkSurfaceKHR& surface = Services::GetWindowManager()->GetMainWindow()->GetVkSurface();
 
 		if (queue == VK_QUEUE_GRAPHICS_BIT)
 		{
@@ -89,8 +97,8 @@ namespace Lemonade
 		VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
 		uint32_t deviceCount = 0;	
-		const VkInstance& instance = UServiceLocator::getInstance()->getWindowManager()->getMainWindow()->getVkInstance();
-		const VkSurfaceKHR& surface = UServiceLocator::getInstance()->getWindowManager()->getMainWindow()->getVkSurface();
+		const VkInstance& instance = Services::GetContext()->GetVkInstance();
+		//const VkSurfaceKHR& surface = UServiceLocator::getInstance()->getWindowManager()->getMainWindow()->getVkSurface();
 
 		vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
@@ -166,7 +174,7 @@ namespace Lemonade
 		VkResult result = vkCreateDevice(m_physicalDevice, &deviceCreateInfo, nullptr, &m_vkDevice);
 
 		if (result != VK_SUCCESS) {
-			CitrusCore::Logger::Log(CitrusCore::Logger::ERROR,"Vulkan Error: %s", string_VkResult(result));
+			//CitrusCore::Logger::Log(CitrusCore::Logger::ERROR,"Vulkan Error: %s", string_VkResult(result));
 			throw std::runtime_error("failed to create logical device!");
 			return false;
 		}
@@ -183,7 +191,7 @@ namespace Lemonade
 		graphicsPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
 		if (vkCreateCommandPool(m_vkDevice, &graphicsPoolInfo, nullptr, &m_graphicsCommandPool) != VK_SUCCESS) {
-			CitrusCore::Logger::Log(Citrus::Logger::ERROR, "Failed to create graphics command pool!");
+			CitrusCore::Logger::Log(CitrusCore::Logger::ERROR, "Failed to create graphics command pool!");
 			throw std::runtime_error("failed to create graphics command pool!");
 			return false;
 		}

@@ -1,8 +1,7 @@
-
-#include <GL/gl.h>
 #include <LCommon.h>
 
 #ifdef RENDERER_OPENGL
+#include <GL/gl.h>
 #include <Platform/OGL/Renderer/Texture.h>
 #include <Platform/Core/Renderer/Materials/TextureType.h>
 

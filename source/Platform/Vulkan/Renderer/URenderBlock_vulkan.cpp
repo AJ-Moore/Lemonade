@@ -1,8 +1,4 @@
 
-#include <UCommon.h>
-#include <Renderer/Platform/OGL/URenderBlock_ogl.h>
-#include <Core/UServiceLocator.h>
-#include <ModelManager/UBone.h>
 
 #ifdef RENDERER_VULKAN
 namespace UpsilonEngine

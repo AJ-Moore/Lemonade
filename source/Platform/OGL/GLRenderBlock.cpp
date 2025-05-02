@@ -1,5 +1,8 @@
 
-#include <Common.h>
+#include <LCommon.h>
+
+#ifdef RENDERER_OPENGL
+
 #include <Renderer/GLRenderBlock.h>
 #include <Core/Services/Services.h>
 #include <Renderer/Bone.h>
@@ -7,7 +10,6 @@
 #include <Renderer/Lighting/SpotLight.h>
 #include <Renderer/AnimationData.h>
 
-#ifdef RENDERER_OPENGL
 namespace CraftyBlocks
 {
 	bool RenderBlock::Init()
