@@ -154,7 +154,7 @@ namespace Lemonade {
 #ifdef RENDERER_OPENGL
 		glDepthRange(0, 1);
 #else 
-		Logger::Log(Logger::WARN,"Explicit Depth range not supported by renderer.");
+		//Logger::Log(Logger::WARN,"Explicit Depth range not supported by renderer.");
 #endif
 
 	}

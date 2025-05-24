@@ -1,17 +1,17 @@
-#include "Platform/Core/Services/Services.h"
+#include <Platform/Core/Services/GraphicsServices.h>
 #include <LemonadeRE.h>
 
 namespace Lemonade
 {
     void LemonadeRE::Init(){
-        Services::GetInstance().Init();
+        GraphicsServices::GetInstance().Init();
     }
     void LemonadeRE::Update(){
-        Services::GetInstance().Update();
-        Services::GetInstance().Render();
+        GraphicsServices::GetInstance().Update();
+        GraphicsServices::GetInstance().Render();
     }
     void LemonadeRE::Unload(){
-        Services::GetInstance().Unload();
+        GraphicsServices::GetInstance().Unload();
     }
 
 }

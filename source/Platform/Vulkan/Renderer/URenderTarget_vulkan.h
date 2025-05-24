@@ -1,5 +1,6 @@
 #pragma once
 
+#include <LCommon.h>
 #if defined(RENDERER_VULKAN)
 #include <Renderer/UMaterial.h>
 #include <Renderer/ARenderTarget.h>

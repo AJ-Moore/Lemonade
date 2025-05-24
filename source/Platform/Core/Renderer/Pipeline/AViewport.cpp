@@ -1,6 +1,6 @@
 #include "AViewport.h"
 #include <Platform/Core/Renderer/Pipeline/LCamera.h>
-#include <Platform/Core/Services/Services.h>
+#include <Platform/Core/Services/GraphicsServices.h>
 #include <Platform/Core/Renderer/Pipeline/LRenderer.h>
 #include <memory>
 
@@ -21,7 +21,7 @@ namespace Lemonade
 
 	void AViewport::Render()
 	{
-		std::shared_ptr<LRenderer> renderer = Services::GetRenderer();
+		std::shared_ptr<LRenderer> renderer = GraphicsServices::GetRenderer();
 
 		for (auto& camera : m_cameras)
 		{

@@ -6,7 +6,7 @@
 
 //#include <vulkan/vk_enum_string_helper.h>
 //#include <vulkan/vulkan_to_string.hpp>
-#include <Platform/Core/Services/Services.h>
+#include <Platform/Core/Services/GraphicsServices.h>
 
 using Logger = CitrusCore::Logger;
 
@@ -47,7 +47,7 @@ namespace Lemonade
 	{
 		VkBool32 supportsPresent = false;
 		bool checkPresentation = false;
-		const VkSurfaceKHR& surface = Services::GetWindowManager()->GetMainWindow()->GetVkSurface();
+		const VkSurfaceKHR& surface = GraphicsServices::GetWindowManager()->GetMainWindow()->GetVkSurface();
 
 		if (queue == VK_QUEUE_GRAPHICS_BIT)
 		{
@@ -97,7 +97,7 @@ namespace Lemonade
 		VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
 		uint32_t deviceCount = 0;	
-		const VkInstance& instance = Services::GetContext()->GetVkInstance();
+		const VkInstance& instance = GraphicsServices::GetContext()->GetVkInstance();
 		//const VkSurfaceKHR& surface = UServiceLocator::getInstance()->getWindowManager()->getMainWindow()->getVkSurface();
 
 		vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);

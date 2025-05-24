@@ -1,5 +1,5 @@
 #include "LRenderer.h"
-#include "Platform/Core/Services/Services.h"
+#include "Platform/Core/Services/GraphicsServices.h"
 #include "Platform/Core/WindowManager/LWindowManager.h"
 #include <memory>
 
@@ -21,7 +21,7 @@ namespace Lemonade {
     void LRenderer::Render()
     {
         // Iterate through all windows.
-        std::shared_ptr<LWindowManager> windowManager = Services::GetWindowManager();
+        std::shared_ptr<LWindowManager> windowManager = GraphicsServices::GetWindowManager();
 
     }
 }

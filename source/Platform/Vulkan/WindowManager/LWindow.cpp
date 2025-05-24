@@ -1,4 +1,4 @@
-#include "Platform/Core/Services/Services.h"
+#include <Platform/Core/Services/GraphicsServices.h>
 #include <Platform/Vulkan/Renderer/Core/LGraphicsContext.h>
 #include "Platform/Core/WindowManager/LSDLWindow.h"
 #include "SDL3/SDL_vulkan.h"
@@ -24,7 +24,7 @@ namespace Lemonade
 
     void LWindow::Unload()
     {
-        std::shared_ptr<LGraphicsContext> vulkanContext = Services::GetContext();
+        std::shared_ptr<LGraphicsContext> vulkanContext = GraphicsServices::GetContext();
         vkDestroySurfaceKHR(vulkanContext->GetVkInstance(), m_vkSurface, nullptr);
     }
     
@@ -36,7 +36,7 @@ namespace Lemonade
       allocationCallbacks.pfnReallocation = CustomReallocate;
       allocationCallbacks.pfnFree = CustomFree;
 
-      std::shared_ptr<LGraphicsContext> vulkanContext = Services::GetContext();
+      std::shared_ptr<LGraphicsContext> vulkanContext = GraphicsServices::GetContext();
       SDL_Vulkan_CreateSurface(GetSDLWindow(), vulkanContext->GetVkInstance(),&allocationCallbacks, &m_vkSurface);
       return true;
     }
