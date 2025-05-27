@@ -1,45 +1,52 @@
 #pragma once
 
+#include <Spatial/Transform.h>
 #include <LCommon.h>
 #include <Platform/Core/LObject.h>
-#include <Platform/Core/Renderer/Transform.h>
 #include <Platform/Core/Renderer/Geometry/Mesh.h>
 #include <Platform/Core/Renderer/Materials/Material.h>
 #include <Platform/Core/Renderer/Geometry/PrimitiveMode.h>
 
 namespace Lemonade
 {
+	struct ShaderProperties
+	{
+		glm::mat4 wvpShadowMat;
+		glm::mat4 modelMat; 
+		glm::mat4 viewMat; 
+		glm::mat4 projMat;
+		bool shadowPass = false;
+		glm::vec3 cameraPosition;
+		glm::vec3 cameraLook;
+	};
+
 	class Renderer;
 
 	/** Render Block */
 	class LEMONADE_API ARenderBlock : public LObject
 	{
-		friend class URenderLayer;
-		friend class URenderer;
-		friend class UMeshRenderer;
+		friend class LRenderLayer;
+		friend class LRenderer;
+		friend class LMeshRenderer;
 	public:
 		ARenderBlock() = default;
 		virtual ~ARenderBlock() {}
 
 		virtual void SetDrawMode(PrimitiveMode mode) = 0;
-		virtual void SetMaterial(std::shared_ptr<Material> Material) = 0;
-		void SetTransform(std::shared_ptr<Transform> Transform) { m_transform = Transform; }
+		virtual void SetMaterial(std::shared_ptr<Material> Material) { m_material = Material; }
+		void SetTransform(std::shared_ptr<CitrusCore::Transform> Transform) { m_transform = Transform; }
 		void SetMesh(std::shared_ptr<Mesh> Mesh) { m_mesh = Mesh; }
 		void SetDirty() { m_bufferDirty = true; }
 		PrimitiveMode GetDrawMode() const { return (PrimitiveMode)m_primitiveMode; }
 	protected:
 		/// Dumps the vertex data to the buffer
-		virtual void DumpBufferData() {};
+		virtual void DumpBufferData() = 0;
 
 		/// Dump animation data.
 		virtual void DumpAnimationData() {}
 
 		// Set/ configure vertex attributes.
 		virtual void ConfigureVertexAttributes() {};
-
-		// Should be moved to OGL render block, unless applicable to other renderers.
-		void VertexAttribPointer(GLuint shaderProgram, std::string name, GLint size, GLuint type, GLboolean normalized, GLsizei stride, const void* pointer) {}
-		GLint EnableVertexAttribArray(GLuint shaderProgram, std::string name) { return -1; }
 
 		/// Bound buffer used by this render block
 		uint32 m_vertexArrayObject = 0;
@@ -52,7 +59,7 @@ namespace Lemonade
 		bool m_animationBufferDirty = true;
 
 		/// The transform of the component that we are rendering
-		std::shared_ptr<Transform> m_transform;
+		std::shared_ptr<CitrusCore::Transform> m_transform;
 
 		/// The mesh being rendered
 		std::shared_ptr<Mesh> m_mesh;

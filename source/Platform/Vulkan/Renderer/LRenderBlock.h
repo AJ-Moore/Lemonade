@@ -1,0 +1,96 @@
+#pragma once
+#include <Platform/Core/Renderer/Geometry/Mesh.h>
+#include <Platform/Core/Renderer/Geometry/PrimitiveMode.h>
+#include <Platform/Core/Renderer/Materials/Material.h>
+#include <Spatial/Transform.h>
+#include <LCommon.h>
+#include <cstddef>
+#include <memory>
+#include <unordered_map>
+#include <vulkan/vulkan_core.h>
+
+#ifdef RENDERER_VULKAN
+#include <Platform/Core/Renderer/RenderBlock/ARenderBlock.h>
+
+namespace Lemonade
+{
+	/** URender Block Class - Used to store render state information */
+	class LEMONADE_API LRenderBlock : public ARenderBlock
+	{
+		enum class VKBufferType 
+		{
+			Position,
+			Normal, 
+			FaceNormal,
+			Colour,
+			UV,
+			UV3D,
+			Tangents, 
+			BiTangents, 
+			BoneWeights, 
+			BoneIds,
+		};
+	
+		struct LVKBuffer
+		{
+			VkBuffer Buffer;
+			void* DataCPUMapped = nullptr;
+			void* DataGPUMapped = nullptr;
+			size_t DataSize = 0;
+			VkDeviceMemory VKDeviceMemory;
+			size_t Stride;
+			int Binding = 0;
+		};
+
+		friend class LRenderLayer;
+		friend class LRenderer;
+		friend class LMeshRenderer;
+	public:
+		LRenderBlock();
+		virtual ~LRenderBlock() {}
+
+		/// Sets the draw mode used by this block.
+		virtual void SetDrawMode(PrimitiveMode mode);
+
+		PrimitiveMode GetDrawMode() const { return (PrimitiveMode)m_primitiveMode; }
+
+	protected:
+		/// Called to perform initialisation 
+		virtual bool Init();
+
+		/// Called prior to object deletion to perform any unload actions
+		virtual void Unload();
+
+		/// Called to perform buffer updates
+		virtual void Update();
+
+		/// Called to render the block 
+		virtual void Render();
+
+		/// Dumbs the vertex data to the buffer
+		virtual void DumpBufferData();
+
+		/// Dmps the animation buffer data 
+		virtual void DumpAnimationData();
+
+		// Set/ configure vertex attributes.
+		virtual void SetVertexAttributes();
+
+		std::vector<VkBuffer> m_vkBuffers;
+		std::vector<VkDeviceSize> m_vkOffsets;
+
+		std::unordered_map<VKBufferType, LVKBuffer> m_vertexBuffers = {
+			{VKBufferType::Position, {} },
+			{VKBufferType::Normal, {} },
+			{VKBufferType::FaceNormal, {} },
+			{VKBufferType::Colour, {} },
+			{VKBufferType::UV, {} },
+			{VKBufferType::UV3D, {} },
+			{VKBufferType::Tangents,  {} },
+			{VKBufferType::BiTangents,  {} },
+			{VKBufferType::BoneWeights,  {} },
+			{VKBufferType::BoneIds,  {} }
+		};
+	};
+}
+#endif

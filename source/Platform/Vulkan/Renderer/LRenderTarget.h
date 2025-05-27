@@ -1,11 +1,13 @@
 #pragma once
 
+#include <Platform/Core/Renderer/Pipeline/ARenderTarget.h>
 #include <LCommon.h>
+#include <vulkan/vulkan_core.h>
 #if defined(RENDERER_VULKAN)
-#include <Renderer/UMaterial.h>
-#include <Renderer/ARenderTarget.h>
+#include <Platform/Core/Renderer/Materials/Material.h>
+#include <map>
 
-namespace UpsilonEngine
+namespace Lemonade
 {
     struct VulkanRenderTarget
     {
@@ -13,40 +15,42 @@ namespace UpsilonEngine
         VkImage Image;
     };
 
-    class URenderTarget : public ARenderTarget
+    class LRenderTarget : public ARenderTarget
     {
     public:
-        URenderTarget();
-        URenderTarget(glm::ivec2 dimensions);
-        virtual ~URenderTarget();
-        virtual bool init();
+        LRenderTarget();
+        LRenderTarget(glm::ivec2 dimensions);
+        virtual ~LRenderTarget();
+        virtual bool Init();
         virtual void initAsDefault() { m_bDoneInit = true; }
         virtual void bindColourAttachments();
-        virtual void bindColourAttachment(UColourAttachment colourAttachment, uint activeTarget = 0);
+        virtual void bindColourAttachment(LColourAttachment colourAttachment, uint activeTarget = 0);
         virtual void bindDepthAttachment(uint activeTarget = 0);
-        virtual void beginRenderPass();
-        virtual void endRenderPass();
+        virtual void BeginRenderPass();
+        virtual void EndRenderPass();
 
         virtual void blit(ARenderTarget& target);
         virtual void blit(unsigned int target);
         virtual void blitToScreen();
         virtual void setDimensions(glm::ivec2 dimensions);
-        virtual void setColourAttachments(const std::vector<UColourAttachment> attachments, bool multiSampled);
+        virtual void SetColourAttachments(const std::vector<LColourAttachment> attachments, bool multiSampled);
+        virtual void SetColourAttachments(int count, bool multisampled);
         virtual void addMultiSampledDepthAttachment();
-        virtual void addDepthAttachment(bool useRenderBufferObject = true, int layers = 1);
-        virtual uint createColourAttachment(UColourAttachment colourAttachment, bool multiSampled = true, int internalFormat = U_RGBA32F);
+        virtual void AddDepthAttachment(bool useRenderBufferObject = true, int layers = 1);
+        virtual uint createColourAttachment(LColourAttachment colourAttachment, bool multiSampled = true, int internalFormat = U_RGBA32F);
 
         void setClearColour(glm::vec4 clearColour) { m_clearColour = clearColour; }
-        virtual void clear(uint clearFlags);
+        virtual void Clear(uint clearFlags);
 
         uint getDepthTexture() { return m_depthTexture; }
 
 
         // Gets the screen target.
-        virtual ARenderTarget* GetScreenTarget();
+        virtual LRenderTarget* GetScreenTarget();
+        VkCommandBuffer GetCommandBuffer() const { return m_commandBuffer; }
     private:
         uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-        VulkanRenderTarget getColourAttachment(UColourAttachment colourAttachment);
+        VulkanRenderTarget getColourAttachment(LColourAttachment colourAttachment);
         VkFramebuffer getFrameBuffer() { return m_frameBuffer; }
         void generateBuffers();
 
@@ -54,7 +58,7 @@ namespace UpsilonEngine
         bool m_hasMultisampledColourAttachment = false;
         uint m_depthBuffer = 0;
         uint m_depthTexture = 0;
-        std::map<UColourAttachment, VulkanRenderTarget> m_colourAttachments;
+        std::map<LColourAttachment, VulkanRenderTarget> m_colourAttachments;
 
         bool m_bHasDepthAttachment = false;
         VulkanRenderTarget m_depthAttachment;
@@ -65,7 +69,7 @@ namespace UpsilonEngine
         VkRenderPass m_renderPass = 0;
         VkCommandBuffer m_commandBuffer = 0;
 
-        static UniquePtr<URenderTarget> m_defaultTarget;
+        static std::unique_ptr<LRenderTarget> m_defaultTarget;
     };
 }
 

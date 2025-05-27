@@ -19,7 +19,7 @@ namespace Lemonade
 		virtual void Render() override;
 
 		VkDevice GetVkDevice() const { return m_vkDevice; }
-		VkPhysicalDevice GetPhysicalDevice() { return m_physicalDevice; }
+		VkPhysicalDevice GetPhysicalDevice() const { return m_physicalDevice; }
 		VkQueue GetPresentationQueue() const { return m_presentationQueue; }
 		VkQueue GetGraphicsQueue() const { return m_graphicsQueue; }
 		VkQueue GetTransferQueue() const { return m_transferQueue; }

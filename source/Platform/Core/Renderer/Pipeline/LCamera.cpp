@@ -2,7 +2,7 @@
 
 namespace Lemonade 
 {
-    void LCamera::calculateProjMatrix(float width, float height)
+    void LCamera::CalculateProjMatrix(float width, float height)
     {
         float ratio = 0;
         if (height)
@@ -12,7 +12,7 @@ namespace Lemonade
 
         if (m_orthographicMode)
         {	
-            //setOrthographicDimensions(glm::vec4(0, 0, width, height));
+            SetOrthographicDimensions(glm::vec4(0, 0, width, height));
             m_projMat = m_orthographic;
             //float sizeX = ratio * this->m_orthographicSize;
             //float sizeY = this->m_orthographicSize;
@@ -20,20 +20,25 @@ namespace Lemonade
         }
         else
         {
-            //m_projMat = glm::perspectiveLH(m_fov/(180/glm::pi<float>()), ratio, m_nearClip, m_farClip);
+            m_projMat = glm::perspectiveLH(m_fov/(180/glm::pi<float>()), ratio, m_nearClip, m_farClip);
         }
     }
 
-    void LCamera::calculateViewMatrix()
+    void LCamera::SetOrthographicDimensions(glm::vec4 rect)
     {
-        //glm::vec3 position = getParent()->getTransform()->getWorldPosition();
-        //glm::vec3 up = getParent()->getTransform()->getUp();
-        //glm::vec3 forward = getParent()->getTransform()->getForward();
-//
-        //m_viewMat = glm::lookAtLH(position, position + forward, up);
+        m_orthographic = glm::ortho(rect.x, rect.z, rect.y, rect.w);
     }
 
-    void LCamera::calculateViewProjMatrix(){
+    void LCamera::CalculateViewMatrix()
+    {
+        glm::vec3 position = m_transform->GetWorldPosition();
+        glm::vec3 up = m_transform->GetUp();
+        glm::vec3 forward = m_transform->GetForward();
+
+        m_viewMat = glm::lookAtLH(position, position + forward, up);
+    }
+
+    void LCamera::CalculateViewProjMatrix(){
 
         if (m_orthographicMode)
         {

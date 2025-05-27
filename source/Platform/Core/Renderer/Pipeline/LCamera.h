@@ -1,25 +1,41 @@
 #pragma once
 
+#include <Platform/Core/Renderer/Pipeline/AViewport.h>
+#include "Spatial/Transform.h"
 #include <Platform/Core/LObject.h>
+#include <glm/fwd.hpp>
 
 namespace Lemonade
 {
 	class LCamera : public LObject
 	{
-		friend class AWindow;
+		friend class AViewport;
 	public:
+		LCamera() = delete; 
+		LCamera( CitrusCore::Transform* transform) : m_transform(transform){}
 		const glm::mat4& GetViewMatrix() const { return m_viewMat; }
 		const glm::mat4& GetProjMatrix() const { return m_projMat; }
 		const glm::mat4& GetViewProjMatrix() const { return m_viewProjMatrix; }
+
+		void SetTransform(CitrusCore::Transform* transform) { m_transform = transform; }
 	private:
+		void SetOrthographicDimensions(glm::vec4 rect);
+
+		// TODO camera transform lifecycle non ownership is a bit hairy
+		CitrusCore::Transform* m_transform = nullptr;
+
 		glm::mat4 m_viewMat;
 		glm::mat4 m_projMat;
 		glm::mat4 m_viewProjMatrix;
 		glm::mat4 m_orthographic;
 		bool m_orthographicMode = false;
 
-		void calculateProjMatrix(float Width, float height);
-		void calculateViewMatrix(); 
-		void calculateViewProjMatrix(); 
+		float m_nearClip = 0.1f;
+		float m_farClip = 1000.0f;
+		float m_fov = 80.0f;
+
+		void CalculateProjMatrix(float Width, float height);
+		void CalculateViewMatrix(); 
+		void CalculateViewProjMatrix(); 
 	};
 }

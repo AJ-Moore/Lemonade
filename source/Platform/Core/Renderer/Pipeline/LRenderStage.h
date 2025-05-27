@@ -1,4 +1,5 @@
 #pragma once
+#include <Platform/Core/Renderer/Pipeline/ARenderPass.h>
 #include <LCommon.h>
 #include <Platform/Core/LObject.h>
 #include <memory>
@@ -6,25 +7,19 @@
 
 namespace Lemonade 
 {
-    class LEMONADE_API LRenderPass : public LObject 
-    {
-    protected:
-        virtual bool Init();
-        virtual void Render();
-        virtual void Update(); 
-        virtual void Unload();
-    private:
-    };
-
+    class LRenderingData;
     class LEMONADE_API LRenderStage : public LObject
     {
+        friend class LRenderer;
     protected:
-        virtual bool Init() = 0;
-        virtual void Render();
+        ~LRenderStage() = default;
+        virtual bool Init(){}
+        virtual void Update(){}
+        virtual void Render(){}
+        virtual void Render(const LRenderingData& renderingData);
 
-        void AddPass(std::shared_ptr<LRenderPass> renderPass);
+        void AddPass(std::shared_ptr<ARenderPass> renderPass);
     private:
-        std::vector<std::shared_ptr<LRenderPass>> m_renderPasses;
-        //virtual void Render(ARenderTarget source, ARenderTarget destination)
+        std::vector<std::shared_ptr<ARenderPass>> m_renderPasses;
     };
 }

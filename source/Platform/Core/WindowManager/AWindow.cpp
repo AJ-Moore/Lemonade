@@ -101,71 +101,14 @@ namespace Lemonade {
 		float depthRange = 1.0f / (float)m_cameras.size();
 		float index = 0; 
 
+		// Will break shadows.
+		//glDepthRange(index * depthRange, (index + 1) * depthRange);
+
 		for (auto& viewport : m_viewports)
 		{
 			viewport->Render();
 		}
-
-		for (auto camera : m_cameras)
-		{
-#ifdef RENDERER_OPENGL
-			glDepthRange(0, 1);
-
-			// Will break shadows.
-			//glDepthRange(index * depthRange, (index + 1) * depthRange);
-#else 
-			Logger::Log(Logger::WARN, "Depth range per camera not supported by renderer.");
-#endif
-			index++;
-
-			m_viewCamera = camera.second.get();
-			m_renderer->m_activeCamera = m_viewCamera;
-
-#ifdef RENDERER_OPENGL
-
-			if (m_renderer->isShadowPass())
-			{
-				// Override viewport size
-				glViewport(0, 0, m_renderer->getShadowMapSize(), m_renderer->getShadowMapSize());
-				glScissor(0, 0, m_renderer->getShadowMapSize(), m_renderer->getShadowMapSize());
-			}
-			else
-			{
-				glViewport(0, 0, m_windowRect.Width, m_windowRect.Height);
-				glScissor(0, 0, m_windowRect.Width, m_windowRect.Height);
-			}
-
-			// probably needed on ps5 aswell - I'm not sure whether we can clear the depth here as it changes the bound framebuffer, why is it here?
-			//URenderTarget().GetScreenTarget()->clear((uint)UBufferBit::DEPTH);
-#else 
-			Logger::Log(Logger::ERROR, "Viewport/ scissor not set, not supported by renderer.");
-#endif
-
-			m_viewCamera->calculateProjMatrix((float)m_windowRect.Width, (float)m_windowRect.Height);
-			m_viewCamera->calculateViewMatrix();
-			m_viewCamera->calculateViewProjMatrix();
-			//m_viewCamera->getParent()->m_parentScene->render();
-
-			// Default back to screen size.
-			//glViewport(0, 0, m_windowRect.Width, m_windowRect.Height);
-			//glScissor(0, 0, m_windowRect.Width, m_windowRect.Height);
-		}
-
-#ifdef RENDERER_OPENGL
-		glDepthRange(0, 1);
-#else 
-		//Logger::Log(Logger::WARN,"Explicit Depth range not supported by renderer.");
-#endif
-
 	}
-
-	//void AWindow::DrawImGUIFullscreenWindow()
-	//{
-	//	// Creates a full screen dock space 
-	//	// if (IsEditorMode)
-	//	ImGui::DockSpaceOverViewport();
-//
-	//}
 
 	void AWindow::RenderImGUI()
 	{

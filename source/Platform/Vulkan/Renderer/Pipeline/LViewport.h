@@ -10,9 +10,9 @@ namespace Lemonade
     class LEMONADE_API LViewport : public AViewport
     {
     protected:
-        virtual void SetViewport(int x, int y, int width, int height) = 0; 
-        virtual void SetScissor(int x, int y, int width, int height) = 0; 
-        virtual void SetDepthRange(float near, float far) = 0;
+        virtual void SetViewport(int x, int y, int width, int height);
+        virtual void SetScissor(int x, int y, int width, int height); 
+        virtual void SetDepthRange(float near, float far);
     };
 }
 

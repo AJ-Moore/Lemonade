@@ -38,6 +38,13 @@ namespace Lemonade
 				SetViewport(0, 0, m_viewRect.Width, m_viewRect.Height);
 				SetScissor(0, 0, m_viewRect.Width, m_viewRect.Height);
 			}
+
+			camera->CalculateProjMatrix((float)m_windowRect.Width, (float)m_windowRect.Height);
+			camera->CalculateViewMatrix();
+			camera->CalculateViewProjMatrix();
+
+			// Render pass goes here!!! 
+			//m_viewCamera->getParent()->m_parentScene->render();
 		}
 	}
 }

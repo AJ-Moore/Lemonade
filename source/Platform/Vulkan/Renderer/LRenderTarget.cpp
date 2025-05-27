@@ -1,34 +1,39 @@
+#include "Platform/Core/Renderer/Pipeline/ARenderTarget.h"
+#include "Platform/Core/Services/GraphicsServices.h"
+#include "Util/Logger.h"
 #include <LCommon.h>
-
+#include <vulkan/vulkan_core.h>
 
 #ifdef RENDERER_VULKAN
-#include <Renderer/ARenderTarget.h>
-#include <Core/UServiceLocator.h>
-#include <Renderer/Platform/Vulkan/URenderTarget_vulkan.h>
 
-namespace UpsilonEngine
+#include <memory>
+#include <Platform/Vulkan/Renderer/LRenderTarget.h>
+
+namespace Lemonade
 {
-    UniquePtr<URenderTarget> URenderTarget::m_defaultTarget = nullptr;
+    using CitrusCore::Logger;
 
-    URenderTarget::URenderTarget()
+    std::unique_ptr<LRenderTarget> LRenderTarget::m_defaultTarget = nullptr;
+
+    LRenderTarget::LRenderTarget()
     {
     }
 
-    URenderTarget::URenderTarget(glm::ivec2 dimensions)
+    LRenderTarget::LRenderTarget(glm::ivec2 dimensions)
     {
         m_dimensions = dimensions;
     }
 
-    URenderTarget::~URenderTarget()
+    LRenderTarget::~LRenderTarget()
     {
         if (m_frameBuffer)
         {
-            VkDevice device = UServiceLocator::getInstance()->getWindowManager()->getVulkanDevice()->getVkDevice();
+            VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
             vkDestroyFramebuffer(device, m_frameBuffer, nullptr);
         }
     }
 
-    bool URenderTarget::init()
+    bool LRenderTarget::Init()
     {
         if (m_bDoneInit)
         {
@@ -39,23 +44,23 @@ namespace UpsilonEngine
         return true;
     }
 
-    void URenderTarget::bindColourAttachments()
+    void LRenderTarget::bindColourAttachments()
     {
     }
 
-    void URenderTarget::bindColourAttachment(UColourAttachment colourAttachment, uint activeTarget)
+    void LRenderTarget::bindColourAttachment(LColourAttachment colourAttachment, uint activeTarget)
     {
     }
 
-    void URenderTarget::bindDepthAttachment(uint activeTarget)
+    void LRenderTarget::bindDepthAttachment(uint activeTarget)
     {
     }
 
-    void URenderTarget::generateBuffers()
+    void LRenderTarget::generateBuffers()
     {
         // Generate Vulkan Framebuffer
 
-        VkDevice device = UServiceLocator::getInstance()->getWindowManager()->getVulkanDevice()->getVkDevice();
+        VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 
         // Destroy framebuffer if it exists
         if (m_frameBuffer)
@@ -124,7 +129,7 @@ namespace UpsilonEngine
 
         if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &m_frameBuffer) != VK_SUCCESS)
         {
-			LogError("Failed to create framebuffer!");
+			Logger::Log(Logger::ERROR,"Failed to create framebuffer!");
 			throw std::runtime_error("Failed to create framebuffer!");
 		}
 
@@ -132,19 +137,19 @@ namespace UpsilonEngine
         VkCommandBufferAllocateInfo allocInfo = {};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.commandBufferCount = 1;
-        allocInfo.commandPool = UServiceLocator::getInstance()->getWindowManager()->getVulkanDevice()->getGraphicsCommandPool();
+        allocInfo.commandPool = GraphicsServices::GetContext()->GetVulkanDevice().GetGraphicsCommandPool();
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
         if (vkAllocateCommandBuffers(device, &allocInfo, &m_commandBuffer) != VK_SUCCESS)
         {
-			LogError("Failed to allocate command buffer!");
+			Logger::Log(Logger::ERROR, "Failed to allocate command buffer!");
 			throw std::runtime_error("Failed to allocate command buffers!");
 		}
 
 		m_dirtyBuffer = false;
     }
 
-    void URenderTarget::beginRenderPass()
+    void LRenderTarget::BeginRenderPass()
     {
         // If buffer dirty or not generated, generate it. Step was to reduce uneccessary buffer re-generation when adding colour targets & such.
         if (m_dirtyBuffer)
@@ -152,7 +157,11 @@ namespace UpsilonEngine
             generateBuffers();
         }
 
-        VkDevice device = UServiceLocator::getInstance()->getWindowManager()->getVulkanDevice()->getVkDevice();
+        VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
+
+        VkClearValue clearValues[2];
+        clearValues[0].color = { { m_clearColour.r, m_clearColour.g, m_clearColour.b, m_clearColour.a } };;
+        clearValues[1].depthStencil = {1.0f, 0};   
 
         VkRenderPassBeginInfo renderPassInfo = {};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -161,7 +170,8 @@ namespace UpsilonEngine
         renderPassInfo.renderArea.offset = { 0, 0 };
         renderPassInfo.renderArea.extent.width = m_dimensions.x;
         renderPassInfo.renderArea.extent.height = m_dimensions.y;
-
+        renderPassInfo.pClearValues = clearValues;
+        renderPassInfo.clearValueCount = 2;
 
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -170,10 +180,12 @@ namespace UpsilonEngine
         beginInfo.pInheritanceInfo = nullptr; // Optional
 
         vkBeginCommandBuffer(m_commandBuffer, &beginInfo);
+        vkCmdBeginRenderPass(m_commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     }
 
-    void URenderTarget::endRenderPass()
+    void LRenderTarget::EndRenderPass()
     {
+        vkCmdEndRenderPass(m_commandBuffer);
         vkEndCommandBuffer(m_commandBuffer);
 
 		VkSubmitInfo submitInfo = {};
@@ -181,33 +193,34 @@ namespace UpsilonEngine
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &m_commandBuffer;
 
-		vkQueueSubmit(UServiceLocator::getInstance()->getWindowManager()->getVulkanDevice()->getGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
-		vkQueueWaitIdle(UServiceLocator::getInstance()->getWindowManager()->getVulkanDevice()->getGraphicsQueue());
+        VkQueue vkqueue = GraphicsServices::GetContext()->GetVulkanDevice().GetGraphicsQueue();
+		vkQueueSubmit(vkqueue, 1, &submitInfo, VK_NULL_HANDLE);
+		vkQueueWaitIdle(vkqueue);
     }
 
-    void URenderTarget::blit(ARenderTarget& target)
+    void LRenderTarget::blit(ARenderTarget& target)
     {
-        //URenderTarget* rtarget = (URenderTarget*)&target;
+        //LRenderTarget* rtarget = (LRenderTarget*)&target;
         //glBindFramebuffer(GL_READ_FRAMEBUFFER, m_frameBuffer);
         //glBindFramebuffer(GL_DRAW_FRAMEBUFFER, rtarget->m_frameBuffer);
         //glBlitFramebuffer(0, 0, m_dimensions.x, m_dimensions.y, 0, 0, m_dimensions.x, m_dimensions.y, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     }
 
-    void URenderTarget::blit(unsigned int framebuffer)
+    void LRenderTarget::blit(unsigned int framebuffer)
     {
         //glBindFramebuffer(GL_READ_FRAMEBUFFER, m_frameBuffer);
         //glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
         //glBlitFramebuffer(0, 0, m_dimensions.x, m_dimensions.y, 0, 0, m_dimensions.x, m_dimensions.y, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     }
 
-    void URenderTarget::blitToScreen()
+    void LRenderTarget::blitToScreen()
     {
         //glBindFramebuffer(GL_READ_FRAMEBUFFER, m_frameBuffer);
         //glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         //glBlitFramebuffer(0, 0, m_dimensions.x, m_dimensions.y, 0, 0, m_dimensions.x, m_dimensions.y, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     }
 
-    void URenderTarget::setDimensions(glm::ivec2 dimensions)
+    void LRenderTarget::setDimensions(glm::ivec2 dimensions)
     {
         if (dimensions == m_dimensions)
         {
@@ -218,23 +231,31 @@ namespace UpsilonEngine
         m_dirtyBuffer = true;
     }
 
-    void URenderTarget::setColourAttachments(const std::vector<UColourAttachment> attachments, bool multiSampled)
+    void LRenderTarget::SetColourAttachments(int count, bool multisampled)
     {
-        for (const UColourAttachment& attachment : attachments)
+        for (int i = 0; i < count; ++i)
+        {
+            createColourAttachment((int)LColourAttachment::LEMON_COLOR_ATTACHMENT0 + i, multiSampled);
+        }
+    }
+
+    void LRenderTarget::SetColourAttachments(const std::vector<LColourAttachment> attachments, bool multiSampled)
+    {
+        for (const LColourAttachment& attachment : attachments)
         {
             createColourAttachment(attachment, multiSampled);
         }
     }
 
-    void URenderTarget::addMultiSampledDepthAttachment()
+    void LRenderTarget::addMultiSampledDepthAttachment()
     {
         m_hasMultisampledColourAttachment = true;
-        addDepthAttachment(false, 1);
+        AddDepthAttachment(false, 1);
     }
 
-    uint32_t URenderTarget::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+    uint32_t LRenderTarget::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
         VkPhysicalDeviceMemoryProperties memProperties;
-        VkPhysicalDevice physicalDevice = UServiceLocator::getInstance()->getWindowManager()->getVulkanDevice()->getPhysicalDevice();
+        VkPhysicalDevice physicalDevice = GraphicsServices::GetContext()->GetVulkanDevice().GetPhysicalDevice();
         vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 
         for (uint32_t i = 0; i < memProperties.memoryTypeCount; ++i) {
@@ -247,10 +268,10 @@ namespace UpsilonEngine
     }
 
 
-    void URenderTarget::addDepthAttachment(bool useRenderBufferStorage, int layers)
+    void LRenderTarget::AddDepthAttachment(bool useRenderBufferStorage, int layers)
     {
         m_dirtyBuffer = true;
-        VkDevice device = UServiceLocator::getInstance()->getWindowManager()->getVulkanDevice()->getVkDevice();
+        VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
         if (m_bHasDepthAttachment)
         {
             // delete depth attachment
@@ -261,7 +282,7 @@ namespace UpsilonEngine
 
         m_bHasDepthAttachment = true;
 
-        uint32_t graphicsIndex = UServiceLocator::getInstance()->getWindowManager()->getVulkanDevice()->getGraphicsQueueIndex();
+        uint32_t graphicsIndex = GraphicsServices::GetContext()->GetVulkanDevice().GetGraphicsQueueIndex();
         uint32_t queueFamilyIndices[] = { graphicsIndex };
 
         VkImageCreateInfo imageInfo = {};
@@ -325,9 +346,9 @@ namespace UpsilonEngine
         m_depthAttachment.ImageView = depthImageView;
     }
 
-    VulkanRenderTarget URenderTarget::getColourAttachment(UColourAttachment colourAttachment)
+    VulkanRenderTarget LRenderTarget::getColourAttachment(LColourAttachment colourAttachment)
     {
-        std::map<UColourAttachment, VulkanRenderTarget>::iterator iter = m_colourAttachments.find(colourAttachment);
+        std::map<LColourAttachment, VulkanRenderTarget>::iterator iter = m_colourAttachments.find(colourAttachment);
 
         if (iter != m_colourAttachments.end())
         {
@@ -337,23 +358,23 @@ namespace UpsilonEngine
         return VulkanRenderTarget();
     }
 
-    uint URenderTarget::createColourAttachment(UColourAttachment colourAttachment, bool multisampled, int internalFormat)
+    uint LRenderTarget::createColourAttachment(LColourAttachment colourAttachment, bool multisampled, int internalFormat)
     {
         m_dirtyBuffer = true;
-        VkDevice device = UServiceLocator::getInstance()->getWindowManager()->getVulkanDevice()->getVkDevice();
+        VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 
         m_hasMultisampledColourAttachment = multisampled;
-        std::map<UColourAttachment, VulkanRenderTarget>::iterator iter = m_colourAttachments.find(colourAttachment);
+        std::map<LColourAttachment, VulkanRenderTarget>::iterator iter = m_colourAttachments.find(colourAttachment);
 
         if (iter != m_colourAttachments.end())
         {
-            vkDestroyImageView(UServiceLocator::getInstance()->getWindowManager()->getVulkanDevice()->getVkDevice(), iter->second.ImageView, nullptr);
-            vkDestroyImage(UServiceLocator::getInstance()->getWindowManager()->getVulkanDevice()->getVkDevice(), iter->second.Image, nullptr);
+            vkDestroyImageView(device, iter->second.ImageView, nullptr);
+            vkDestroyImage(device, iter->second.Image, nullptr);
         }
 
         m_colourAttachments[colourAttachment] = VulkanRenderTarget();
         
-        uint32_t graphicsIndex = UServiceLocator::getInstance()->getWindowManager()->getVulkanDevice()->getGraphicsQueueIndex();
+        uint32_t graphicsIndex = GraphicsServices::GetContext()->GetVulkanDevice().GetGraphicsQueueIndex();
         uint32_t queueFamilyIndices[] = { graphicsIndex };
 
         VkImageCreateInfo imageInfo = {};
@@ -376,7 +397,7 @@ namespace UpsilonEngine
         imageInfo.pQueueFamilyIndices = queueFamilyIndices;
 
         if (vkCreateImage(device, &imageInfo, nullptr, &m_colourAttachments.at(colourAttachment).Image) != VK_SUCCESS) {
-            LogError("Failed to create image!");
+            Logger::Log(Logger::ERROR,"Failed to create image!");
             throw std::runtime_error("Failed to create image!");
             return -1;
         }
@@ -393,7 +414,7 @@ namespace UpsilonEngine
         viewInfo.subresourceRange.layerCount = 1;
 
         if (vkCreateImageView(device, &viewInfo, nullptr, &m_colourAttachments.at(colourAttachment).ImageView) != VK_SUCCESS) {
-            LogError("Failed to create image view!");
+            Logger::Log(Logger::ERROR,"Failed to create image view!");
             throw std::runtime_error("Failed to create image view!");
             return -1;
         }
@@ -401,26 +422,19 @@ namespace UpsilonEngine
         return 0;
     }
 
-    void URenderTarget::clear(uint clearFlags)
+    void LRenderTarget::Clear(uint clearFlags)
     {
-        beginRenderPass();
-        GLuint flags = 0;
-        flags |= (clearFlags & (uint)UBufferBit::COLOUR) ? GL_COLOR_BUFFER_BIT : 0;
-        flags |= (clearFlags & (uint)UBufferBit::DEPTH) ? GL_DEPTH_BUFFER_BIT : 0;
-        glClearColor(m_clearColour.x, m_clearColour.y, m_clearColour.z, m_clearColour.w);
-        glClear(flags);
-        LogGLErrors();
     }
 
-    ARenderTarget* URenderTarget::GetScreenTarget()
+    LRenderTarget* LRenderTarget::GetScreenTarget()
     {
         if (m_defaultTarget == nullptr)
         {
-            m_defaultTarget = std::make_unique<URenderTarget>();
+            m_defaultTarget = std::make_unique<LRenderTarget>();
             m_defaultTarget->initAsDefault();
         }
 
-        createColourAttachment(UColourAttachment::UP_COLOR_ATTACHMENT0, false);
+        createColourAttachment(LColourAttachment::LEMON_COLOR_ATTACHMENT0, false);
 
         return m_defaultTarget.get();
     }

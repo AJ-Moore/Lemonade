@@ -20,9 +20,10 @@ namespace Lemonade {
     
     void LRenderer::Render()
     {
-        // Iterate through all windows.
-        std::shared_ptr<LWindowManager> windowManager = GraphicsServices::GetWindowManager();
-
+        for (auto& renderStage : m_renderStages)
+        {
+            renderStage.Render(m_renderingData);
+        }
     }
 }
 

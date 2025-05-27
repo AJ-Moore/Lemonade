@@ -45,6 +45,9 @@ namespace Lemonade
 		const std::shared_ptr<std::vector<glm::vec3>> GetTangents();
 		const std::shared_ptr<std::vector<glm::vec3>> GetBiTangents();
 		const std::shared_ptr<std::vector<glm::vec3>> GetNormals() const { return m_normals; }
+		const std::shared_ptr<std::vector<glm::vec4>> GetColours() const { return m_colours; }
+		const std::shared_ptr<std::vector<glm::vec2>> GetUVS() const { return m_uvs; }
+		const std::shared_ptr<std::vector<glm::vec3>> GetUVS3D() const { return m_uvs3d; }
 		const std::shared_ptr<std::vector<glm::vec3>> GetVertices() const { return m_vertices; }
 		const std::shared_ptr<std::vector<glm::vec4>> GetBoneWeights() const { return m_boneWeights; }
 		const std::shared_ptr<std::vector<glm::vec4>> GetBoneIds() const { return m_boneIds; }
