@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Platform/Core/Renderer/Pipeline/AViewport.h>
 #include "Spatial/Transform.h"
 #include <Platform/Core/LObject.h>
 #include <glm/fwd.hpp>

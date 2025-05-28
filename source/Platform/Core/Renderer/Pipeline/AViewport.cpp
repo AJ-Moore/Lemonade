@@ -39,7 +39,7 @@ namespace Lemonade
 				SetScissor(0, 0, m_viewRect.Width, m_viewRect.Height);
 			}
 
-			camera->CalculateProjMatrix((float)m_windowRect.Width, (float)m_windowRect.Height);
+			camera->CalculateProjMatrix((float)m_viewRect.Width, (float)m_viewRect.Height);
 			camera->CalculateViewMatrix();
 			camera->CalculateViewProjMatrix();
 

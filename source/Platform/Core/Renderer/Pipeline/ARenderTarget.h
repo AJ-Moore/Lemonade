@@ -43,7 +43,7 @@ namespace Lemonade
         ARenderTarget(glm::ivec2 dimensions);
         virtual ~ARenderTarget() {}
         virtual bool Init() = 0;
-        virtual void initAsDefault() { m_bDoneInit = true; }
+        virtual void InitAsDefault() { m_bDoneInit = true; }
         virtual void bindColourAttachments() = 0;
         virtual void bindColourAttachment(LColourAttachment colourAttachment, uint activeTarget = 0) = 0;
         virtual void bindDepthAttachment(uint activeTarget = 0) = 0;

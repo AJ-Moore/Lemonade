@@ -1,4 +1,5 @@
 
+#include <Platform/Core/Renderer/Pipeline/LRenderer.h>
 #include "Services/Services.h"
 #include <Platform/Core/WindowManager/LWindowManager.h>
 #include <Platform/Core/Services/GraphicsServices.h>

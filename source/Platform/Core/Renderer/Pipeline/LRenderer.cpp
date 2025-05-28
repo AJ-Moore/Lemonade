@@ -1,7 +1,5 @@
 #include "LRenderer.h"
 #include "Platform/Core/Services/GraphicsServices.h"
-#include "Platform/Core/WindowManager/LWindowManager.h"
-#include <memory>
 
 namespace Lemonade {
     bool LRenderer::Init()
@@ -22,7 +20,7 @@ namespace Lemonade {
     {
         for (auto& renderStage : m_renderStages)
         {
-            renderStage.Render(m_renderingData);
+            renderStage->Render(m_renderingData);
         }
     }
 }

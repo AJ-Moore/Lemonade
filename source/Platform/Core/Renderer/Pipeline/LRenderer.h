@@ -31,17 +31,18 @@ namespace Lemonade
 
 		virtual void RenderScene(); 
 		CitrusCore::Event<const LRenderingData&> OnRenderScene;
+
+		void SetActiveCamera(LCamera* camera) {m_activeCamera = camera;}
+		void SetActiveRenderTarget(ARenderTarget* target) { m_activeRenderTarget = target; }
 	protected:
 		virtual bool Init();
 		virtual void Unload();
 		virtual void Update();
 		virtual void Render();
 
-
-		void SetActiveCamera(LCamera* camera) {m_activeCamera = camera;}
 	private:
 		LRenderingData m_renderingData;
-		std::vector<LRenderStage> m_renderStages;
+		std::vector<std::shared_ptr<LRenderStage>> m_renderStages;
 
 		float m_shadowMapSize = 512.0f;
 		LCamera* m_activeCamera;

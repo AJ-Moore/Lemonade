@@ -13,7 +13,7 @@ namespace Lemonade
         friend class LRenderer;
     protected:
         ~LRenderStage() = default;
-        virtual bool Init(){}
+        virtual bool Init(){ return true; }
         virtual void Update(){}
         virtual void Render(){}
         virtual void Render(const LRenderingData& renderingData);

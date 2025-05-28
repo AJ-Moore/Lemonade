@@ -22,7 +22,7 @@ namespace Lemonade
         LRenderTarget(glm::ivec2 dimensions);
         virtual ~LRenderTarget();
         virtual bool Init();
-        virtual void initAsDefault() { m_bDoneInit = true; }
+        virtual void InitAsDefault();
         virtual void bindColourAttachments();
         virtual void bindColourAttachment(LColourAttachment colourAttachment, uint activeTarget = 0);
         virtual void bindDepthAttachment(uint activeTarget = 0);
@@ -68,6 +68,7 @@ namespace Lemonade
         VkFramebuffer m_frameBuffer = 0;
         VkRenderPass m_renderPass = 0;
         VkCommandBuffer m_commandBuffer = 0;
+        bool m_bRenderToScreen = false;
 
         static std::unique_ptr<LRenderTarget> m_defaultTarget;
     };

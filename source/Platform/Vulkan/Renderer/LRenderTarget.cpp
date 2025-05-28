@@ -33,6 +33,11 @@ namespace Lemonade
         }
     }
 
+    void LRenderTarget::InitAsDefault()
+    {
+        m_bRenderToScreen = true;
+    }
+
     bool LRenderTarget::Init()
     {
         if (m_bDoneInit)
@@ -157,6 +162,7 @@ namespace Lemonade
             generateBuffers();
         }
 
+        GraphicsServices::GetRenderer()->SetActiveRenderTarget(this);
         VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 
         VkClearValue clearValues[2];
@@ -431,7 +437,7 @@ namespace Lemonade
         if (m_defaultTarget == nullptr)
         {
             m_defaultTarget = std::make_unique<LRenderTarget>();
-            m_defaultTarget->initAsDefault();
+            m_defaultTarget->InitAsDefault();
         }
 
         createColourAttachment(LColourAttachment::LEMON_COLOR_ATTACHMENT0, false);

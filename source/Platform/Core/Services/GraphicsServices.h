@@ -1,12 +1,10 @@
 #pragma once
 
-#include "Platform/Core/Services/LService.h"
-#include "Platform/Core/WindowManager/LWindowManager.h"
+#include <Platform/Core/WindowManager/LWindowManager.h>
 #include "Services/Services.h"
 #include <Platform/Core/LObject.h>
 #include <LCommon.h>
 #include <Platform/Core/Time/Time.h>
-#include <Platform/Core/Renderer/Pipeline/LRenderer.h>
 #include <memory>
 
 #if defined(RENDERER_OGL)
@@ -17,6 +15,8 @@
 
 namespace Lemonade
 {
+	class LRenderer;
+
 	class LEMONADE_API GraphicsServices : public CitrusCore::Services
 	{
 		friend class LemonadeRE;

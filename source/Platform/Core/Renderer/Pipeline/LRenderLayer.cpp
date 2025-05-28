@@ -15,7 +15,7 @@
 
 namespace Lemonade 
 {
-	void LRenderLayer::Init()
+	bool LRenderLayer::Init()
 	{
 		const auto vertices = std::make_shared<std::vector<glm::vec3>>(std::vector<glm::vec3>
 		{
@@ -46,13 +46,14 @@ namespace Lemonade
 		mesh->SetTextureCoords(uvs);
 		m_renderBlock->SetMesh(mesh);
 		m_renderBlock->Init();
+        return true;
 	}
 
 	void LRenderLayer::Render()
 	{
-		CitrusCore::Rect window = UServiceLocator::getInstance()->getWindowManager()->getMainWindow()->GetWindowRect();
 		//m_material->getShader().setUniformfv("width", window.Width);
 		//m_material->getShader().setUniformfv("height", window.Height);
+        // BIND SSBO with layer dimensions?
 		m_renderBlock->Render();
 	}
 

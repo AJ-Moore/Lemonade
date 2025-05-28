@@ -4,6 +4,8 @@
 #include <Platform/Core/LObject.h>
 #include <Platform/Core/Renderer/Pipeline/LCamera.h>
 #include <Geometry/Rect.h>
+#include <memory>
+#include <vector>
 
 namespace Lemonade
 {

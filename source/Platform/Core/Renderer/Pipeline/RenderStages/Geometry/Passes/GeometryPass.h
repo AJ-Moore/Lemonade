@@ -9,7 +9,7 @@ namespace Lemonade {
     class LEMONADE_API GeometryPass : public ARenderPass{
     protected:
         bool Init();
-        void Render( const LRenderingData& renderingData);
+        virtual void Render( const LRenderingData& renderingData);
     private:
         LRenderTarget m_geometryTarget;
     };

@@ -1,12 +1,14 @@
+#pragma once 
 
 #include "Platform/Core/LObject.h"
 #include "Platform/Core/Renderer/Pipeline/LRenderer.h"
 #include <LCommon.h>
 
 namespace Lemonade {
+    struct LRenderingData;
     class LEMONADE_API ARenderPass : public LObject 
     {
-        friend class LrenderStage;
+        friend class LRenderStage;
     protected:
         virtual bool Init() = 0;
         virtual void Render(){}

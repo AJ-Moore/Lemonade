@@ -6,38 +6,143 @@
 #include <SDL3/SDL_vulkan.h>
 #include <memory>
 #include <vector>
+#include <vulkan/vulkan_core.h>
 
 namespace Lemonade 
 {
     // Custom allocation functions
     void* CustomAllocate(void* pUserData, size_t size, size_t alignment, VkSystemAllocationScope allocationScope) {
-      return malloc(size);  // Example: just use malloc for allocations
+		return malloc(size);  // Example: just use malloc for allocations
     }
 
     void* CustomReallocate(void* pUserData, void* pOriginal, size_t size, size_t alignment, VkSystemAllocationScope allocationScope) {
-      return realloc(pOriginal, size);  // Example: just use realloc for reallocations
+		return realloc(pOriginal, size);  // Example: just use realloc for reallocations
     }
 
     void CustomFree(void* pUserData, void* pMemory) {
-      free(pMemory);  // Example: just use free for deallocations
+		free(pMemory);  // Example: just use free for deallocations
     }
 
     void LWindow::Unload()
     {
         std::shared_ptr<LGraphicsContext> vulkanContext = GraphicsServices::GetContext();
         vkDestroySurfaceKHR(vulkanContext->GetVkInstance(), m_vkSurface, nullptr);
+		vkDestroySwapchainKHR(vulkanContext->GetVulkanDevice().GetVkDevice(), m_swapChain, nullptr);
+		vkDestroyFence(vulkanContext->GetVulkanDevice().GetVkDevice(), m_fence, nullptr);
     }
+
+	void LWindow::Render()
+	{
+		VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
+
+		vkAcquireNextImageKHR(device, m_swapChain, UINT64_MAX, VK_NULL_HANDLE, m_fence, &m_activeSwapChainImageIndex);
+		vkWaitForFences(device, 1, &m_fence, VK_TRUE, UINT64_MAX);
+		
+		LSDLWindow::Render();	
+	}
     
     bool LWindow::Init()
     {
-      LSDLWindow::Init();
-      allocationCallbacks = {};
-      allocationCallbacks.pfnAllocation = CustomAllocate;
-      allocationCallbacks.pfnReallocation = CustomReallocate;
-      allocationCallbacks.pfnFree = CustomFree;
+    	LSDLWindow::Init();
+    	allocationCallbacks = {};
+    	allocationCallbacks.pfnAllocation = CustomAllocate;
+    	allocationCallbacks.pfnReallocation = CustomReallocate;
+    	allocationCallbacks.pfnFree = CustomFree;	
+    	std::shared_ptr<LGraphicsContext> vulkanContext = GraphicsServices::GetContext();
+    	SDL_Vulkan_CreateSurface(GetSDLWindow(), vulkanContext->GetVkInstance(),&allocationCallbacks, &m_vkSurface);	
+    	CreateSwapChain();	
 
-      std::shared_ptr<LGraphicsContext> vulkanContext = GraphicsServices::GetContext();
-      SDL_Vulkan_CreateSurface(GetSDLWindow(), vulkanContext->GetVkInstance(),&allocationCallbacks, &m_vkSurface);
-      return true;
+		VkFenceCreateInfo fenceInfo = {
+			.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+			.pNext = nullptr,
+			.flags = 0, // or VK_FENCE_CREATE_SIGNALED_BIT
+		};
+		
+		VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
+		VkResult result = vkCreateFence(device, &fenceInfo, nullptr, &m_fence);
+
+    	return true;
+    }
+
+    void LWindow::CreateSwapChain() 
+    {
+    	std::shared_ptr<LGraphicsContext> vulkanContext = GraphicsServices::GetContext();
+    	VkPhysicalDevice physicalDevice = vulkanContext->GetVulkanDevice().GetPhysicalDevice();	
+    	VkDevice device = vulkanContext->GetVulkanDevice().GetVkDevice();	
+    	uint32_t formatCount;
+    	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_vkSurface, &formatCount, nullptr);
+
+    	std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
+
+    	if (formatCount != 0)
+    	{
+			vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_vkSurface, &formatCount, surfaceFormats.data());
+    	}
+
+		VkSurfaceFormatKHR surfaceFormat = surfaceFormats[0];
+
+		for (const auto& format : surfaceFormats)
+		{
+			if (format.format == VK_FORMAT_B8G8R8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+				surfaceFormat = format;
+			}
+		}
+
+		VkSurfaceCapabilitiesKHR capabilities;
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_vkSurface, &capabilities);
+
+		VkExtent2D extent;
+
+		if (capabilities.currentExtent.width != UINT32_MAX) {
+			extent = capabilities.currentExtent;
+		} else {
+			extent.width  = m_windowRect.Width;
+			extent.height = m_windowRect.Height;
+		}
+
+		
+		uint32_t presentModeCount;
+		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_vkSurface, &presentModeCount, nullptr);
+    	std::vector<VkPresentModeKHR> presents(presentModeCount);
+		VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+
+		if (presentModeCount != 0) {
+			vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_vkSurface, &presentModeCount, presents.data());
+
+			for (const auto& mode : presents) {
+				if (mode == VK_PRESENT_MODE_MAILBOX_KHR) {
+					presentMode = mode;
+					break;
+				}
+			}
+		}
+
+		m_imageCount = capabilities.minImageCount + 1; 
+
+    	VkSwapchainCreateInfoKHR createInfo{};
+    	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    	createInfo.surface = m_vkSurface;
+    	createInfo.minImageCount = m_imageCount;
+    	createInfo.imageFormat = surfaceFormat.format;
+    	createInfo.imageColorSpace = surfaceFormat.colorSpace;
+    	createInfo.imageExtent = extent;
+    	// imageArrayLayers - 1 Unless developing steroscopic 3D application, strokes beard.
+    	createInfo.imageArrayLayers = 1;
+		// Colour attachment -> thinking face. VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT for fullscreen pass 
+    	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		createInfo.preTransform = capabilities.currentTransform;
+		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+		createInfo.presentMode = presentMode;
+		createInfo.clipped = VK_TRUE;
+		createInfo.oldSwapchain = VK_NULL_HANDLE;
+	
+		if (vkCreateSwapchainKHR(vulkanContext->GetVulkanDevice().GetVkDevice(), &createInfo, nullptr, &m_swapChain) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create swap chain!");
+		}		
+
+		// Cache the swapchain images
+		vkGetSwapchainImagesKHR(device, m_swapChain, &m_imageCount, nullptr);
+		m_swapChainImages.resize(m_imageCount);
+		vkGetSwapchainImagesKHR(device, m_swapChain, &m_imageCount, m_swapChainImages.data());
     }
 }
