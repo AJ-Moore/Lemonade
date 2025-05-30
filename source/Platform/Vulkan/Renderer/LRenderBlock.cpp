@@ -1,5 +1,4 @@
 #include "Platform/Core/Renderer/RenderBlock/ARenderBlock.h"
-#include <Platform/Core/Services/Services.h>
 #include <Platform/Vulkan/Renderer/LRenderTarget.h>
 #include <Util/Logger.h>
 #include <Platform/Core/Services/GraphicsServices.h>
@@ -212,13 +211,13 @@ namespace Lemonade
 		{
 			// Set binding desciption
 			VkVertexInputBindingDescription bindingDescription;
-			bindingDescription.binding = vertexBuffer.binding;
-			bindingDescription.stride = vertexBuffer.stride;
+			bindingDescription.binding = vertexBuffer.second.Binding;
+			bindingDescription.stride = vertexBuffer.second.Stride;
 			bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
 			VkVertexInputAttributeDescription attributeDescription;
-			attributeDescription.binding = vertexBuffer.binding;
-			attributeDescription.location = vertexBuffer.binding;
+			attributeDescription.binding = vertexBuffer.second.Binding;
+			attributeDescription.location = vertexBuffer.second.Binding;
 			attributeDescription.format = VK_FORMAT_R32G32_SFLOAT;
 			attributeDescription.offset = 0;
 
@@ -236,7 +235,7 @@ namespace Lemonade
 			}
 
 			VkMemoryRequirements memRequirements;
-			vkGetBufferMemoryRequirements(device.GetVkDevice(), &vertexBuffer.second.Buffer, &memRequirements);
+			vkGetBufferMemoryRequirements(device.GetVkDevice(), vertexBuffer.second.Buffer, &memRequirements);
 
 			VkMemoryAllocateInfo allocInfo{};
 			allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;

@@ -1,3 +1,4 @@
+#include "Platform/Core/Services/GraphicsServices.h"
 #include <LCommon.h>
 #include <vulkan/vulkan_core.h>
 
@@ -8,24 +9,25 @@ namespace Lemonade
 {
     void LViewport::SetViewport(int x, int y, int width, int height)
     {
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(swapChainExtent.width);
-        viewport.height = static_cast<float>(swapChainExtent.height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+        m_viewport.x = x;
+        m_viewport.y = y;
+        m_viewport.width = static_cast<float>(width);
+        m_viewport.height = static_cast<float>(height);
+        m_viewport.minDepth = 0.0f;
+        m_viewport.maxDepth = 1.0f;
     }
 
     void LViewport::SetScissor(int x, int y, int width, int height)
     {
         // Get active command buffer.
+        m_scissor.offset = {x,y};
+        m_scissor.extent = {(uint)width, (uint)height};
+    }
 
-        VkRect2D scissor{};
-        scissor.offset = {x,y};
-        scissor.extent = {(uint)width, (uint)height};
-        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+    void LViewport::VulkanApply(VkCommandBuffer commandBuffer)
+    {
+        vkCmdSetScissor(commandBuffer, 0, 1, &m_scissor);
+        vkCmdSetViewport(commandBuffer, 0, 1, &m_viewport);
     }
 
     void LViewport::SetDepthRange(float near, float far)

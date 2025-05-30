@@ -45,6 +45,7 @@ namespace Lemonade
 
 			// Render pass goes here!!! 
 			//m_viewCamera->getParent()->m_parentScene->render();
+			renderer->Render();
 		}
 	}
 }

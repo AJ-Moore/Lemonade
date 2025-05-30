@@ -2,8 +2,7 @@
 
 #include "Events/Event.h"
 #include "LCommon.h"
-#include "Platform/Core/Renderer/Pipeline/ARenderTarget.h"
-#include "Platform/Core/Renderer/Pipeline/LRenderStage.h"
+#include <Platform/Core/Renderer/Pipeline/ARenderTarget.h>
 #include <Platform/Core/Renderer/Pipeline/AViewport.h>
 #include <Platform/Core/Services/LService.h>
 #include <Platform/Core/Renderer/Pipeline/LCamera.h>
@@ -17,6 +16,8 @@ namespace Lemonade
 	{
 
 	};
+
+	class LRenderStage;
 
 	class LEMONADE_API LRenderer : public LService
 	{

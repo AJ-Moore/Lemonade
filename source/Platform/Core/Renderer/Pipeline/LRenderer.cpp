@@ -1,5 +1,6 @@
 #include "LRenderer.h"
 #include "Platform/Core/Services/GraphicsServices.h"
+#include <Platform/Core/Renderer/Pipeline/LRenderStage.h>
 
 namespace Lemonade {
     bool LRenderer::Init()
@@ -22,6 +23,11 @@ namespace Lemonade {
         {
             renderStage->Render(m_renderingData);
         }
+    }
+
+    void LRenderer::RenderScene()
+    {
+        OnRenderScene.Invoke(m_renderingData);
     }
 }
 

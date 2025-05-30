@@ -241,7 +241,7 @@ namespace Lemonade
     {
         for (int i = 0; i < count; ++i)
         {
-            createColourAttachment((int)LColourAttachment::LEMON_COLOR_ATTACHMENT0 + i, multiSampled);
+            createColourAttachment((LColourAttachment)((int)LColourAttachment::LEMON_COLOR_ATTACHMENT0 + i), multisampled);
         }
     }
 
