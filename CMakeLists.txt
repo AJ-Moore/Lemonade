@@ -43,6 +43,9 @@ CPMAddPackage(
     GIT_TAG v3.11.3
 )
 
+# DX Shader Compiler - HLSL -> SPIR-V
+find_library(DXC_LIB dxcompiler)
+
 # GLEW
 ##CPMAddPackage(
 ##  NAME GLEW
@@ -83,6 +86,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glm::glm
     OpenGL::GL
     Vulkan::Vulkan
+    dxcompiler
     #${Vulkan_LIBRARIES}
     #Trying to stick to modern GL 3.x + glew/ glu should not be required
     #glew

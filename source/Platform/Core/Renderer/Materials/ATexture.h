@@ -15,7 +15,8 @@ namespace Lemonade
 
 		const TextureFormat& GetTextureFormat() const { return m_textureFormat; }
 	protected:
-		virtual bool LoadResource(std::string path);
+		virtual bool LoadResource(std::string path) override;
+		virtual void UnloadResource() override{}
 		TextureFormat GetTextureFormat(SDL_Surface* surface) const;
 		virtual int GetNativeTextureFormat(TextureFormat format) const = 0;
 		virtual void LoadNativeTextureFromSurface(SDL_Surface* surface) = 0;

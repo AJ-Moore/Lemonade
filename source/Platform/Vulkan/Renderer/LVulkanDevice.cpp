@@ -47,7 +47,7 @@ namespace Lemonade
 	{
 		VkBool32 supportsPresent = false;
 		bool checkPresentation = false;
-		const VkSurfaceKHR& surface = GraphicsServices::GetWindowManager()->GetMainWindow()->GetVkSurface();
+		VkSurfaceKHR surface = GraphicsServices::GetWindowManager()->GetMainWindow()->GetVkSurface();
 
 		if (queue == VK_QUEUE_GRAPHICS_BIT)
 		{
@@ -90,6 +90,21 @@ namespace Lemonade
 		queueCreateInfo.flags = 0;
 
 		return graphicsQueueFamilyIndex;
+	}
+
+	void LVulkanDevice::CreatePipelineCache() 
+	{
+		if (m_vkCache != VK_NULL_HANDLE)
+		{
+			Logger::Log(Logger::WARN, "Pipeline cache has already been created.");
+		}
+
+		VkPipelineCacheCreateInfo cacheCreateInfo{};
+		cacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+		cacheCreateInfo.initialDataSize = 0;
+		cacheCreateInfo.pInitialData = 0;
+
+		vkCreatePipelineCache(m_vkDevice, &cacheCreateInfo, nullptr, &m_vkCache);
 	}
 
 	bool LVulkanDevice::CreateVulkanDevice()

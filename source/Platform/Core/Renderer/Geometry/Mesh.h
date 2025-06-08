@@ -23,7 +23,7 @@ namespace Lemonade
 		void SetNormals(std::shared_ptr<std::vector<glm::vec3>> normals) { m_normals = normals; }
 		void SetTangents(std::shared_ptr<std::vector<glm::vec3>> tangents) { m_bShouldGenerateTangents = false; m_tangents = tangents; }
 		void SetBiTangents(std::shared_ptr<std::vector<glm::vec3>> tangents) { m_bShouldGenerateTangents = false; m_bitangents = tangents; }
-		void SetTextureCoords(std::shared_ptr<std::vector<glm::vec2>> textureCoords) { m_bDirtyTangents = true; m_uvs = textureCoords; }
+		void SetUVS(std::shared_ptr<std::vector<glm::vec2>> textureCoords) { m_bDirtyTangents = true; m_uvs = textureCoords; }
 		void SetTexture3dCoords(std::shared_ptr<std::vector<glm::vec3>> textureCoords) { m_uvs3d = textureCoords; }
 		void SetColours(std::shared_ptr<std::vector<glm::vec4>> Colours) { m_colours = Colours; }
 		void setBones(std::shared_ptr<std::vector<std::shared_ptr<Bone>>> bones) { m_bones = bones; }

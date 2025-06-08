@@ -49,10 +49,10 @@ namespace Lemonade {
 
 		#ifdef USING_SDL
 		{
-			if (!SDL_Init(SDL_INIT_VIDEO)) {
-				Logger::Log(Logger::ERROR, "Failed to initialise SDL.");
-				return false;
-			}
+			//if (!SDL_Init(SDL_INIT_VIDEO)) {
+			//	Logger::Log(Logger::ERROR, "Failed to initialise SDL.");
+			//	return false;
+			//}
 		}
 		#endif
 

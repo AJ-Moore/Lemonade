@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Base/Object.h"
+#include "Platform/Core/Renderer/Materials/Material.h"
 #include <LCommon.h>
 #include <Resources/ResourceGroup.h>
 #include <Resources/ResourceHandle.h>
@@ -8,11 +9,13 @@
 
 namespace Lemonade
 {
-	class LEMONADE_API GraphicsResources : CitrusCore::Object
+	class LEMONADE_API LGraphicsResources : CitrusCore::Object
 	{
 	public:
-		std::shared_ptr<CitrusCore::ResourceHandle<ATexture>> GetTextureHandle(std::string path) const;
+		CitrusCore::ResourcePtr<ATexture> GetTextureHandle(std::string path);
+		CitrusCore::ResourcePtr<Material> GetMaterialHandle(std::string path);
 	private:
 		CitrusCore::ResourceGroup<ATexture> m_textures;
+		CitrusCore::ResourceGroup<Material> m_materials;
 	};
 }

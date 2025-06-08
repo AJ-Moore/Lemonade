@@ -91,6 +91,17 @@ namespace Lemonade
 			{VKBufferType::BoneWeights,  {} },
 			{VKBufferType::BoneIds,  {} }
 		};
+
+	private: 
+		void CreateVkPipeline();
+
+		VkPipeline m_vkPipeline = VK_NULL_HANDLE;
+		VkPipelineInputAssemblyStateCreateInfo m_inputAssembly;
+		VkPipelineRasterizationStateCreateInfo m_rasterizer;
+		VkPipelineColorBlendAttachmentState m_colorBlendAttachment; 
+		VkPipelineMultisampleStateCreateInfo m_multisampling;
+		VkPipelineVertexInputStateCreateInfo m_vertexInputInfo;
+		VkPipelineLayout m_pipelineLayout;
 	};
 }
 #endif

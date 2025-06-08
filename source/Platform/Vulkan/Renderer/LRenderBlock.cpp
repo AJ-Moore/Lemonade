@@ -254,5 +254,24 @@ namespace Lemonade
 			m_vkBuffers.push_back(vertexBuffer.second.Buffer);
 		}
 	}
+
+	void LRenderBlock::CreateVkPipeline() 
+	{
+		m_mate
+
+		VkGraphicsPipelineCreateInfo createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		createInfo.pNext = nullptr; 
+		createInfo.flags = 0;
+
+
+		LVulkanDevice device = GraphicsServices::GetContext()->GetVulkanDevice();
+		VkResult result = vkCreateGraphicsPipelines(device.GetVkDevice(), 
+			device.GetPipelineCache(), 
+			1, 
+			&createInfo, 
+			nullptr, 
+			&m_vkPipeline);
+	}
 }
 #endif

@@ -9,8 +9,8 @@ namespace Lemonade
 	{
 	protected:
 		virtual bool LoadResource(std::string path) override;
+		virtual void UnloadResource() override{}
 	private:
-		virtual uint32 LoadAndCompileShader(const std::string& shaderFile, ShaderType shaderType);
 		const std::string m_meta = ".meta";
 	};
 }

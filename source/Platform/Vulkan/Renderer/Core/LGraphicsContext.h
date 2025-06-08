@@ -10,6 +10,9 @@ namespace Lemonade
 	public:
 		const LVulkanDevice& GetVulkanDevice() const noexcept { return m_vulkanDevice; }
 		const VkInstance& GetVkInstance() const { return m_vkInstance; }
+
+		// Hack called prior to swap chain creation, we can probably mitigate this by creating a surface just to query properties?
+		void InitVulkanDevice() { m_vulkanDevice.Init(); }
 	protected:
 		virtual void Unload();
 		virtual bool Init();

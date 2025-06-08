@@ -11,10 +11,4 @@ namespace Lemonade {
         // Else recompile shader.
         return false;
     }
-    
-    uint32 Shader::LoadAndCompileShader(const std::string& shaderFile, ShaderType shaderType)
-    {
-        return uint32();
-    }
-    
 }

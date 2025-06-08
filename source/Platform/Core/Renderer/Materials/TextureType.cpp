@@ -52,22 +52,22 @@ namespace Lemonade
 		{"nearest", TextureFilter::NearestNeighbour}
 	};
 
-	TextureData::TextureData(TextureType type)
+	TextureData::TextureData(TextureType type, CitrusCore::ResourcePtr<ATexture> texture)
 	{
 		m_textureType = type;
+		m_texture = texture;
 	}
 
-	TextureData::TextureData(TextureType type, std::string path)
+	TextureType TextureData::GetTextureType(std::string type)
 	{
-		m_textureType = type;
-		m_path = path;
-	}
+		auto result = m_textureLookup.find(type);
 
-	TextureData::TextureData(TextureType type, std::string path, std::string shaderVar)
-	{
-		m_textureType = type;
-		m_path = path;
-		m_shaderVariable = shaderVar;
+		if (result != m_textureLookup.end())
+		{
+			return result->second;
+		}
+
+		return TextureType::None;
 	}
 
 	std::string TextureData::GetName()

@@ -5,14 +5,13 @@
 #include <LCommon.h>
 
 namespace Lemonade {
-    struct LRenderingData;
     class LEMONADE_API ARenderPass : public LObject 
     {
         friend class LRenderStage;
     protected:
         virtual bool Init() = 0;
         virtual void Render(){}
-        virtual void Render(const LRenderingData& renderingData);
+        virtual void Render(const LRenderingData& renderingData) = 0; 
         virtual void Update(){}
         virtual void Unload(){}
     private:

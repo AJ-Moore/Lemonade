@@ -1,13 +1,15 @@
 #pragma once
 
 #include "LCommon.h"
+#include "Platform/Core/Renderer/Materials/ATexture.h"
+#include <Resources/ResourceHandle.h>
 #include <Platform/Core/Renderer/Materials/TextureUtils.h>
 
 namespace Lemonade
 {
 	enum class TextureType
 	{
-		None,
+		None = 0x0,
 		Diffuse,
 		Specular,
 		Ambient,
@@ -40,15 +42,14 @@ namespace Lemonade
 	{
 	public:
 		TextureData() = delete;
-		TextureData(TextureType type);
-		TextureData(TextureType type, std::string path);
-		TextureData(TextureType type, std::string path, std::string shaderVar);
+		TextureData(TextureType type, CitrusCore::ResourcePtr<ATexture>);
 		std::string GetName();
 		std::string GetPath() const { return m_path; }
 		std::string GetShaderVariable() const { return m_shaderVariable; }
 		TextureType GetTextureType() const { return m_textureType; }
 		static std::string GetStringTypeForBindType(TextureBindType bindType);
 		static TextureBindType GetTextureBindType(std::string);
+		static TextureType GetTextureType(std::string type);
 
 		// Implemented in native platform Texture.cpp
 		static int GetNativeTextureFormat(const TextureFormat& format);
@@ -62,5 +63,7 @@ namespace Lemonade
 		std::string m_shaderVariable;
 		std::string m_path;
 		TextureType m_textureType;
+
+		CitrusCore::ResourcePtr<ATexture> m_texture;
 	};
 }

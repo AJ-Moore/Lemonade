@@ -1,6 +1,7 @@
 #pragma once
 
 #include <LCommon.h>
+#include <vulkan/vulkan_core.h>
 #ifdef RENDERER_VULKAN
 #include <Platform/Core/LObject.h>
 #include <vector>
@@ -25,6 +26,7 @@ namespace Lemonade
 		VkQueue GetTransferQueue() const { return m_transferQueue; }
 		VkQueue GetComputeQueue() const { return m_computeQueue; }
 		VkCommandPool GetGraphicsCommandPool() const { return m_graphicsCommandPool; }
+		VkPipelineCache GetPipelineCache() const { return m_vkCache; }
 
 		int GetGraphicsQueueIndex() const { return m_graphicsQueueIndex; }
 		int GetTransferQueueIndex() const { return m_transferQueueIndex; }
@@ -33,6 +35,7 @@ namespace Lemonade
 
 	private:
 		bool CreateVulkanDevice();
+		void CreatePipelineCache();
 		void DestroyVulkanDevice();
 		bool IsDeviceSuitable(VkPhysicalDevice device);
 		int RateDeviceSuitability(VkPhysicalDevice device);
@@ -53,6 +56,8 @@ namespace Lemonade
 		VkCommandPool m_graphicsCommandPool;
 		VkCommandPool m_transferCommandPool;
 		VkCommandPool m_computeCommandPool;
+
+		VkPipelineCache m_vkCache;
 
 		int m_graphicsQueueIndex = -1;
 		int m_transferQueueIndex = -1;

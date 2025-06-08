@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Resources/ResourceHandle.h"
 #include <Spatial/Transform.h>
 #include <LCommon.h>
 #include <Platform/Core/LObject.h>
@@ -33,7 +34,7 @@ namespace Lemonade
 		virtual ~ARenderBlock() {}
 
 		virtual void SetDrawMode(PrimitiveMode mode) = 0;
-		virtual void SetMaterial(std::shared_ptr<Material> Material) { m_material = Material; }
+		virtual void SetMaterial(CitrusCore::ResourcePtr<Material> Material) { m_material = Material; }
 		void SetTransform(std::shared_ptr<CitrusCore::Transform> Transform) { m_transform = Transform; }
 		void SetMesh(std::shared_ptr<Mesh> Mesh) { m_mesh = Mesh; }
 		void SetDirty() { m_bufferDirty = true; }
@@ -65,7 +66,7 @@ namespace Lemonade
 		std::shared_ptr<Mesh> m_mesh;
 
 		/// The material used by this mesh 
-		std::shared_ptr<Material> m_material;
+		CitrusCore::ResourcePtr<Material>  m_material;
 
 		/// Holds all the render state information
 		uint32 m_renderState = 0;

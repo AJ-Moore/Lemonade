@@ -1,12 +1,16 @@
 #include "Material.h"
 #include "Platform/Core/Renderer/Materials/ATexture.h"
+#include "Platform/Core/Services/GraphicsServices.h"
+#include "Resources/ResourceHandle.h"
 #include <fstream>
 #include <filesystem>
 #include <Platform/Core/Renderer/Materials/TextureUtils.h>
 #include <Platform/Core/Renderer/Materials/TextureType.h>
 #include <LCommon.h>
 
+#include <memory>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace Lemonade
 {
@@ -80,6 +84,7 @@ namespace Lemonade
 
 		// Load Textures
 		json::iterator textures = data.find(m_materialTextures);
+		int bindLocation = 0;// Implicit bind location fallback.
 
 		if (textures != data.end())
 		{
@@ -90,6 +95,38 @@ namespace Lemonade
 				std::string textureTypeStr = it.key().c_str();
 				Logger::Log(Logger::VERBOSE,"Loading texture [%s]", textureTypeStr.c_str());
 
+				TextureType textureType = TextureData::GetTextureType(textureTypeStr);
+
+				if (textureType == TextureType::None)
+				{
+					continue;
+				}
+
+				json textureData = it.value();
+				json::iterator bindloc = textureData.find("bindlocation");
+
+				if (bindloc != textureData.end())
+				{
+					int bindIndex = bindloc.value().get<int>();
+					bindLocation = bindIndex;
+				}
+				else
+				{
+					int bindIndex = bindLocation++;
+				}
+
+				// For ref - we want to load a texture regardless of whether we believe the path to be correct! 
+				json::iterator texturepath = textureData.find("path");
+				std::string path;
+
+				if (texturepath != textureData.end())
+				{
+					path = bindloc.value().get<std::string>();
+				}
+
+				ResourcePtr<ATexture> texture = GraphicsServices::GetGraphicsResources()->GetTextureHandle(path);
+				std::shared_ptr<TextureData> textureDataPtr = std::make_shared<TextureData>(textureType, texture);
+				m_textures.insert(std::make_pair(textureType, textureDataPtr));
 			}
 		}
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Platform/Core/WindowManager/LWindowManager.h>
+#include "Platform/Core/Resources/GraphicsResources.h"
 #include "Services/Services.h"
 #include <Platform/Core/LObject.h>
 #include <LCommon.h>
@@ -27,6 +28,7 @@ namespace Lemonade
 		static std::shared_ptr<LRenderer> GetRenderer() { return GetInstance().m_renderer; }
 		static std::shared_ptr<LGraphicsContext> GetContext() { return GetInstance().m_context; }
 		static std::shared_ptr<LWindowManager> GetWindowManager() { return GetInstance().m_windowManager; }
+		static std::shared_ptr<LGraphicsResources> GetGraphicsResources() { return GetInstance().m_graphicsResources; }
 	
 		// Delete the methods we don't want to allow
 		GraphicsServices(GraphicsServices const&) = delete; // Copy constructor
@@ -40,5 +42,6 @@ namespace Lemonade
 		std::shared_ptr<LRenderer> m_renderer;
 		std::shared_ptr<LGraphicsContext> m_context;
 		std::shared_ptr<LWindowManager> m_windowManager;
+		std::shared_ptr<LGraphicsResources> m_graphicsResources;
 	};
 }

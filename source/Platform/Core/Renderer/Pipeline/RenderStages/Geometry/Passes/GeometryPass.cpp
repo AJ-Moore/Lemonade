@@ -9,6 +9,7 @@ namespace Lemonade
 		m_geometryTarget.SetColourAttachments(7, true);
         m_geometryTarget.AddDepthAttachment();
         m_geometryTarget.Init();
+        return true;
     }
 
     void GeometryPass::Render( const LRenderingData& renderingData)

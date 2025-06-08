@@ -19,7 +19,7 @@ namespace Lemonade
 	public:
     LRenderLayer(std::shared_ptr<Material> material) : m_material(material) {}
 		virtual bool Init();
-        virtual void Unload();
+        virtual void Unload(){}
 		virtual void Render();
 		virtual void Update();
 

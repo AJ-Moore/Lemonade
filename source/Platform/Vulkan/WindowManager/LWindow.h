@@ -15,7 +15,7 @@ namespace Lemonade
 		friend class LWindowManager; 
 	public:
 		virtual ~LWindow(){}
-		const VkSurfaceKHR& GetVkSurface() const { return m_vkSurface; }
+		VkSurfaceKHR GetVkSurface() { return m_vkSurface; }
 		VkImage GetSwapChainImage() const { return m_swapChainImages[m_activeSwapChainImageIndex]; }
 	protected:
 		virtual void Unload() override;
@@ -23,6 +23,7 @@ namespace Lemonade
 		virtual void Render() override;
 	private:
 		void CreateSwapChain();
+		void CreateVkPipeline();
 
 		VkSwapchainKHR m_swapChain = VK_NULL_HANDLE;
 		VkSurfaceKHR m_vkSurface = VK_NULL_HANDLE;

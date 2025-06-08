@@ -39,8 +39,8 @@ namespace Lemonade
     class ARenderTarget
     {
     public:
-        ARenderTarget();
-        ARenderTarget(glm::ivec2 dimensions);
+        ARenderTarget(){}
+        ARenderTarget(glm::ivec2 dimensions){m_dimensions = dimensions;}
         virtual ~ARenderTarget() {}
         virtual bool Init() = 0;
         virtual void InitAsDefault() { m_bDoneInit = true; }

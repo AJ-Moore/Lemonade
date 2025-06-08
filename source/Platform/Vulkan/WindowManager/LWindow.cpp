@@ -2,6 +2,7 @@
 #include <Platform/Vulkan/Renderer/Core/LGraphicsContext.h>
 #include "Platform/Core/WindowManager/LSDLWindow.h"
 #include "SDL3/SDL_vulkan.h"
+#include "Util/Logger.h"
 #include <Platform/Vulkan/WindowManager/LWindow.h>
 #include <SDL3/SDL_vulkan.h>
 #include <memory>
@@ -49,7 +50,13 @@ namespace Lemonade
     	allocationCallbacks.pfnReallocation = CustomReallocate;
     	allocationCallbacks.pfnFree = CustomFree;	
     	std::shared_ptr<LGraphicsContext> vulkanContext = GraphicsServices::GetContext();
-    	SDL_Vulkan_CreateSurface(GetSDLWindow(), vulkanContext->GetVkInstance(),&allocationCallbacks, &m_vkSurface);	
+
+    	if (!SDL_Vulkan_CreateSurface(GetSDLWindow(), vulkanContext->GetVkInstance(),&allocationCallbacks, &m_vkSurface)){
+			CitrusCore::Logger::Log(CitrusCore::Logger::ERROR, "Failed to create vulkan surface [%s]", SDL_GetError());
+			throw("Failed to create surface");
+			return false;
+		}
+
     	CreateSwapChain();	
 
 		VkFenceCreateInfo fenceInfo = {
@@ -64,9 +71,15 @@ namespace Lemonade
     	return true;
     }
 
+	void LWindow::CreateVkPipeline() 
+	{
+		VkGraphicsPipelineCreateInfo pipelineInfo = {};
+	}
+
     void LWindow::CreateSwapChain() 
     {
     	std::shared_ptr<LGraphicsContext> vulkanContext = GraphicsServices::GetContext();
+		vulkanContext->InitVulkanDevice(); // HACK
     	VkPhysicalDevice physicalDevice = vulkanContext->GetVulkanDevice().GetPhysicalDevice();	
     	VkDevice device = vulkanContext->GetVulkanDevice().GetVkDevice();	
     	uint32_t formatCount;
