@@ -14,8 +14,10 @@ namespace Lemonade
 	public:
 		CitrusCore::ResourcePtr<ATexture> GetTextureHandle(std::string path);
 		CitrusCore::ResourcePtr<Material> GetMaterialHandle(std::string path);
+		CitrusCore::ResourcePtr<AShader> GetShaderHandle(std::string path);
 	private:
 		CitrusCore::ResourceGroup<ATexture> m_textures;
+		CitrusCore::ResourceGroup<AShader> m_shaders;
 		CitrusCore::ResourceGroup<Material> m_materials;
 	};
 }

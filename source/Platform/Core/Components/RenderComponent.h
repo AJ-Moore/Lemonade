@@ -17,7 +17,7 @@ namespace Lemonade
         virtual void Update() override;
         virtual void Render() override;
 
-        void AssignTransform(std::shared_ptr<CitrusCore::Transform> trans);
+        void SetTransform(std::shared_ptr<CitrusCore::Transform> trans);
     protected:
         std::unique_ptr<ARenderBlock> m_renderBlock;
         std::shared_ptr<CitrusCore::Transform> m_transform;

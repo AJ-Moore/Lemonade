@@ -33,6 +33,49 @@ CPMAddPackage(
     URL_HASH SHA256=a725bd6d04261fdda0dd8d950659e1dc15a8065d025275ef460d32ae7dcfc182
 )
 
+# Add SPIRV-Headers first (needed by SPIRV-Tools)
+CPMAddPackage(
+  NAME SPIRV-Headers
+  GITHUB_REPOSITORY KhronosGroup/SPIRV-Headers
+  GIT_TAG 09913f088a1197aba4aefd300a876b2ebbaa3391
+)
+
+# Then SPIRV-Tools, and make sure to disable its tests
+CPMAddPackage(
+  NAME SPIRV-Tools
+  GITHUB_REPOSITORY KhronosGroup/SPIRV-Tools
+  GIT_TAG v2025.1
+  OPTIONS
+    "SPIRV_TOOLS_BUILD_STATIC ON"
+    "SPIRV_TOOLS_BUILD_TESTS OFF"
+    "SPIRV_WERROR OFF"
+)
+
+# glslang
+CPMAddPackage(
+  NAME glslang
+  GITHUB_REPOSITORY KhronosGroup/glslang
+  GIT_TAG main
+  OPTIONS
+    "ENABLE_GLSLANG_BINARIES OFF"
+    "ENABLE_HLSL ON"
+    "ENABLE_OPT OFF"
+    "ENABLE_CTEST OFF"
+)
+
+# Shaderc glsl -> spirv
+CPMAddPackage(
+  NAME shaderc
+  GITHUB_REPOSITORY google/shaderc
+  GIT_TAG main
+  OPTIONS
+    "SHADERC_SKIP_TESTS ON"
+    "SHADERC_ENABLE_TESTS OFF"
+    "SHADERC_ENABLE_WERROR_COMPILE OFF"
+    "ENABLE_SPIRV_TOOLS_INSTALL OFF"
+    "BUILD_TESTING OFF"
+)
+
 # GLM
 CPMAddPackage("gh:g-truc/glm#1.0.1")
 
@@ -87,6 +130,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     OpenGL::GL
     Vulkan::Vulkan
     dxcompiler
+    shaderc
     #${Vulkan_LIBRARIES}
     #Trying to stick to modern GL 3.x + glew/ glu should not be required
     #glew

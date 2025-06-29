@@ -1,4 +1,6 @@
-#include "AViewport.h"
+
+#include "Spatial/Transform.h"
+#include <Platform/Core/Renderer/Pipeline/AViewport.h>
 #include <Platform/Core/Renderer/Pipeline/LCamera.h>
 #include <Platform/Core/Services/GraphicsServices.h>
 #include <Platform/Core/Renderer/Pipeline/LRenderer.h>
@@ -8,7 +10,10 @@ namespace Lemonade
 {
 	bool AViewport::Init()
 	{
-		return false;
+		// TODO remove Test
+		m_cameras.push_back(std::make_shared<LCamera>(new CitrusCore::Transform()));
+
+		return true;
 	}
 
 	void AViewport::Unload()
@@ -45,7 +50,7 @@ namespace Lemonade
 
 			// Render pass goes here!!! 
 			//m_viewCamera->getParent()->m_parentScene->render();
-			renderer->Render();
+			renderer->RenderPass();
 		}
 	}
 }

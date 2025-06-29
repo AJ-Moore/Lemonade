@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Platform/Core/Renderer/Pipeline/LRenderer.h"
 #include <LCommon.h>
 #include <Util/UID.h>
 #include <Geometry/Rect.h>
@@ -13,7 +12,8 @@ namespace Lemonade {
 
 	using CitrusCore::Rect;
 
-	class LEMONADE_API LWindowManager;
+	class LWindowManager;
+	class LRenderer;
 
 	class LEMONADE_API AWindow : public LObject {
 		friend class LWindowManager; 
@@ -34,12 +34,12 @@ namespace Lemonade {
 		virtual void ToggleFullscreen(bool value);
 
 	protected:
-		virtual bool Init();
-		virtual void Update(){}
-		virtual void Unload();
+		virtual bool Init() override;
+		virtual void Update() override{}
+		virtual void Unload() override;
 		virtual bool Load(std::string configFile);
 		virtual bool Load();
-		virtual void Render();
+		virtual void Render() override;
 		virtual void RenderImGUI();
 
 		bool m_fullscreen = false;
@@ -58,7 +58,7 @@ namespace Lemonade {
 		LWindowManager* m_windowManager = nullptr; 
 
 		std::unordered_map<uint64, std::shared_ptr<LCamera>> m_cameras;
-		std::unordered_set<std::shared_ptr<AViewport>> m_viewports;
+		std::vector<std::shared_ptr<AViewport>> m_viewports;
 
 		std::shared_ptr<LCamera> m_postProcessingCamera;
 

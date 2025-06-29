@@ -43,7 +43,7 @@ namespace Lemonade
 		std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
 		mesh->SetShouldGenerateTangents(false);
 		mesh->SetVertices(vertices);
-		mesh->SetTextureCoords(uvs);
+		mesh->SetUVS(uvs);
 		m_renderBlock->SetMesh(mesh);
 		m_renderBlock->Init();
         return true;

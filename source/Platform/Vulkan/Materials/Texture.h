@@ -7,7 +7,7 @@
 
 namespace Lemonade
 {
-	class LEMONADE_API Texture : ATexture
+	class LEMONADE_API Texture : public ATexture
 	{
 	public:
 		virtual void Bind(){}

@@ -1,4 +1,5 @@
 #include "Material.h"
+#include "Platform/Core/Renderer/Materials/AShader.h"
 #include "Platform/Core/Renderer/Materials/ATexture.h"
 #include "Platform/Core/Services/GraphicsServices.h"
 #include "Resources/ResourceHandle.h"
@@ -12,6 +13,8 @@
 #include <nlohmann/json.hpp>
 #include <utility>
 
+#include <Platform/Vulkan/Renderer/LShaderProgram.h>
+
 namespace Lemonade
 {
 	using namespace nlohmann;
@@ -20,7 +23,12 @@ namespace Lemonade
     {
     }
 
-    ResourcePtr<AShaderProgram> Material::GetShader() const
+	void Material::UnloadResource()
+	{ 
+		throw "TODO implement unload of resources.";
+	}
+
+    std::shared_ptr<AShaderProgram> Material::GetShader() const
     {
         return m_shader;
     }
@@ -63,6 +71,9 @@ namespace Lemonade
 			textureBindType = TextureData::GetTextureBindType(bindType);
 		}
 
+		// Get shader program.
+		m_shader = std::make_shared<LShaderProgram>();
+
 		// Load Shaders 
 		json::iterator shaders = data.find(m_materialShaders);
 		if (shaders != data.end())
@@ -77,7 +88,8 @@ namespace Lemonade
 				{
 					std::string shaderPath = shaderIt.value().get<std::string>();
 					Logger::Log(Logger::VERBOSE, "Loading shader [%s]", shaderPath.c_str());
-					ShaderType shaderType = AShader::GetShaderType(shaderPath);
+					ResourcePtr<AShader> shader = GraphicsServices::GetGraphicsResources()->GetShaderHandle(shaderPath);
+					m_shader->AddShader(shader);
 				}
 			}
 		}

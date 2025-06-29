@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Resources/AResource.h"
+#include "Platform/Core/LObject.h"
+#include <Resources/AResource.h>
 #include <Resources/ResourceHandle.h>
 #include <Platform/Core/Renderer/Materials/AShader.h>
 #include <memory>
@@ -8,10 +9,10 @@
 
 namespace Lemonade
 {
-	class AShaderProgram : public CitrusCore::AResource<AShaderProgram>
+	class AShaderProgram : public Lemonade::LObject
 	{
 	public:
-		virtual void Bind();
+		virtual void Bind() = 0;
 		const std::vector<CitrusCore::ResourcePtr<AShader>>& GetShaders() const { return m_shaders; }
 
 		virtual void AddShader(CitrusCore::ResourcePtr<AShader> shader);
@@ -20,8 +21,6 @@ namespace Lemonade
 		virtual void Unload(){}
 		virtual void Update(){}
 		virtual void Render(){}
-
-		virtual bool LoadResource(std::string path) = 0;
 	private: 
 		std::vector<CitrusCore::ResourcePtr<AShader>> m_shaders;
 	};

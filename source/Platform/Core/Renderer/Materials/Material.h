@@ -1,5 +1,6 @@
 #pragma once 
 
+#include "LCommon.h"
 #include "Platform/Core/Renderer/Materials/TextureType.h"
 #include "Resources/AResource.h"
 #include "Resources/ResourceHandle.h"
@@ -14,18 +15,18 @@ namespace Lemonade
 	using CitrusCore::ResourcePtr;
 	using CitrusCore::Logger;
 
-	class Material : public CitrusCore::AResource<Material>
+	class LEMONADE_API Material : public CitrusCore::AResource<Material>
 	{
 	public: 
 		void Bind();
 
-		ResourcePtr<AShaderProgram> GetShader() const;
+		std::shared_ptr<AShaderProgram> GetShader() const;
 		ResourcePtr<ATexture> GetTexture() const;
 	protected: 
 		virtual bool LoadResource(std::string path) override;
-		virtual void UnloadResource() override{}
+		virtual void UnloadResource() override;
 	private:
-		ResourcePtr<AShaderProgram> m_shader;
+		std::shared_ptr<AShaderProgram> m_shader;
 		ResourcePtr<ATexture> m_texture;
 
 		std::unordered_map<TextureType, std::shared_ptr<TextureData>> m_textures;

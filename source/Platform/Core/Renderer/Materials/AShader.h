@@ -27,14 +27,26 @@ namespace Lemonade
 		Amplification,
 	};
 
+	class AShaderProgram;
+
 	class AShader : public CitrusCore::AResource<AShader>
 	{
+		friend class AShaderProgram;
 	public:
 		virtual void Bind() = 0;
-		virtual uint32 LoadAndCompileShader(const std::string& shaderFile, ShaderType shaderType) = 0;
 		static const std::unordered_map<std::string, ShaderType> m_shaderTypeLookup;
-		static ShaderType GetShaderType(std::string type);
+		static ShaderType GetShaderTypeForString(std::string type);
+		ShaderType GetShaderType() const { return m_shaderType; }
+
 	protected:
-		virtual bool LoadResource(std::string path) = 0;
+		virtual bool LoadResource(std::string path) override = 0;
+		virtual void UnloadResource() override{};
+		void SetParent(AShaderProgram* shaderProgram) { m_parent = shaderProgram; }
+
+		AShaderProgram* GetParent() const { return m_parent; }
+		void SetShaderType(ShaderType type);
+	private:
+		AShaderProgram* m_parent = nullptr;
+		ShaderType m_shaderType;
 	};
 }

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Events/Event.h"
-#include "LCommon.h"
+#include <Platform/Vulkan/WindowManager/LWindow.h>
+#include <Events/Event.h>
+#include <LCommon.h>
 #include <Platform/Core/Renderer/Pipeline/ARenderTarget.h>
 #include <Platform/Core/Renderer/Pipeline/AViewport.h>
 #include <Platform/Core/Services/LService.h>
@@ -14,7 +15,8 @@ namespace Lemonade
 {
 	struct LEMONADE_API LRenderingData
 	{
-
+		LCamera* ActiveCamera;
+		LWindow* ActiveWindow;
 	};
 
 	class LRenderStage;
@@ -40,6 +42,7 @@ namespace Lemonade
 		virtual void Unload();
 		virtual void Update();
 		virtual void Render();
+		void RenderPass();
 
 	private:
 		LRenderingData m_renderingData;

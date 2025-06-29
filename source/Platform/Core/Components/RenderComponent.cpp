@@ -41,7 +41,7 @@ namespace Lemonade{
 
     }
 
-    void RenderComponent::AssignTransform(std::shared_ptr<CitrusCore::Transform> trans)
+    void RenderComponent::SetTransform(std::shared_ptr<CitrusCore::Transform> trans)
     {
         m_transform = trans;
         m_renderBlock->SetTransform(trans);

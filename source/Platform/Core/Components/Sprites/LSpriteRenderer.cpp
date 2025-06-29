@@ -33,7 +33,7 @@ namespace Lemonade {
             { 1.0f, 0.0f,},
         });
 
-        const std::shared_ptr<std::vector<glm::vec3>> normals = = std::make_shared<std::vector<glm::vec2>>(std::vector<glm::vec3>
+        const std::shared_ptr<std::vector<glm::vec3>> normals = std::make_shared<std::vector<glm::vec3>>(std::vector<glm::vec3>
         {
             { 0.0f, 0.0f, 1.0f },
             { 0.0f, 0.0f, 1.0f },
@@ -49,7 +49,13 @@ namespace Lemonade {
         m_mesh->SetVertices(vertices);
         m_mesh->SetUVS(m_uvs);
         m_mesh->SetNormals(normals);
-        AssignMesh(m_mesh);
+        SetMesh(m_mesh);
+        return true;
+    }
+
+    LSpriteRenderer::LSpriteRenderer(CitrusCore::ResourcePtr<Material> material)
+    {
+        SetMaterial(material);
     }
 
     void LSpriteRenderer::SetMaterial(CitrusCore::ResourcePtr<Material> material)

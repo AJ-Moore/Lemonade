@@ -121,9 +121,8 @@ namespace Lemonade {
 	{
 		for (auto& window : m_windows)
 		{
+			m_activeWindow = window.get();
 			window->Render();
 		}
 	}
-
-
 }

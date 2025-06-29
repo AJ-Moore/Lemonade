@@ -1,7 +1,14 @@
-#include "Platform/Core/Renderer/Pipeline/ARenderTarget.h"
-#include "Platform/Core/Services/GraphicsServices.h"
-#include "Util/Logger.h"
+#include "Platform/Core/Time/Time.h"
+#include <Platform/Core/Renderer/Pipeline/ARenderTarget.h>
+#include <Platform/Core/Services/GraphicsServices.h>
+#include <Platform/Vulkan/WindowManager/LWindow.h>
+#include <Platform/Core/Renderer/Pipeline/LRenderer.h>
+#include <Util/Logger.h>
 #include <LCommon.h>
+#include <cstdint>
+#include <glm/fwd.hpp>
+#include <stdexcept>
+#include <vector>
 #include <vulkan/vulkan_core.h>
 
 #ifdef RENDERER_VULKAN
@@ -13,7 +20,14 @@ namespace Lemonade
 {
     using CitrusCore::Logger;
 
-    std::unique_ptr<LRenderTarget> LRenderTarget::m_defaultTarget = nullptr;
+    std::unordered_map<CitrusCore::UID, std::vector<std::shared_ptr<LRenderTarget>>> LRenderTarget::m_defaultTargets;
+
+    // TODO remove this hack, thanks
+    LRenderTarget& LRenderTarget::GetDefault()
+    {
+        static LRenderTarget target; 
+        return target;
+    }
 
     LRenderTarget::LRenderTarget()
     {
@@ -46,6 +60,30 @@ namespace Lemonade
         }
 
         m_bDoneInit = true;
+        m_dirtyBuffer = true;
+
+        VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
+
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
+        {
+            VkSemaphoreCreateInfo semaphoreInfo{};
+            semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+            vkCreateSemaphore(device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphore[i]);
+    
+            VkFenceCreateInfo fenceInfo{};
+            fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+            fenceInfo.flags = 0;
+
+            if (vkCreateFence(device, &fenceInfo, nullptr, &m_inFlightFence[i]) != VK_SUCCESS) {
+                throw std::runtime_error("Failed to create in-flight fence!");
+            }
+
+            if (vkCreateFence(device, &fenceInfo, nullptr, &m_queueFence[i]) != VK_SUCCESS) {
+                throw std::runtime_error("Failed to create in-flight fence!");
+            }
+        }
+
+
         return true;
     }
 
@@ -61,7 +99,7 @@ namespace Lemonade
     {
     }
 
-    void LRenderTarget::generateBuffers()
+    void LRenderTarget::GenerateBuffers()
     {
         // Generate Vulkan Framebuffer
 
@@ -92,6 +130,12 @@ namespace Lemonade
             colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+            if (m_bRenderToScreen)
+            {
+                colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+            }
+
             attachmentDescription.push_back(colorAttachment);
 
             VkAttachmentReference attachmentRef = {};
@@ -145,11 +189,14 @@ namespace Lemonade
         allocInfo.commandPool = GraphicsServices::GetContext()->GetVulkanDevice().GetGraphicsCommandPool();
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
-        if (vkAllocateCommandBuffers(device, &allocInfo, &m_commandBuffer) != VK_SUCCESS)
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
         {
-			Logger::Log(Logger::ERROR, "Failed to allocate command buffer!");
-			throw std::runtime_error("Failed to allocate command buffers!");
-		}
+            if (vkAllocateCommandBuffers(device, &allocInfo, &m_commandBuffer[i]) != VK_SUCCESS)
+            {
+                Logger::Log(Logger::ERROR, "Failed to allocate command buffer!");
+                throw std::runtime_error("Failed to allocate command buffers!");
+            }
+        }
 
 		m_dirtyBuffer = false;
     }
@@ -159,15 +206,24 @@ namespace Lemonade
         // If buffer dirty or not generated, generate it. Step was to reduce uneccessary buffer re-generation when adding colour targets & such.
         if (m_dirtyBuffer)
         {
-            generateBuffers();
+            GenerateBuffers();
         }
 
         GraphicsServices::GetRenderer()->SetActiveRenderTarget(this);
         VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 
         VkClearValue clearValues[2];
-        clearValues[0].color = { { m_clearColour.r, m_clearColour.g, m_clearColour.b, m_clearColour.a } };;
-        clearValues[1].depthStencil = {1.0f, 0};   
+        clearValues[0].color = { { m_clearColour.r, m_clearColour.g, m_clearColour.b, m_clearColour.a } };
+
+        if (m_bHasDepthAttachment)
+        {
+            clearValues[1].depthStencil = {1.0f, 0};   
+        }
+
+        LWindow* activeWindow = GraphicsServices::GetWindowManager()->GetActiveWindow();
+        uint32_t currentFrame = activeWindow->GetCurrentFrame();
+
+        m_activeBuffer = m_commandBuffer[currentFrame];
 
         VkRenderPassBeginInfo renderPassInfo = {};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -177,7 +233,7 @@ namespace Lemonade
         renderPassInfo.renderArea.extent.width = m_dimensions.x;
         renderPassInfo.renderArea.extent.height = m_dimensions.y;
         renderPassInfo.pClearValues = clearValues;
-        renderPassInfo.clearValueCount = 2;
+        renderPassInfo.clearValueCount = (m_bHasDepthAttachment) ? 2 : 1;
 
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -185,23 +241,159 @@ namespace Lemonade
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT; // Set command buffer usage flags
         beginInfo.pInheritanceInfo = nullptr; // Optional
 
-        vkBeginCommandBuffer(m_commandBuffer, &beginInfo);
-        vkCmdBeginRenderPass(m_commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkResetCommandBuffer(m_commandBuffer[currentFrame], 0); 
+        vkBeginCommandBuffer(m_commandBuffer[currentFrame], &beginInfo);
+        vkCmdBeginRenderPass(m_commandBuffer[currentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        // TODO replace with viewport apply method
+        VkViewport viewport = {};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = (float)800;
+        viewport.height = (float)600;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        
+        vkCmdSetViewport(m_commandBuffer[currentFrame], 0, 1, &viewport);
+        
+        VkRect2D scissor = {};
+        scissor.offset = {0, 0};
+        scissor.extent = {800, 600};
+        
+        vkCmdSetScissor(m_commandBuffer[currentFrame], 0, 1, &scissor);
     }
 
     void LRenderTarget::EndRenderPass()
     {
-        vkCmdEndRenderPass(m_commandBuffer);
-        vkEndCommandBuffer(m_commandBuffer);
+        VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
+        VkResult result;
 
-		VkSubmitInfo submitInfo = {};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        LWindow* activeWindow = GraphicsServices::GetWindowManager()->GetActiveWindow();
+        uint32_t currentFrame = activeWindow->GetCurrentFrame();
+        
+        vkCmdEndRenderPass(m_commandBuffer[currentFrame]);
+        VkResult endResult = vkEndCommandBuffer(m_commandBuffer[currentFrame]);
+        
+        vkEndCommandBuffer(m_commandBuffer[currentFrame]);
+        if (endResult != VK_SUCCESS) {
+            Logger::Log(Logger::ERROR, "Failed to end command buffer: %d", endResult);
+            return; // don't submit if ending failed
+        }
+        
+        VkPipelineStageFlags waitStages[] = {
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
+        };        
+        
+        VkSemaphore semaphore = activeWindow->GetSemaphore();
+        //VkFence inFlightFrame = activeWindow->GetFence();
+
+        uint64_t value = activeWindow->GetFrameSemaphoreTimelineValueAndIncrement();
+        uint64_t nextValue = value + 1;
+
+        VkSemaphore signalSemaphores[] = { m_renderFinishedSemaphore[currentFrame], semaphore };
+        uint64_t signalValues[] = {0,value + 1 }; 
+
+        VkTimelineSemaphoreSubmitInfo timelineInfo{};
+        timelineInfo.sType = VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO;
+        timelineInfo.signalSemaphoreValueCount = 2;
+        timelineInfo.pSignalSemaphoreValues = signalValues;
+        timelineInfo.pWaitSemaphoreValues = &value;
+        timelineInfo.waitSemaphoreValueCount = 1;
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        if (m_bRenderToScreen)
+        {
+            submitInfo.signalSemaphoreCount = 2;
+            submitInfo.pSignalSemaphores = signalSemaphores;
+        }
+        else {
+            timelineInfo.signalSemaphoreValueCount = 1;
+            timelineInfo.pSignalSemaphoreValues = &signalValues[1];
+            submitInfo.signalSemaphoreCount = 1; 
+            submitInfo.pSignalSemaphores = &semaphore;
+        }
+
+        submitInfo.pNext = &timelineInfo;
+
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_commandBuffer;
+		submitInfo.pCommandBuffers = &m_commandBuffer[currentFrame];
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = &semaphore;
+        submitInfo.pWaitDstStageMask = waitStages;
 
-        VkQueue vkqueue = GraphicsServices::GetContext()->GetVulkanDevice().GetGraphicsQueue();
-		vkQueueSubmit(vkqueue, 1, &submitInfo, VK_NULL_HANDLE);
-		vkQueueWaitIdle(vkqueue);
+        VkQueue graphicsQueue = GraphicsServices::GetContext()->GetVulkanDevice().GetGraphicsQueue();
+
+		result = vkQueueSubmit(graphicsQueue, 1, &submitInfo, m_inFlightFence[currentFrame]);
+
+        if (result != VK_SUCCESS) {
+            // Handle error — log it, abort, whatever
+            printf("vkQueueSubmit failed with error %d\n", result);
+        }
+
+		//vkQueueWaitIdle(graphicsQueue);
+
+        // Wait until frame finished rendering.
+        //activeWindow->WaitForFence();
+
+        uint64_t timeout = 100000000; // 100ms
+        result = vkWaitForFences(device, 1, &m_inFlightFence[currentFrame], VK_TRUE, timeout);
+
+        if (result == VK_TIMEOUT) {
+            Logger::Log(Logger::ERROR, "Fence wait timed out after %llu ns", timeout);
+
+            VkResult status = vkGetFenceStatus(device, m_inFlightFence[currentFrame]);
+            if (status == VK_SUCCESS) {
+                Logger::Log(Logger::WARN, "Fence appears to have signaled despite timeout.");
+            } else if (status == VK_NOT_READY) {
+                Logger::Log(Logger::ERROR, "Fence is still unsignaled (VK_NOT_READY). Possible GPU hang or bad submission.");
+            } else {
+                Logger::Log(Logger::ERROR, "vkGetFenceStatus returned error code: %d", status);
+            }
+
+        } else if (result == VK_SUCCESS) {
+            Logger::Log(Logger::INFO, "Fence signaled successfully within timeout.");
+        } else {
+            Logger::Log(Logger::ERROR, "vkWaitForFences failed with error: %d", result);
+        }
+
+        //vkWaitForFences(device, 1, &m_inFlightFence, VK_TRUE, UINT64_MAX);
+        vkResetFences(device, 1, &m_inFlightFence[currentFrame]);
+        
+
+        if (m_bRenderToScreen)
+        {
+            uint32_t imageIndex = activeWindow->GetSwapChainImageIndex();
+            VkQueue presentationQueue = GraphicsServices::GetContext()->GetVulkanDevice().GetPresentationQueue();
+            VkPresentInfoKHR presentInfo = {};
+            presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+            presentInfo.waitSemaphoreCount = 1;
+            presentInfo.pWaitSemaphores = &m_renderFinishedSemaphore[currentFrame];
+            presentInfo.swapchainCount = 1;
+            presentInfo.pSwapchains = &activeWindow->GetSwapChain();
+            presentInfo.pImageIndices = &imageIndex;
+    
+            result = vkQueuePresentKHR(presentationQueue, &presentInfo);
+    
+            if (result != VK_SUCCESS) {
+                // Handle error — log it, abort, whatever
+                printf("present failed with error %d\n", result);
+            }
+        }
+
+        //vkQueueSubmit(graphicsQueue, 0, nullptr, m_inFlightFence);
+//
+        //if (result != VK_SUCCESS) {
+        //    // Handle error — log it, abort, whatever
+        //    printf("vkQueueSubmit failed with error %d\n", result);
+        //}
+//
+        //vkWaitForFences(device, 1, &m_inFlightFence, VK_TRUE, UINT64_MAX);
+        //vkResetFences(device, 1, &m_inFlightFence);
+
+
+        //vkQueueWaitIdle(presentationQueue);
     }
 
     void LRenderTarget::blit(ARenderTarget& target)
@@ -241,7 +433,7 @@ namespace Lemonade
     {
         for (int i = 0; i < count; ++i)
         {
-            createColourAttachment((LColourAttachment)((int)LColourAttachment::LEMON_COLOR_ATTACHMENT0 + i), multisampled);
+            CreateColourAttachment((LColourAttachment)((int)LColourAttachment::LEMON_COLOR_ATTACHMENT0 + i), multisampled);
         }
     }
 
@@ -249,7 +441,7 @@ namespace Lemonade
     {
         for (const LColourAttachment& attachment : attachments)
         {
-            createColourAttachment(attachment, multiSampled);
+            CreateColourAttachment(attachment, multiSampled);
         }
     }
 
@@ -352,7 +544,7 @@ namespace Lemonade
         m_depthAttachment.ImageView = depthImageView;
     }
 
-    VulkanRenderTarget LRenderTarget::getColourAttachment(LColourAttachment colourAttachment)
+    VulkanRenderTarget LRenderTarget::GetColourAttachment(LColourAttachment colourAttachment)
     {
         std::map<LColourAttachment, VulkanRenderTarget>::iterator iter = m_colourAttachments.find(colourAttachment);
 
@@ -364,7 +556,7 @@ namespace Lemonade
         return VulkanRenderTarget();
     }
 
-    uint LRenderTarget::createColourAttachment(LColourAttachment colourAttachment, bool multisampled, int internalFormat)
+    uint LRenderTarget::CreateColourAttachment(LColourAttachment colourAttachment, bool multisampled, int internalFormat)
     {
         m_dirtyBuffer = true;
         VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
@@ -432,17 +624,58 @@ namespace Lemonade
     {
     }
 
-    LRenderTarget* LRenderTarget::GetScreenTarget()
+    ARenderTarget* LRenderTarget::GetScreenTarget(LWindow* window)
     {
-        if (m_defaultTarget == nullptr)
+        if (window == nullptr)
         {
-            m_defaultTarget = std::make_unique<LRenderTarget>();
-            m_defaultTarget->InitAsDefault();
+            throw std::runtime_error("You cannot get the rendertarget for a null window.");
         }
 
-        createColourAttachment(LColourAttachment::LEMON_COLOR_ATTACHMENT0, false);
+        VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
+        auto iter = m_defaultTargets.find(window->GetUID());
 
-        return m_defaultTarget.get();
+        if (iter == m_defaultTargets.end())
+        {
+            // Get swapchain images for window 
+            const std::vector<VkImage>& images = window->GetSwapChainImages();
+
+            if (images.empty())
+            {
+                throw std::runtime_error("Swapchain not created!?, unable to create render target for swapchain.");
+            }
+
+            for (VkImage image : images)
+            {
+                // Create a new render target.
+                std::shared_ptr<LRenderTarget> renderTarget = std::make_shared<LRenderTarget>(glm::ivec2(window->GetWidth(), window->GetHeight()));
+                renderTarget->InitAsDefault();
+                renderTarget->Init();
+                m_defaultTargets[window->GetUID()].push_back(renderTarget);
+
+                // Add a single colour attachment to new render target -> Set this to the swap chain image/ image view for the swapchain image.
+                renderTarget->m_colourAttachments[LColourAttachment::LEMON_COLOR_ATTACHMENT0] = VulkanRenderTarget();
+                renderTarget->m_colourAttachments[LColourAttachment::LEMON_COLOR_ATTACHMENT0].Image = image;
+
+                // Create the image views from the swapchain images.
+                VkImageViewCreateInfo viewInfo = {};
+                viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+                viewInfo.image = image;
+                viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+                viewInfo.format = window->GetSwapChainImageFormat();
+                viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                viewInfo.subresourceRange.baseMipLevel = 0;
+                viewInfo.subresourceRange.levelCount = 1;
+                viewInfo.subresourceRange.baseArrayLayer = 0;
+                viewInfo.subresourceRange.layerCount = 1;
+
+                if (vkCreateImageView(device, &viewInfo, nullptr, &renderTarget->m_colourAttachments[LColourAttachment::LEMON_COLOR_ATTACHMENT0].ImageView) != VK_SUCCESS) {
+                    throw std::runtime_error("Failed to create image views for swapchain");
+                }         
+            }
+        }
+
+        // Return target for current swap chain frame. 
+        return m_defaultTargets[window->GetUID()][window->GetCurrentFrame()].get();
     }
 }
 

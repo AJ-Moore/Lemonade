@@ -28,7 +28,7 @@ namespace Lemonade
 
 		/// Returns a reference to the default persistant window.
 		std::shared_ptr<LWindow> GetMainWindow() { return m_defaultWindow; }
-
+		LWindow* GetActiveWindow() { return m_activeWindow; }
 		const std::vector<std::shared_ptr<LWindow>> GetWindows() { return m_windows; }
 
 	protected:
@@ -42,5 +42,6 @@ namespace Lemonade
 		LGraphicsContext m_graphicsContext;
 		std::vector<std::shared_ptr<LWindow>> m_windows;
 		std::shared_ptr<LWindow> m_defaultWindow;
+		LWindow* m_activeWindow;
 	};
 }

@@ -6,6 +6,7 @@ namespace Lemonade
     void LRenderStage::AddPass(std::shared_ptr<ARenderPass> renderPass)
     {
         m_renderPasses.push_back(renderPass);
+        renderPass->Init();
     }
 
     void LRenderStage::Render(const LRenderingData& renderingData)

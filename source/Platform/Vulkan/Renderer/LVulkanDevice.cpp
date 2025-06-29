@@ -195,9 +195,9 @@ namespace Lemonade
 		}
 
 		vkGetDeviceQueue(m_vkDevice, queueCreateInfo[0].queueFamilyIndex, 0, &m_graphicsQueue);
-		vkGetDeviceQueue(m_vkDevice, queueCreateInfo[1].queueFamilyIndex, 1, &m_computeQueue);
-		vkGetDeviceQueue(m_vkDevice, queueCreateInfo[2].queueFamilyIndex, 2, &m_transferQueue);
-		vkGetDeviceQueue(m_vkDevice, queueCreateInfo[3].queueFamilyIndex, 3, &m_presentationQueue);
+		vkGetDeviceQueue(m_vkDevice, queueCreateInfo[1].queueFamilyIndex, 0, &m_computeQueue);
+		vkGetDeviceQueue(m_vkDevice, queueCreateInfo[2].queueFamilyIndex, 0, &m_transferQueue);
+		vkGetDeviceQueue(m_vkDevice, queueCreateInfo[3].queueFamilyIndex, 0, &m_presentationQueue);
 
 		// Create command pools
 		VkCommandPoolCreateInfo graphicsPoolInfo = {};

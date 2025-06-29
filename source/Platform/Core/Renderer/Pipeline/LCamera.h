@@ -16,7 +16,13 @@ namespace Lemonade
 		const glm::mat4& GetProjMatrix() const { return m_projMat; }
 		const glm::mat4& GetViewProjMatrix() const { return m_viewProjMatrix; }
 
+		CitrusCore::Transform* GetTransfrom() { return m_transform; }
 		void SetTransform(CitrusCore::Transform* transform) { m_transform = transform; }
+	protected:
+		virtual bool Init()override{ return true; }
+		virtual void Unload()override{}
+		virtual void Update()override{}
+		virtual void Render()override{}
 	private:
 		void SetOrthographicDimensions(glm::vec4 rect);
 

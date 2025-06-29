@@ -1,6 +1,6 @@
 #pragma once 
 
-#include "LCommon.h"
+#include <LCommon.h>
 #include <SDL3/SDL_video.h>
 #include <Platform/Core/WindowManager/AWindow.h>
 

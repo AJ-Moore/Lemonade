@@ -1,10 +1,12 @@
 #include <Platform/Core/Services/GraphicsServices.h>
 #include <Platform/Vulkan/Renderer/Core/LGraphicsContext.h>
 #include "Platform/Core/WindowManager/LSDLWindow.h"
+#include "Platform/Vulkan/Renderer/LRenderTarget.h"
 #include "SDL3/SDL_vulkan.h"
 #include "Util/Logger.h"
 #include <Platform/Vulkan/WindowManager/LWindow.h>
 #include <SDL3/SDL_vulkan.h>
+#include <cstdint>
 #include <memory>
 #include <vector>
 #include <vulkan/vulkan_core.h>
@@ -29,15 +31,28 @@ namespace Lemonade
         std::shared_ptr<LGraphicsContext> vulkanContext = GraphicsServices::GetContext();
         vkDestroySurfaceKHR(vulkanContext->GetVkInstance(), m_vkSurface, nullptr);
 		vkDestroySwapchainKHR(vulkanContext->GetVulkanDevice().GetVkDevice(), m_swapChain, nullptr);
-		vkDestroyFence(vulkanContext->GetVulkanDevice().GetVkDevice(), m_fence, nullptr);
+
+		for (int i = 0; i < LRenderTarget::MAX_FRAMES_IN_FLIGHT; ++i) {
+			vkDestroyFence(vulkanContext->GetVulkanDevice().GetVkDevice(), m_fence[i], nullptr);
+			vkDestroySemaphore(vulkanContext->GetVulkanDevice().GetVkDevice(), m_imageAvailableSemaphore[i], nullptr);
+		}
     }
 
 	void LWindow::Render()
 	{
 		VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 
-		vkAcquireNextImageKHR(device, m_swapChain, UINT64_MAX, VK_NULL_HANDLE, m_fence, &m_activeSwapChainImageIndex);
-		vkWaitForFences(device, 1, &m_fence, VK_TRUE, UINT64_MAX);
+		m_currentFrame = ++m_currentFrame % LRenderTarget::MAX_FRAMES_IN_FLIGHT;
+
+		//vkWaitForFences(device, 1, &m_fence[m_currentFrame], VK_TRUE, UINT64_MAX);
+		//vkResetFences(device, 1, &m_fence[m_currentFrame]);
+		m_currentSemaphoreValue = 0;
+		VkResult result = vkAcquireNextImageKHR(device, m_swapChain, UINT64_MAX, m_imageAvailableSemaphore[m_currentFrame], VK_NULL_HANDLE, &m_activeSwapChainImageIndex);
+		
+		if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+			Logger::Log(Logger::ERROR, "Failed to acquire next image: %d", result);
+		}
+
 		
 		LSDLWindow::Render();	
 	}
@@ -62,18 +77,37 @@ namespace Lemonade
 		VkFenceCreateInfo fenceInfo = {
 			.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
 			.pNext = nullptr,
-			.flags = 0, // or VK_FENCE_CREATE_SIGNALED_BIT
+			//.flags = 0, // or VK_FENCE_CREATE_SIGNALED_BIT
+			//.flags = 0,
+			.flags = VK_FENCE_CREATE_SIGNALED_BIT,
 		};
 		
 		VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
-		VkResult result = vkCreateFence(device, &fenceInfo, nullptr, &m_fence);
+
+		for (int i = 0; i < LRenderTarget::MAX_FRAMES_IN_FLIGHT; ++i) {
+			vkCreateFence(device, &fenceInfo, nullptr, &m_fence[i]);
+
+			// We need a timeline as we have multiple submits per frame waiting on a single semaphore
+			VkSemaphoreTypeCreateInfo timelineCreateInfo = {
+				.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO,
+				.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE,
+				.initialValue = 0
+			};
+
+			VkSemaphoreCreateInfo semaphoreInfo{};
+			semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+			semaphoreInfo.pNext = &timelineCreateInfo;
+			vkCreateSemaphore(device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphore[i]);
+		}
 
     	return true;
     }
 
-	void LWindow::CreateVkPipeline() 
+	uint64_t LWindow::GetFrameSemaphoreTimelineValueAndIncrement()
 	{
-		VkGraphicsPipelineCreateInfo pipelineInfo = {};
+		uint64_t value = m_currentSemaphoreValue;
+		m_currentSemaphoreValue++; 
+		return value;
 	}
 
     void LWindow::CreateSwapChain() 
@@ -130,7 +164,9 @@ namespace Lemonade
 			}
 		}
 
+		
 		m_imageCount = capabilities.minImageCount + 1; 
+		m_imageFormat = surfaceFormat.format;
 
     	VkSwapchainCreateInfoKHR createInfo{};
     	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;

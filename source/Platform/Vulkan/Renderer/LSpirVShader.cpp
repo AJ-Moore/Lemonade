@@ -1,18 +1,17 @@
-#include "Platform/Core/Services/GraphicsServices.h"
-#include <dxc/dxcapi.h>
+#ifdef NOPE
+
 #include <Platform/Vulkan/Renderer/LSpirVShader.h>
-#include <memory>
+#include <dxc/WinAdapter.h>
 #include <string>
 
 namespace Lemonade 
 {
-    uint32 LSpirVShader::LoadAndCompileShader(const std::string& shaderFile, ShaderType shaderType)
-    {
-        return 0;
-    }
+	// Load bearing
+	LSpirVShader::~LSpirVShader() = default;  
 
     bool LSpirVShader::LoadResource(std::string path)
 	{
+		SetShaderType(GetShaderTypeForString(path));
 		InitialiseDXC();
         std::wstring wsPath(path.begin(), path.end());
 
@@ -31,12 +30,12 @@ namespace Lemonade
 		LPCWSTR targetProfile{};
 		size_t idx = path.rfind('.');
 		if (idx != std::string::npos) {
-			std::string extension = path.substr(idx + 1);
-			if (extension == "vert") {
-				targetProfile = L"vs_6_1";
+			std::string extension = path.substr(idx - 2);
+			if (extension == "vs.hlsl") {
+				targetProfile = L"vs_6_0";
 			}
-			if (extension == "frag") {
-				targetProfile = L"ps_6_1";
+			if (extension == "fs.hlsl") {
+				targetProfile = L"ps_6_0";
 			}
 			// Mapping for other file types go here (cs_x_y, lib_x_y, etc.)
 		}
@@ -44,13 +43,15 @@ namespace Lemonade
 		// Configure the compiler arguments for compiling the HLSL shader to SPIR-V
 		std::vector<LPCWSTR> arguments = {
 			// (Optional) name of the shader file to be displayed e.g. in an error message
-			wsPath.c_str(),
+			//wsPath.c_str(),
 			// Shader main entry point
 			L"-E", L"main",
 			// Shader target profile
-			L"-T", targetProfile,
+			L"-T", L"ps_6_0",
+			//L"-Qstrip_debug", 
 			// Compile to SPIRV
-			L"-spirv"
+			//L"-spirv",
+			//L"-fspv-target-env=vulkan1.2",
 		};
 
         CompileShader(sourceBlob, arguments);
@@ -63,13 +64,47 @@ namespace Lemonade
     void LSpirVShader::CompileShader(IDxcBlobEncoding* sourceBlob, std::vector<LPCWSTR>& arguments)
 	{
 		// Compile shader
-		DxcBuffer buffer{};
-		buffer.Encoding = DXC_CP_ACP;
-		buffer.Ptr = sourceBlob->GetBufferPointer();
-		buffer.Size = sourceBlob->GetBufferSize();
+		//DxcBuffer buffer{};
+		//buffer.Encoding = DXC_CP_UTF8;
+		//buffer.Ptr = sourceBlob->GetBufferPointer();
+		//buffer.Size = sourceBlob->GetBufferSize();
+
+		const char* shaderSource = R"(
+			float4 main(float4 pos : SV_Position) : SV_Target {
+				return float4(1.0, 0.0, 0.0, 1.0);
+			}
+		)";
+
+		// Create a blob for the source with UTF-8 encoding
+		CComPtr<IDxcBlobEncoding> sourceBloby;
+		HRESULT hr = m_library->CreateBlobWithEncodingFromPinned(
+			shaderSource,
+			(UINT32)strlen(shaderSource),
+			DXC_CP_UTF8,
+			&sourceBloby);
+
+		DxcBuffer buffer = {};
+		buffer.Ptr = sourceBloby->GetBufferPointer();
+		buffer.Size = sourceBloby->GetBufferSize();
+		buffer.Encoding = DXC_CP_UTF8;
+		
+		//DxcBuffer buffer = {};
+		//buffer.Ptr = shaderSource;
+		//buffer.Size = strlen(shaderSource);
+		//buffer.Encoding = DXC_CP_UTF8; // Assume UTF-8 string
 
 		HRESULT hres;
 		IDxcResult* result{ nullptr };
+
+		if (sourceBlob) {
+			const char* text = reinterpret_cast<const char*>(sourceBlob->GetBufferPointer());
+			size_t size = sourceBlob->GetBufferSize();
+		
+			// Add null terminator (optional, for safety)
+			std::string str(text, size);
+			printf("%s\n", str.c_str());
+		}
+
         //m_compiler->Compile
 		hres = m_compiler->Compile(
 			&buffer,
@@ -78,6 +113,10 @@ namespace Lemonade
 			nullptr,
 			IID_IDxcResult,
 			(void**)(&result));
+
+		if (FAILED(hres)) {
+			printf("Compile call failed: 0x%08X\n", hres);
+		}
 
 		if (SUCCEEDED(hres)) {
 			result->GetStatus(&hres);
@@ -96,16 +135,7 @@ namespace Lemonade
 		// Get compilation result
 		CComPtr<IDxcBlob> code;
 		result->GetResult(&code);
-        OnShaderCompiled.Invoke(code);
-
-		/// VULKAN SPECIFIC BIT, REST CAN BE MADE COMMON! 
-		// Create a Vulkan shader module from the compilation result
-		VkShaderModuleCreateInfo shaderModuleCI{};
-		shaderModuleCI.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		shaderModuleCI.codeSize = code->GetBufferSize();
-		shaderModuleCI.pCode = (uint32_t*)code->GetBufferPointer();
-		VkShaderModule shaderModule;
-		vkCreateShaderModule(GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice(), &shaderModuleCI, nullptr, &shaderModule);
+        OnShaderCompiled(code);
 
         //> ??
         code.Release();
@@ -134,7 +164,7 @@ namespace Lemonade
 
 		// Initialize DXC compiler
 		IDxcCompiler3* compiler;
-		hres = DxcCreateInstance(CLSID_DxcCompiler, IID_IDxcCompiler, (void**)compiler);
+		hres = DxcCreateInstance(CLSID_DxcCompiler, IID_IDxcCompiler, (void**)&compiler);
 		if (FAILED(hres)) {
 			throw std::runtime_error("Could not init DXC Compiler");
 		}
@@ -145,7 +175,7 @@ namespace Lemonade
 
 		// Initialize DXC utility
 		IDxcUtils* utils;
-		hres = DxcCreateInstance(CLSID_DxcUtils, IID_IDxcUtils, (void**)utils);
+		hres = DxcCreateInstance(CLSID_DxcUtils, IID_IDxcUtils, (void**)&utils);
 		if (FAILED(hres)) {
 			throw std::runtime_error("Could not init DXC Utiliy");
 		}
@@ -157,3 +187,4 @@ namespace Lemonade
 		m_bDoneDXCInit = true;
 	}
 }
+#endif

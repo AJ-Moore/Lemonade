@@ -7,7 +7,9 @@
 #include <cstddef>
 #include <memory>
 #include <unordered_map>
+#include <vector>
 #include <vulkan/vulkan_core.h>
+#include <Platform/Core/Renderer/Materials/VertexData.h>
 
 #ifdef RENDERER_VULKAN
 #include <Platform/Core/Renderer/RenderBlock/ARenderBlock.h>
@@ -93,15 +95,31 @@ namespace Lemonade
 		};
 
 	private: 
+		void SetUniforms();
 		void CreateVkPipeline();
+		void CreateVkDescriptors();
+		std::vector<LVKBuffer> m_uniformBuffers;
+		std::vector<VkDescriptorSet> m_descriptorSets;
 
+		// Vertex Input
+		std::vector<VkVertexInputBindingDescription> m_bindingDescriptions;
+		std::vector<VkVertexInputAttributeDescription> m_attributeDescriptions;
+
+		// VK Pipeline
 		VkPipeline m_vkPipeline = VK_NULL_HANDLE;
+
+		// Shader Stage
+		VertexData m_vertexData;
+		VkPipelineLayout m_vkPipelineLayout = VK_NULL_HANDLE;
+		VkDescriptorSetLayout m_vkDescriptorSetLayout = VK_NULL_HANDLE;
+		VkDescriptorPool m_vkDescriptorPool = VK_NULL_HANDLE;
+
+		VkPipelineLayoutCreateInfo m_vkPipelineLayoutCreateInfo;
 		VkPipelineInputAssemblyStateCreateInfo m_inputAssembly;
 		VkPipelineRasterizationStateCreateInfo m_rasterizer;
 		VkPipelineColorBlendAttachmentState m_colorBlendAttachment; 
 		VkPipelineMultisampleStateCreateInfo m_multisampling;
 		VkPipelineVertexInputStateCreateInfo m_vertexInputInfo;
-		VkPipelineLayout m_pipelineLayout;
 	};
 }
 #endif

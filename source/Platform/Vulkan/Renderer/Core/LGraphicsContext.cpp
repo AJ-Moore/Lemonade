@@ -4,11 +4,27 @@
 
 namespace Lemonade
 {
+	using CitrusCore::Logger;
+
     void LGraphicsContext::Unload()
     {
 		m_vulkanDevice.Unload();
         vkDestroyInstance(m_vkInstance, nullptr);
     }
+
+	VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+		void* pUserData)
+	{
+		// Optional: filter messages if needed
+		if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+			Logger::Log(Logger::ERROR, "[Vulkan] %s", pCallbackData->pMessage);
+		}
+	
+		return VK_FALSE; // don't abort
+	}
 
     bool LGraphicsContext::Init() 
     {
@@ -29,7 +45,7 @@ namespace Lemonade
 		#endif
 
 		if (!SDL_Init(SDL_INIT_VIDEO)) {
-			CitrusCore::Logger::Log(CitrusCore::Logger::ERROR, "Failed to initialise SDL.");
+			CitrusCore::Logger::Log(CitrusCore::Logger::ERROR, "Failed to initialise SDL. [%s]", SDL_GetError());
 			return false;
 		}
 
@@ -49,14 +65,30 @@ namespace Lemonade
 		extensions[0] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
 		SDL_memcpy(&extensions[1], instance_extensions, count_instance_extensions * sizeof(const char*)); 
 
+		const std::vector<const char*> validationLayers = {
+			"VK_LAYER_KHRONOS_validation"
+		};
+
+		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {};
+		debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+		debugCreateInfo.messageSeverity = 
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		debugCreateInfo.messageType = 
+			VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		debugCreateInfo.pfnUserCallback = DebugCallback;
+		debugCreateInfo.pUserData = nullptr;
 
         VkInstanceCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-		createInfo.pNext = nullptr;
+		createInfo.pNext = &debugCreateInfo;
 		createInfo.flags = 0;
 		createInfo.pApplicationInfo = &app;
-		createInfo.enabledLayerCount = 0;
-		createInfo.ppEnabledLayerNames = nullptr;
+		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+		createInfo.ppEnabledLayerNames = validationLayers.data();
 		createInfo.enabledExtensionCount = countExt;
 		createInfo.ppEnabledExtensionNames = extensions.data();
 

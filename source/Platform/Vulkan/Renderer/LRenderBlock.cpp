@@ -1,14 +1,20 @@
-#include "Platform/Core/Renderer/RenderBlock/ARenderBlock.h"
+#include <Platform/Core/Renderer/Pipeline/LCamera.h>
+#include <Platform/Core/Renderer/RenderBlock/ARenderBlock.h>
+#include <Platform/Core/Renderer/Pipeline/LRenderer.h>
 #include <Platform/Vulkan/Renderer/LRenderTarget.h>
 #include <Util/Logger.h>
 #include <Platform/Core/Services/GraphicsServices.h>
 #include <Platform/Vulkan/Renderer/LVulkanDevice.h>
 #include <Platform/Vulkan/Renderer/LRenderBlock.h>
 #include <LCommon.h>
+#include <alloca.h>
+#include <cstdint>
 #include <cstring>
 #include <glm/fwd.hpp>
+#include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan_core.h>
+#include <Platform/Vulkan/Renderer/LShaderProgram.h>
 
 #ifdef RENDERER_VULKAN
 namespace Lemonade
@@ -17,11 +23,13 @@ namespace Lemonade
 
 	LRenderBlock::LRenderBlock() : ARenderBlock()
 	{
-		//SetName("LRenderBlock");
+		SetName("LRenderBlock");
 	}
 
 	bool LRenderBlock::Init()
 	{
+		m_uniformBuffers.resize(LRenderTarget::MAX_FRAMES_IN_FLIGHT);
+		m_descriptorSets.resize(LRenderTarget::MAX_FRAMES_IN_FLIGHT);
 		return true;
 	}
 
@@ -66,8 +74,24 @@ namespace Lemonade
 			return;
 		}
 
+		int currentFrame = GraphicsServices::GetWindowManager()->GetActiveWindow()->GetCurrentFrame();
+
 		LRenderTarget* renderTarget = static_cast<LRenderTarget*>(GraphicsServices::GetRenderer()->GetActiveRenderTarget());
 		VkCommandBuffer commandBuffer = renderTarget->GetCommandBuffer();
+
+		if (m_vkPipeline == VK_NULL_HANDLE)
+		{
+			CreateVkPipeline();
+		}
+
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_vkPipeline);
+		SetUniforms();
+		
+		vkCmdBindDescriptorSets(commandBuffer,
+			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			m_vkPipelineLayout,
+			0, 1, &m_descriptorSets[currentFrame],
+			0, nullptr);
 
 		vkCmdBindVertexBuffers(commandBuffer, /*firstBinding=*/0, 
 			static_cast<uint32_t>(m_vkBuffers.size()), 
@@ -204,8 +228,8 @@ namespace Lemonade
 		}
 
 		m_vkBuffers.clear();
-		std::vector<VkVertexInputBindingDescription> bindingDescriptions;
-		std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+		m_attributeDescriptions.clear(); 
+		m_bindingDescriptions.clear();
 
 		for (auto& vertexBuffer : m_vertexBuffers)
 		{
@@ -221,8 +245,8 @@ namespace Lemonade
 			attributeDescription.format = VK_FORMAT_R32G32_SFLOAT;
 			attributeDescription.offset = 0;
 
-			bindingDescriptions.push_back(bindingDescription);
-			attributeDescriptions.push_back(attributeDescription);
+			m_bindingDescriptions.push_back(bindingDescription);
+			m_attributeDescriptions.push_back(attributeDescription);
 
 			VkBufferCreateInfo bufferInfo{};
 			bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -255,23 +279,245 @@ namespace Lemonade
 		}
 	}
 
+	void LRenderBlock::SetUniforms() 
+	{
+		LVulkanDevice device = GraphicsServices::GetContext()->GetVulkanDevice();
+		LCamera* activeCamera = GraphicsServices::GetRenderer()->GetActiveCamera();
+		int currentFrame = GraphicsServices::GetWindowManager()->GetActiveWindow()->GetCurrentFrame();
+
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = m_uniformBuffers[currentFrame].Buffer;
+		bufferInfo.offset = 0;
+		bufferInfo.range = sizeof(VertexData);
+
+		VkDescriptorSetAllocateInfo allocInfo;
+		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocInfo.pNext = nullptr; 
+		allocInfo.descriptorPool = m_vkDescriptorPool;
+		allocInfo.descriptorSetCount = 1;
+		allocInfo.pSetLayouts = &m_vkDescriptorSetLayout;
+
+		VkDescriptorSet descriptorSet;
+		VkResult result = vkAllocateDescriptorSets(device.GetVkDevice(), &allocInfo, &descriptorSet);
+		if (result != VK_SUCCESS) {
+			throw std::runtime_error("Failed to allocate descriptor set!");
+		}
+
+		VkWriteDescriptorSet descriptorWrite{};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = descriptorSet;
+		descriptorWrite.dstBinding = 0;
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrite.descriptorCount = 1;
+		descriptorWrite.pBufferInfo = &bufferInfo;
+
+		m_vertexData.cameraPosition = activeCamera->GetTransfrom()->GetPosition();
+		m_vertexData.model = m_transform->GetWorldMatrix();         
+        m_vertexData.view = activeCamera->GetViewMatrix();          
+        m_vertexData.projection = activeCamera->GetProjMatrix();         
+        m_vertexData.shadowPass = false;          
+        m_vertexData.unlit = false;               
+        m_vertexData.emission = 0;                     
+
+		std::memcpy(m_uniformBuffers[currentFrame].DataGPUMapped, m_uniformBuffers[currentFrame].DataCPUMapped, m_uniformBuffers[currentFrame].DataSize);
+		vkUpdateDescriptorSets(device.GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
+	}
+
+	void LRenderBlock::CreateVkDescriptors()
+	{
+		LVulkanDevice device = GraphicsServices::GetContext()->GetVulkanDevice();
+
+		// Allocate Unifrom buffer memory 
+		for (auto& uniformBuffer : m_uniformBuffers)
+		{
+			VkMemoryRequirements memRequirements;
+			vkGetBufferMemoryRequirements(device.GetVkDevice(), uniformBuffer.Buffer, &memRequirements);
+
+			VkMemoryAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+			allocInfo.allocationSize = memRequirements.size;
+			allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+			if (vkAllocateMemory(device.GetVkDevice(), &allocInfo, nullptr, &uniformBuffer.VKDeviceMemory) != VK_SUCCESS) {
+				throw std::runtime_error("failed to allocate vertex buffer memory!");
+			}
+
+			vkBindBufferMemory(device.GetVkDevice(), uniformBuffer.Buffer, uniformBuffer.VKDeviceMemory, 0);
+			uniformBuffer.DataSize = sizeof(VertexData);
+			vkMapMemory(device.GetVkDevice(), uniformBuffer.VKDeviceMemory, 0, uniformBuffer.DataSize, 0, &uniformBuffer.DataGPUMapped);
+			uniformBuffer.DataCPUMapped = &m_vertexData;
+			std::memcpy(uniformBuffer.DataGPUMapped, uniformBuffer.DataCPUMapped, uniformBuffer.DataSize);
+		}
+
+		VkDescriptorSetLayoutBinding uboLayoutBinding{};
+		uboLayoutBinding.binding = 0;
+		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboLayoutBinding.descriptorCount = 1; 
+		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		uboLayoutBinding.pImmutableSamplers = nullptr;   
+		
+		VkDescriptorSetLayoutCreateInfo descriptorCreateInfo;
+		descriptorCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		descriptorCreateInfo.bindingCount = 1;
+		descriptorCreateInfo.pBindings = &uboLayoutBinding;
+
+		VkResult result = vkCreateDescriptorSetLayout(device.GetVkDevice(), &descriptorCreateInfo, nullptr, &m_vkDescriptorSetLayout);
+
+		if (result != VK_SUCCESS)
+		{
+			throw std::runtime_error("Unable to create descriptor set layout.");
+		}
+
+		VkDescriptorPoolSize poolSize{};
+		poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSize.descriptorCount = 10;
+
+		VkDescriptorPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.poolSizeCount = 1;
+		poolInfo.pPoolSizes = &poolSize;
+		poolInfo.maxSets = 5;
+
+		VkDescriptorPool descriptorPool;
+		result = vkCreateDescriptorPool(device.GetVkDevice(), &poolInfo, nullptr, &descriptorPool);
+		
+		if (result != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to create descriptor pool!");
+		}
+	}
+
 	void LRenderBlock::CreateVkPipeline() 
 	{
-		m_mate
+		CreateVkDescriptors();
 
+		LVulkanDevice device = GraphicsServices::GetContext()->GetVulkanDevice();
+		LRenderTarget* renderTarget = static_cast<LRenderTarget*>(GraphicsServices::GetRenderer()->GetActiveRenderTarget());
+
+		VkPushConstantRange pushConstantRange{};
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = 128;
+
+		m_vkPipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		m_vkPipelineLayoutCreateInfo.setLayoutCount = 1;
+		m_vkPipelineLayoutCreateInfo.pSetLayouts = &m_vkDescriptorSetLayout;
+		m_vkPipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+		m_vkPipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+
+		VkResult result = vkCreatePipelineLayout(device.GetVkDevice(), &m_vkPipelineLayoutCreateInfo, nullptr, &m_vkPipelineLayout);
+
+		if (result != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create pipeline layout!");
+		}
+
+		VkPipelineVertexInputStateCreateInfo vertexInput = {
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+			.pNext = nullptr,
+			.flags = 0,
+			.vertexBindingDescriptionCount = (uint32_t)m_bindingDescriptions.size(),
+			.pVertexBindingDescriptions = m_bindingDescriptions.data(),
+			.vertexAttributeDescriptionCount = (uint32_t)m_attributeDescriptions.size(),
+			.pVertexAttributeDescriptions = m_attributeDescriptions.data(),
+		};
+
+		LShaderProgram* shaderProgram = static_cast<LShaderProgram*>(m_material->GetResource()->GetShader().get());
+
+		// Input Assembly 
+		VkPipelineInputAssemblyStateCreateInfo inputAssembly = {
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+			.primitiveRestartEnable = VK_FALSE
+		};
+
+		VkPipelineViewportStateCreateInfo viewportState = {
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+			.viewportCount = 1,
+			.scissorCount = 1
+		};
+
+		VkPipelineRasterizationStateCreateInfo rasterizer = {
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+			.depthClampEnable = VK_FALSE,
+			.rasterizerDiscardEnable = VK_FALSE,
+			.polygonMode = VK_POLYGON_MODE_FILL,
+			.cullMode = VK_CULL_MODE_BACK_BIT,
+			.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+			.depthBiasEnable = VK_FALSE,
+			.lineWidth = 1.0f
+		};
+
+		VkPipelineMultisampleStateCreateInfo multisampling = {
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+			.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
+			.sampleShadingEnable = VK_FALSE
+		};
+
+		VkPipelineColorBlendAttachmentState colorBlendAttachment = {
+			.blendEnable = VK_FALSE,
+			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+							  VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
+		};
+		
+		VkPipelineColorBlendStateCreateInfo colorBlending = {
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+			.logicOpEnable = VK_FALSE,
+			.attachmentCount = 1,
+			.pAttachments = &colorBlendAttachment
+		};
+
+		VkPipelineDepthStencilStateCreateInfo depthStencil = {
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+			.depthTestEnable = VK_TRUE,
+			.depthWriteEnable = VK_TRUE,
+			.depthCompareOp = VK_COMPARE_OP_LESS,
+			.depthBoundsTestEnable = VK_FALSE,
+			.stencilTestEnable = VK_FALSE
+		};
+
+		VkDynamicState dynamicStates[] = {
+			VK_DYNAMIC_STATE_VIEWPORT,
+			VK_DYNAMIC_STATE_SCISSOR
+		};
+		
+		VkPipelineDynamicStateCreateInfo dynamicState = {
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+			.dynamicStateCount = 2,
+			.pDynamicStates = dynamicStates
+		};
+		
 		VkGraphicsPipelineCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		createInfo.pNext = nullptr; 
 		createInfo.flags = 0;
+		createInfo.stageCount = shaderProgram->GetShaderCreateInfo().size(); 
+		createInfo.pStages = shaderProgram->GetShaderCreateInfo().data();
+		createInfo.layout = m_vkPipelineLayout;
+		createInfo.basePipelineHandle = VK_NULL_HANDLE;
+		createInfo.basePipelineIndex = -1;
+		createInfo.renderPass = renderTarget->GetRenderPass();
+		createInfo.pVertexInputState = &vertexInput;
+		createInfo.pInputAssemblyState = &inputAssembly;
+		createInfo.pViewportState = &viewportState;
+		createInfo.pRasterizationState = &rasterizer;
+		createInfo.pMultisampleState = &multisampling;
+		createInfo.pColorBlendState = &colorBlending;
+		createInfo.pDepthStencilState = &depthStencil;
+		createInfo.pDynamicState = &dynamicState;
 
-
-		LVulkanDevice device = GraphicsServices::GetContext()->GetVulkanDevice();
-		VkResult result = vkCreateGraphicsPipelines(device.GetVkDevice(), 
+		result = vkCreateGraphicsPipelines(device.GetVkDevice(), 
 			device.GetPipelineCache(), 
 			1, 
 			&createInfo, 
 			nullptr, 
 			&m_vkPipeline);
+
+		if (result != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create vkpipeline!");
+		}
 	}
 }
 #endif

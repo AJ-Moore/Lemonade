@@ -23,7 +23,7 @@ namespace Lemonade
             m_projMat = glm::perspectiveLH(m_fov/(180/glm::pi<float>()), ratio, m_nearClip, m_farClip);
         }
     }
-
+    
     void LCamera::SetOrthographicDimensions(glm::vec4 rect)
     {
         m_orthographic = glm::ortho(rect.x, rect.z, rect.y, rect.w);

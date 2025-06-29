@@ -22,10 +22,9 @@ namespace Lemonade
         }
 
         SDL_SetWindowBordered(m_window, m_windowBorder);
-		SDL_SetWindowBordered(m_window, true);
 		SDL_SetWindowResizable(m_window, true);
 
-		if (m_fullscreen || true)
+		if (m_fullscreen)
 		{
 			SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN);
 		}
@@ -39,6 +38,9 @@ namespace Lemonade
     void LSDLWindow::Render() 
     {
         AWindow::Render();
+
+        SDL_Event event;
+        SDL_PollEvent(&event);
     }
 
     void LSDLWindow::Unload() 

@@ -3,6 +3,7 @@
 #include <Util/Config.h>
 #include <memory>
 #include "Platform/Core/Renderer/Pipeline/LCamera.h"
+#include "Platform/Vulkan/Renderer/Pipeline/LViewport.h"
 #include "Util/Logger.h"
 
 
@@ -91,7 +92,12 @@ namespace Lemonade {
 		m_windowRect.Width = config.GetInt("window_width", 1920);
 		m_windowRect.Height = config.GetInt("window_height", 1080);
 		m_windowBorder = config.GetInt("window_border");
-		m_fullscreen = config.GetInt("fullscreen");
+		m_fullscreen = config.GetInt("fullscreen", 0);
+
+		std::shared_ptr<LViewport> viewport = std::make_shared<LViewport>();
+		viewport->Init();
+		viewport->m_viewRect = m_windowRect;
+		m_viewports.push_back(viewport);
 
 		return Load();
 	}

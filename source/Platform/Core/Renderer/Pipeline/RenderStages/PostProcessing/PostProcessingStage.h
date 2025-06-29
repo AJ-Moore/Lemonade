@@ -4,7 +4,7 @@
 
 namespace Lemonade 
 {
-    class LEMONADE_API GeometryStage : public LRenderStage
+    class LEMONADE_API PostProcessingStage : public LRenderStage
     {
     protected:
         virtual bool Init() override;

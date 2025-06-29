@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Platform/Vulkan/WindowManager/LWindow.h>
 #include <LCommon.h>
 
 namespace Lemonade
@@ -41,7 +42,7 @@ namespace Lemonade
     public:
         ARenderTarget(){}
         ARenderTarget(glm::ivec2 dimensions){m_dimensions = dimensions;}
-        virtual ~ARenderTarget() {}
+        virtual ~ARenderTarget();
         virtual bool Init() = 0;
         virtual void InitAsDefault() { m_bDoneInit = true; }
         virtual void bindColourAttachments() = 0;
@@ -55,19 +56,20 @@ namespace Lemonade
         virtual void blitToScreen() = 0;
         virtual void setDimensions(glm::ivec2 dimensions) = 0;
         virtual void SetColourAttachments(const std::vector<LColourAttachment> attachments, bool multisampled = false) = 0;
+        virtual void SetColourAttachments(int count, bool multisampled) = 0;
         virtual void AddDepthAttachment(bool useRenderBufferStorage = true, int layers = 1) = 0;
         virtual void addMultiSampledDepthAttachment() = 0;
-        virtual uint createColourAttachment(LColourAttachment colourAttachment, bool multisampled = true, int internalFormat = U_RGBA32F) = 0;
+        virtual uint CreateColourAttachment(LColourAttachment colourAttachment, bool multisampled = true, int internalFormat = U_RGBA32F) = 0;
 
         void setClearColour(glm::vec4 clearColour) { m_clearColour = clearColour; }
         virtual void Clear(uint clearFlags) = 0;
 
-        // Gets the screen target.
-        virtual ARenderTarget* GetScreenTarget() = 0;
+        // Gets the screen target for a given window.
+        virtual ARenderTarget* GetScreenTarget(LWindow* window) = 0;
 
     protected:
         bool m_bDoneInit = false;
         glm::ivec2 m_dimensions;
-        glm::vec4 m_clearColour = glm::vec4(0,0,0,1);
+        glm::vec4 m_clearColour = glm::vec4(1,0,0,1);
     };
 }

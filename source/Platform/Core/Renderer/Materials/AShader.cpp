@@ -16,7 +16,7 @@ namespace Lemonade
 		{"geometry", ShaderType::Geometry},
 	};
 
-	ShaderType AShader::GetShaderType(std::string type)
+	ShaderType AShader::GetShaderTypeForString(std::string type)
 	{
 		std::string ltype = StringUtil::ToLower(type);
 		auto iterator = m_shaderTypeLookup.find(ltype);
@@ -27,5 +27,10 @@ namespace Lemonade
 		}
 
 		return ShaderType::None;
+	}
+
+	void AShader::SetShaderType(ShaderType type)
+	{
+		m_shaderType = type;
 	}
 }
