@@ -42,11 +42,39 @@ namespace Lemonade
 	{
 		VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 
+		// Check if timeline semaphore is waiting to be signaled, not equal to 0 almost certainly triggered 
+		//if (m_currentSemaphoreValue != 0)
+		//{
+		//	uint64_t currentValue = 0;
+		//	vkGetSemaphoreCounterValue(device, m_timelineSemaphore[m_currentFrame], &currentValue);
+		//	uint64_t waitvalue = m_currentSemaphoreValue;
+//
+		//	//if (currentValue < waitvalue)
+		//	{
+		//		// Still waiting — semaphore hasn't been signaled to targetValue yet
+//
+		//		VkSemaphoreWaitInfo waitInfo{};
+		//		waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
+		//		waitInfo.pNext = nullptr;
+		//		waitInfo.flags = 0; 
+		//		waitInfo.semaphoreCount = 1;
+		//		waitInfo.pSemaphores = &m_timelineSemaphore[m_currentFrame];
+		//		waitInfo.pValues = &waitvalue;
+//
+		//		// Wait forever until the semaphore reaches at least '5'
+		//		VkResult result = vkWaitSemaphores(device, &waitInfo, UINT64_MAX);
+//
+		//		if (result != VK_SUCCESS) {
+		//			throw std::runtime_error("Failed to wait on timeline semaphore!");
+		//		}
+		//	}
+		//}
+
 		m_currentFrame = ++m_currentFrame % LRenderTarget::MAX_FRAMES_IN_FLIGHT;
 
 		//vkWaitForFences(device, 1, &m_fence[m_currentFrame], VK_TRUE, UINT64_MAX);
 		//vkResetFences(device, 1, &m_fence[m_currentFrame]);
-		m_currentSemaphoreValue = 0;
+		m_passIndex = 0;
 		VkResult result = vkAcquireNextImageKHR(device, m_swapChain, UINT64_MAX, m_imageAvailableSemaphore[m_currentFrame], VK_NULL_HANDLE, &m_activeSwapChainImageIndex);
 		
 		if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -94,14 +122,32 @@ namespace Lemonade
 				.initialValue = 0
 			};
 
-			VkSemaphoreCreateInfo semaphoreInfo{};
-			semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-			semaphoreInfo.pNext = &timelineCreateInfo;
+			VkSemaphoreCreateInfo semaphoreInfo = {
+				.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+				.pNext = nullptr,
+				.flags = 0,
+			};
+			
 			vkCreateSemaphore(device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphore[i]);
+
+			VkSemaphoreCreateInfo timelinesemaphoreInfo = {
+				.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+				.pNext = &timelineCreateInfo,
+				.flags = 0,
+			};
+
+			vkCreateSemaphore(device, &timelinesemaphoreInfo, nullptr, &m_timelineSemaphore[i]);
 		}
 
     	return true;
     }
+
+	uint64_t LWindow::GetPassIndexAndIncrement()
+	{
+		uint64_t value = m_passIndex;
+		m_passIndex++; 
+		return value;
+	}
 
 	uint64_t LWindow::GetFrameSemaphoreTimelineValueAndIncrement()
 	{
@@ -130,7 +176,7 @@ namespace Lemonade
 
 		for (const auto& format : surfaceFormats)
 		{
-			if (format.format == VK_FORMAT_B8G8R8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+			if (format.format == VK_FORMAT_R8G8B8A8_UNORM && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
 				surfaceFormat = format;
 			}
 		}

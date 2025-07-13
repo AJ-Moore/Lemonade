@@ -3,8 +3,6 @@
 #include <Platform/Core/Renderer/Materials/AShader.h>
 #include <LCommon.h>
 #include <shaderc/shaderc.hpp>
-#include <dxc/dxcapi.h>
-#include <dxc/WinAdapter.h>
 
 #if defined(RENDERER_VULKAN) || defined(RENDERER_OGL)
 

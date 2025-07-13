@@ -3,6 +3,7 @@
 #include <LCommon.h>
 #include <Resources/AResource.h>
 #include <Platform/Core/Renderer/Materials/TextureUtils.h>
+#include <cstdint>
 
 namespace Lemonade
 {
@@ -19,7 +20,7 @@ namespace Lemonade
 		virtual void UnloadResource() override{}
 		TextureFormat GetTextureFormat(SDL_Surface* surface) const;
 		virtual void LoadNativeTextureFromSurface(SDL_Surface* surface) = 0;
-		virtual void LoadNativeTextureFromPixels(const std::vector<Colour>& data) = 0;
+		virtual void LoadNativeTextureFromPixels(const Colour* data, uint32_t width, uint32_t height) = 0;
 
 		uint m_width = 0; 
 		uint m_height = 0;

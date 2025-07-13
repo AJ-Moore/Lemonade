@@ -30,6 +30,8 @@ namespace Lemonade {
     void LMeshRenderer::SetMesh(std::shared_ptr<Mesh> mesh)
     {
         m_mesh = mesh;
+        m_renderBlock->SetMesh(mesh);
+        m_renderBlock->SetDirty();
     }
 
     void LMeshRenderer::SetMaterial(ResourcePtr<Material> material)

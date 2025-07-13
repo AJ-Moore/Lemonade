@@ -23,22 +23,23 @@ namespace Lemonade{
 
     bool RenderComponent::Init()
     {
+        m_renderBlock->Init();
         return true;
     }
 
     void RenderComponent::Unload()
     {
-
+        m_renderBlock->Unload();
     }
 
     void RenderComponent::Update()
     {
-
+        m_renderBlock->Update();
     }
 
     void RenderComponent::Render()
     {
-
+        m_renderBlock->Render();
     }
 
     void RenderComponent::SetTransform(std::shared_ptr<CitrusCore::Transform> trans)

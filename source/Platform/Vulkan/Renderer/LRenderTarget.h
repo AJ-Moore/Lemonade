@@ -3,6 +3,7 @@
 #include <Util/UID.h>
 #include <Platform/Core/Renderer/Pipeline/ARenderTarget.h>
 #include <LCommon.h>
+#include <cstdint>
 #include <memory>
 #include <vector>
 #include <vulkan/vulkan_core.h>
@@ -16,6 +17,8 @@ namespace Lemonade
     {
         VkImageView ImageView;
         VkImage Image;
+        VkDeviceMemory Memory;
+        VkSampler Sampler;
     };
 
     class LWindow;
@@ -28,8 +31,8 @@ namespace Lemonade
         virtual ~LRenderTarget();
         virtual bool Init() override;
         virtual void InitAsDefault() override;
-        virtual void bindColourAttachments() override;
-        virtual void bindColourAttachment(LColourAttachment colourAttachment, uint activeTarget = 0) override;
+        virtual void BindColourAttachments() override;
+        virtual void BindColourAttachment(LColourAttachment colourAttachment, uint activeTarget = 0) override;
         virtual void bindDepthAttachment(uint activeTarget = 0) override;
         virtual void BeginRenderPass() override;
         virtual void EndRenderPass() override;
@@ -55,6 +58,8 @@ namespace Lemonade
         virtual ARenderTarget* GetScreenTarget(LWindow* window) override;
         VkCommandBuffer GetCommandBuffer() const { return m_activeBuffer; }
         VkRenderPass GetRenderPass() const { return m_renderPass; }
+        VkSampleCountFlagBits GetSampleCount() const { return m_hasMultisampledColourAttachment ? m_sampleCount : VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT; }
+        uint32_t GetAttachmentCount() const { return m_colourAttachments.size(); }
 
         static LRenderTarget& GetDefault();
     private:
@@ -69,6 +74,9 @@ namespace Lemonade
         uint m_depthTexture = 0;
         std::map<LColourAttachment, VulkanRenderTarget> m_colourAttachments;
 
+        std::vector<VkDescriptorSet> m_colourAttachmentDescriptors;
+        std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts;;
+
         bool m_bHasDepthAttachment = false;
         VulkanRenderTarget m_depthAttachment;
         VkDeviceMemory m_depthMemory;
@@ -79,6 +87,9 @@ namespace Lemonade
         VkCommandBuffer m_commandBuffer[MAX_FRAMES_IN_FLIGHT];
         VkCommandBuffer m_activeBuffer;
         bool m_bRenderToScreen = false;
+
+        VkDescriptorPool m_descriptorPool;
+        VkPipelineLayout m_vkPipelineLayout = VK_NULL_HANDLE;
 
         VkSemaphore m_renderFinishedSemaphore[MAX_FRAMES_IN_FLIGHT];
         VkFence m_inFlightFence[MAX_FRAMES_IN_FLIGHT];

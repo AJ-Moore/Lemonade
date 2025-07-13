@@ -40,7 +40,7 @@ namespace Lemonade
 
 		if (!std::filesystem::exists(fsPath))
 		{
-			Logger::Log(Logger::WARN, "Unable to find texture at path [%s]", path);
+			Logger::Log(Logger::WARN, "Unable to find texture at path [%s]", path.c_str());
 			return false;
 		}
 
@@ -149,7 +149,7 @@ namespace Lemonade
 		}
 
 		m_textureFilter = TextureFilter::NearestNeighbour;
-		LoadNativeTextureFromPixels(m_pixelData);
+		LoadNativeTextureFromPixels(m_pixelData.data(), 16, 16);
 		m_bPinkBlackTextureLoaded = true;
 	}
 }

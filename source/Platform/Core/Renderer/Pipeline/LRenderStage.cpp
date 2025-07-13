@@ -16,4 +16,12 @@ namespace Lemonade
             renderPass->Render(renderingData);
         }
     }
+
+    void LRenderStage::Update()
+    {
+        for (auto& renderPass : m_renderPasses)
+        {
+            renderPass->Update();
+        }
+    }
 }

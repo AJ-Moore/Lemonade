@@ -6,9 +6,9 @@ namespace Lemonade
 {
     bool GeometryPass::Init() 
     {
-		m_geometryTarget.SetColourAttachments(7, true);
-        m_geometryTarget.AddDepthAttachment();
         m_geometryTarget.Init();
+		m_geometryTarget.SetColourAttachments(1, true);
+        m_geometryTarget.AddDepthAttachment();
         return true;
     }
 
@@ -16,7 +16,7 @@ namespace Lemonade
     {
         m_geometryTarget.BeginRenderPass();
         m_geometryTarget.Clear((uint)LBufferBit::COLOUR | (uint)LBufferBit::DEPTH);
-        GraphicsServices::GetRenderer()->RenderScene();
+        //GraphicsServices::GetRenderer()->RenderScene();
         m_geometryTarget.EndRenderPass();
     }
 }

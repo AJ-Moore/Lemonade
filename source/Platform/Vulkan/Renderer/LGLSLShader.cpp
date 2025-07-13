@@ -1,6 +1,7 @@
 
 #include "Platform/Core/Renderer/Materials/AShader.h"
 #include <Platform/Vulkan/Renderer/LGLSLShader.h>
+#include <fstream>
 #include <shaderc/shaderc.h>
 #include <stdexcept>
 #include <vector>
@@ -30,13 +31,24 @@ namespace Lemonade
 
         shaderc_shader_kind kind = GetShaderKind();
 
+        bool isHlslShader = true;
+
         shaderc::Compiler compiler;
         shaderc::CompileOptions options;
         options.SetOptimizationLevel(shaderc_optimization_level_performance);
-        options.SetSourceLanguage(shaderc_source_language_hlsl); //temporary lazy
-        options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
-        shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(shader, kind, path.c_str(), options);
 
+        options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+        shaderc::SpvCompilationResult result;
+
+        if (isHlslShader)
+        {
+            options.SetSourceLanguage(shaderc_source_language_hlsl);
+            result = compiler.CompileGlslToSpv(shader, kind, path.c_str(), "main", options);
+        }
+        else
+        {
+            result = compiler.CompileGlslToSpv(shader, kind, path.c_str(), options);
+        }
 
         if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
             // TODO handle more grace like

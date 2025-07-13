@@ -42,11 +42,11 @@ namespace Lemonade
 			VkDeviceMemory VKDeviceMemory;
 			size_t Stride;
 			int Binding = 0;
+			VkFormat Format = VK_FORMAT_R32G32B32_SFLOAT;
 		};
 
 		friend class LRenderLayer;
 		friend class LRenderer;
-		friend class LMeshRenderer;
 	public:
 		LRenderBlock();
 		virtual ~LRenderBlock() {}
@@ -92,6 +92,19 @@ namespace Lemonade
 			{VKBufferType::BiTangents,  {} },
 			{VKBufferType::BoneWeights,  {} },
 			{VKBufferType::BoneIds,  {} }
+		};
+
+		const std::vector<VKBufferType> m_bufferOrder = {
+			VKBufferType::Position,
+			VKBufferType::Normal,
+			VKBufferType::FaceNormal,
+			VKBufferType::Colour,
+			VKBufferType::UV,
+			VKBufferType::UV3D,
+			VKBufferType::Tangents,
+			VKBufferType::BiTangents,
+			VKBufferType::BoneWeights,
+			VKBufferType::BoneIds
 		};
 
 	private: 

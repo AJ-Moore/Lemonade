@@ -6,7 +6,6 @@
 #include <vulkan/vulkan_core.h>
 
 #ifdef RENDERER_VULKAN
-#include <dxc/dxcapi.h>
 
 namespace Lemonade
 {
@@ -46,7 +45,7 @@ namespace Lemonade
 		// Create a Vulkan shader module from the compilation result
 		VkShaderModuleCreateInfo shaderModuleCI{};
 		shaderModuleCI.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		shaderModuleCI.codeSize = code.size();
+		shaderModuleCI.codeSize = code.size() * sizeof(uint32_t);
 		shaderModuleCI.pCode = code.data();
 		vkCreateShaderModule(GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice(), &shaderModuleCI, nullptr, &m_shaderModule);
 
@@ -55,6 +54,8 @@ namespace Lemonade
                 m_pipelineShaderStageCreateInfo.pNext = nullptr; 
                 m_pipelineShaderStageCreateInfo.flags = 0;
                 m_pipelineShaderStageCreateInfo.stage = GetShaderStage(GetShaderType());
+                m_pipelineShaderStageCreateInfo.pName = "main";
+                m_pipelineShaderStageCreateInfo.module = m_shaderModule;
 
         }
 }

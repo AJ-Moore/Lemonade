@@ -60,10 +60,11 @@ namespace Lemonade
 
 		if (instance_extensions == NULL) { return false; }
 
-		int countExt = count_instance_extensions + 1;
+		int countExt = count_instance_extensions + 2;
 		std::vector<const char*> extensions(countExt);
 		extensions[0] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
-		SDL_memcpy(&extensions[1], instance_extensions, count_instance_extensions * sizeof(const char*)); 
+		extensions[1] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
+		SDL_memcpy(&extensions[2], instance_extensions, count_instance_extensions * sizeof(const char*)); 
 
 		const std::vector<const char*> validationLayers = {
 			"VK_LAYER_KHRONOS_validation"
@@ -89,7 +90,7 @@ namespace Lemonade
 		createInfo.pApplicationInfo = &app;
 		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 		createInfo.ppEnabledLayerNames = validationLayers.data();
-		createInfo.enabledExtensionCount = countExt;
+		createInfo.enabledExtensionCount = extensions.size();
 		createInfo.ppEnabledExtensionNames = extensions.data();
 
 		vkCreateInstance(&createInfo, nullptr, &m_vkInstance);

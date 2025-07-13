@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Events/Event.h"
 #include "Resources/ResourceHandle.h"
 #include <Spatial/Transform.h>
 #include <LCommon.h>
@@ -7,6 +8,7 @@
 #include <Platform/Core/Renderer/Geometry/Mesh.h>
 #include <Platform/Core/Renderer/Materials/Material.h>
 #include <Platform/Core/Renderer/Geometry/PrimitiveMode.h>
+#include <memory>
 
 namespace Lemonade
 {
@@ -28,9 +30,12 @@ namespace Lemonade
 	{
 		friend class LRenderLayer;
 		friend class LRenderer;
-		friend class LMeshRenderer;
+		friend class RenderComponent;
 	public:
-		ARenderBlock() = default;
+		ARenderBlock(){
+			// Fallback.
+			m_transform = std::make_shared<CitrusCore::Transform>();
+		}
 		virtual ~ARenderBlock() {}
 
 		virtual void SetDrawMode(PrimitiveMode mode) = 0;
@@ -39,6 +44,8 @@ namespace Lemonade
 		void SetMesh(std::shared_ptr<Mesh> Mesh) { m_mesh = Mesh; }
 		void SetDirty() { m_bufferDirty = true; }
 		PrimitiveMode GetDrawMode() const { return (PrimitiveMode)m_primitiveMode; }
+
+		CitrusCore::Event<ARenderBlock*> OnPipelineBound;
 	protected:
 		/// Dumps the vertex data to the buffer
 		virtual void DumpBufferData() = 0;

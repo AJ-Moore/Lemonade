@@ -14,7 +14,7 @@ namespace Lemonade
     protected:
         ~LRenderStage() = default;
         virtual bool Init()override{ return true; }
-        virtual void Update()override{}
+        virtual void Update()override;
         virtual void Render()override{}
         virtual void Unload()override{}
         virtual void Render(const LRenderingData& renderingData);

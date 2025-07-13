@@ -33,6 +33,11 @@ namespace Lemonade
 		int GetComputeQueueIndex() const { return m_computeQueueIndex; }
 		int GetPresentationQueueIndex() const { return m_presentationQueueIndex; }
 
+		LVulkanDevice(const LVulkanDevice&) = delete;
+		LVulkanDevice& operator=(const LVulkanDevice&) = delete;
+	
+		LVulkanDevice(LVulkanDevice&&) = default;
+		LVulkanDevice& operator=(LVulkanDevice&&) = default;
 	private:
 		bool CreateVulkanDevice();
 		void CreatePipelineCache();

@@ -1,10 +1,10 @@
 #pragma once 
 
-#include "LCommon.h"
-#include "Platform/Core/Renderer/Materials/TextureType.h"
-#include "Resources/AResource.h"
-#include "Resources/ResourceHandle.h"
-#include "Util/Logger.h"
+#include <LCommon.h>
+#include <Platform/Core/Renderer/Materials/TextureType.h>
+#include <Resources/AResource.h>
+#include <Resources/ResourceHandle.h>
+#include <Util/Logger.h>
 #include <Platform/Core/Renderer/Materials/AShaderProgram.h>
 #include <Platform/Core/Renderer/Materials/ATexture.h>
 #include <memory>

@@ -7,6 +7,7 @@
 #include <Platform/Vulkan/Renderer/LVulkanDevice.h>
 #include <Platform/Vulkan/Renderer/LRenderBlock.h>
 #include <LCommon.h>
+#include <algorithm>
 #include <alloca.h>
 #include <cstdint>
 #include <cstring>
@@ -30,12 +31,13 @@ namespace Lemonade
 	{
 		m_uniformBuffers.resize(LRenderTarget::MAX_FRAMES_IN_FLIGHT);
 		m_descriptorSets.resize(LRenderTarget::MAX_FRAMES_IN_FLIGHT);
+
 		return true;
 	}
 
 	void LRenderBlock::Unload()
 	{
-		LVulkanDevice device = GraphicsServices::GetContext()->GetVulkanDevice();
+		const LVulkanDevice& device = GraphicsServices::GetContext()->GetVulkanDevice();
 		//vkDestroyBuffer(device.GetVkDevice(), m_vertexBuffer, nullptr);
 
 		for (auto& vertexBuffer : m_vertexBuffers)
@@ -85,6 +87,8 @@ namespace Lemonade
 		}
 
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_vkPipeline);
+		OnPipelineBound.Invoke(this);
+
 		SetUniforms();
 		
 		vkCmdBindDescriptorSets(commandBuffer,
@@ -119,7 +123,7 @@ namespace Lemonade
 	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
 		VkPhysicalDeviceMemoryProperties memProperties;
 
-		LVulkanDevice device = GraphicsServices::GetContext()->GetVulkanDevice();
+		const LVulkanDevice& device = GraphicsServices::GetContext()->GetVulkanDevice();
 		vkGetPhysicalDeviceMemoryProperties(device.GetPhysicalDevice(), &memProperties);
 	
 		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
@@ -141,7 +145,7 @@ namespace Lemonade
 		}
 
 		SetDrawMode(m_mesh->GetDrawMode());
-		LVulkanDevice device = GraphicsServices::GetContext()->GetVulkanDevice();
+		const LVulkanDevice& device =GraphicsServices::GetContext()->GetVulkanDevice();
 
 		size_t vertexBufferSize = m_mesh->GetVertexBufferSize();
 		size_t textureBufferSize = m_mesh->GetTextureBufferSize();
@@ -161,6 +165,7 @@ namespace Lemonade
 			m_vertexBuffers[VKBufferType::Position].DataSize = vertexBufferSize * sizeof(float);
 			m_vertexBuffers[VKBufferType::Position].Stride = sizeof(glm::vec3);
 			m_vertexBuffers[VKBufferType::Position].Binding = binding++;
+			m_vertexBuffers[VKBufferType::Position].Format = VK_FORMAT_R32G32B32_SFLOAT;
 		}
 
 		if (m_mesh->GetNormals() != nullptr)
@@ -169,6 +174,7 @@ namespace Lemonade
 			m_vertexBuffers[VKBufferType::Normal].DataSize = normalBufferSize * sizeof(float);
 			m_vertexBuffers[VKBufferType::Normal].Stride = sizeof(glm::vec3);
 			m_vertexBuffers[VKBufferType::Normal].Binding = binding++;
+			m_vertexBuffers[VKBufferType::Normal].Format = VK_FORMAT_R32G32B32_SFLOAT;
 		}
 
 		if (m_mesh->GetUVS() != nullptr)
@@ -177,6 +183,7 @@ namespace Lemonade
 			m_vertexBuffers[VKBufferType::UV].DataSize = textureBufferSize * sizeof(float);
 			m_vertexBuffers[VKBufferType::UV].Stride = sizeof(glm::vec2);
 			m_vertexBuffers[VKBufferType::UV].Binding = binding++;
+			m_vertexBuffers[VKBufferType::UV].Format = VK_FORMAT_R32G32_SFLOAT;
 		}
 
 		if (m_mesh->GetUVS3D() != nullptr)
@@ -185,6 +192,7 @@ namespace Lemonade
 			m_vertexBuffers[VKBufferType::UV3D].DataSize = texture3DBufferSize * sizeof(float);
 			m_vertexBuffers[VKBufferType::UV3D].Stride = sizeof(glm::vec3);
 			m_vertexBuffers[VKBufferType::UV3D].Binding = binding++;
+			m_vertexBuffers[VKBufferType::UV3D].Format = VK_FORMAT_R32G32B32_SFLOAT;
 		}
 
 		if (m_mesh->GetColours() != nullptr)
@@ -193,6 +201,7 @@ namespace Lemonade
 			m_vertexBuffers[VKBufferType::Colour].DataSize = colourBufferSize * sizeof(float);
 			m_vertexBuffers[VKBufferType::Colour].Stride = sizeof(glm::vec4);
 			m_vertexBuffers[VKBufferType::Colour].Binding = binding++;
+			m_vertexBuffers[VKBufferType::Colour].Format = VK_FORMAT_R32G32B32A32_SFLOAT;
 		}
 
 		if (m_mesh->GetTangents() != nullptr)
@@ -201,6 +210,7 @@ namespace Lemonade
 			m_vertexBuffers[VKBufferType::Tangents].DataSize = tangentBufferSize * sizeof(float);
 			m_vertexBuffers[VKBufferType::Tangents].Stride = sizeof(glm::vec3);
 			m_vertexBuffers[VKBufferType::Tangents].Binding = binding++;
+			m_vertexBuffers[VKBufferType::Tangents].Format = VK_FORMAT_R32G32B32_SFLOAT;
 		}
 
 		if (m_mesh->GetBiTangents() != nullptr)
@@ -209,6 +219,7 @@ namespace Lemonade
 			m_vertexBuffers[VKBufferType::BiTangents].DataSize = biTangentBufferSize * sizeof(float);
 			m_vertexBuffers[VKBufferType::BiTangents].Stride = sizeof(glm::vec3);
 			m_vertexBuffers[VKBufferType::BiTangents].Binding = binding++;
+			m_vertexBuffers[VKBufferType::BiTangents].Format = VK_FORMAT_R32G32B32_SFLOAT;
 		}
 
 		if (m_mesh->GetBoneWeights() != nullptr)
@@ -217,6 +228,7 @@ namespace Lemonade
 			m_vertexBuffers[VKBufferType::BoneWeights].DataSize = weightSize * sizeof(float);
 			m_vertexBuffers[VKBufferType::BoneWeights].Stride = sizeof(glm::vec4);
 			m_vertexBuffers[VKBufferType::BoneWeights].Binding = binding++;
+			m_vertexBuffers[VKBufferType::BoneWeights].Format = VK_FORMAT_R32G32B32A32_SFLOAT;
 		}
 
 		if (m_mesh->GetBoneIds() != nullptr)
@@ -225,24 +237,34 @@ namespace Lemonade
 			m_vertexBuffers[VKBufferType::BoneIds].DataSize = boneIdSize * sizeof(float);
 			m_vertexBuffers[VKBufferType::BoneIds].Stride = sizeof(glm::vec4);
 			m_vertexBuffers[VKBufferType::BoneIds].Binding = binding++;
+			m_vertexBuffers[VKBufferType::BoneIds].Format = VK_FORMAT_R32G32B32A32_SFLOAT;
 		}
 
 		m_vkBuffers.clear();
 		m_attributeDescriptions.clear(); 
 		m_bindingDescriptions.clear();
 
-		for (auto& vertexBuffer : m_vertexBuffers)
+		//for (auto& vertexBuffer : m_vertexBuffers)
+		for (VKBufferType bufferType : m_bufferOrder)
 		{
+			auto& vertexBuffer = m_vertexBuffers[bufferType];
+
+			if (vertexBuffer.DataSize == 0)
+			{
+				// Skip buffer, not set 
+				continue;
+			}
+
 			// Set binding desciption
 			VkVertexInputBindingDescription bindingDescription;
-			bindingDescription.binding = vertexBuffer.second.Binding;
-			bindingDescription.stride = vertexBuffer.second.Stride;
+			bindingDescription.binding = vertexBuffer.Binding;
+			bindingDescription.stride = vertexBuffer.Stride;
 			bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
 			VkVertexInputAttributeDescription attributeDescription;
-			attributeDescription.binding = vertexBuffer.second.Binding;
-			attributeDescription.location = vertexBuffer.second.Binding;
-			attributeDescription.format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescription.binding = vertexBuffer.Binding;
+			attributeDescription.location = vertexBuffer.Binding;
+			attributeDescription.format = vertexBuffer.Format;
 			attributeDescription.offset = 0;
 
 			m_bindingDescriptions.push_back(bindingDescription);
@@ -250,62 +272,58 @@ namespace Lemonade
 
 			VkBufferCreateInfo bufferInfo{};
 			bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-			bufferInfo.size = vertexBuffer.second.DataSize;
+			bufferInfo.size = vertexBuffer.DataSize;
 			bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 			bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-			if (vkCreateBuffer(device.GetVkDevice(), &bufferInfo, nullptr, &vertexBuffer.second.Buffer) != VK_SUCCESS) {
+			if (vkCreateBuffer(device.GetVkDevice(), &bufferInfo, nullptr, &vertexBuffer.Buffer) != VK_SUCCESS) {
 				throw std::runtime_error("failed to create vertex buffer!");
 			}
 
 			VkMemoryRequirements memRequirements;
-			vkGetBufferMemoryRequirements(device.GetVkDevice(), vertexBuffer.second.Buffer, &memRequirements);
+			vkGetBufferMemoryRequirements(device.GetVkDevice(), vertexBuffer.Buffer, &memRequirements);
+
+			VkPhysicalDeviceMemoryProperties memProps;
+			vkGetPhysicalDeviceMemoryProperties(device.GetPhysicalDevice(), &memProps);
 
 			VkMemoryAllocateInfo allocInfo{};
 			allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 			allocInfo.allocationSize = memRequirements.size;
 			allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-			if (vkAllocateMemory(device.GetVkDevice(), &allocInfo, nullptr, &vertexBuffer.second.VKDeviceMemory) != VK_SUCCESS) {
+			assert(allocInfo.memoryTypeIndex < memProps.memoryTypeCount);
+
+			if (vkAllocateMemory(device.GetVkDevice(), &allocInfo, nullptr, &vertexBuffer.VKDeviceMemory) != VK_SUCCESS) {
 				throw std::runtime_error("failed to allocate vertex buffer memory!");
 			}
 
-			vkBindBufferMemory(device.GetVkDevice(), vertexBuffer.second.Buffer, vertexBuffer.second.VKDeviceMemory, 0);
+			vkBindBufferMemory(device.GetVkDevice(), vertexBuffer.Buffer, vertexBuffer.VKDeviceMemory, 0);
 
-			vkMapMemory(device.GetVkDevice(), vertexBuffer.second.VKDeviceMemory, 0, vertexBuffer.second.DataSize, 0, &vertexBuffer.second.DataGPUMapped);
-			std::memcpy(vertexBuffer.second.DataGPUMapped, vertexBuffer.second.DataCPUMapped, vertexBuffer.second.DataSize);
+			vkMapMemory(device.GetVkDevice(), vertexBuffer.VKDeviceMemory, 0, vertexBuffer.DataSize, 0, &vertexBuffer.DataGPUMapped);
+			std::memcpy(vertexBuffer.DataGPUMapped, vertexBuffer.DataCPUMapped, vertexBuffer.DataSize);
 
-			m_vkBuffers.push_back(vertexBuffer.second.Buffer);
+			m_vkBuffers.push_back(vertexBuffer.Buffer);
+			m_vkOffsets.push_back(0);
 		}
 	}
 
 	void LRenderBlock::SetUniforms() 
 	{
-		LVulkanDevice device = GraphicsServices::GetContext()->GetVulkanDevice();
+		const LVulkanDevice& device = GraphicsServices::GetContext()->GetVulkanDevice();
 		LCamera* activeCamera = GraphicsServices::GetRenderer()->GetActiveCamera();
 		int currentFrame = GraphicsServices::GetWindowManager()->GetActiveWindow()->GetCurrentFrame();
+		
+		// Idiot allan we don't want to be doing this, clearly this was left from when we we're recreating descriptors each frame.
+		//vkResetDescriptorPool(device.GetVkDevice(), m_vkDescriptorPool, 0);
 
 		VkDescriptorBufferInfo bufferInfo{};
 		bufferInfo.buffer = m_uniformBuffers[currentFrame].Buffer;
 		bufferInfo.offset = 0;
 		bufferInfo.range = sizeof(VertexData);
 
-		VkDescriptorSetAllocateInfo allocInfo;
-		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		allocInfo.pNext = nullptr; 
-		allocInfo.descriptorPool = m_vkDescriptorPool;
-		allocInfo.descriptorSetCount = 1;
-		allocInfo.pSetLayouts = &m_vkDescriptorSetLayout;
-
-		VkDescriptorSet descriptorSet;
-		VkResult result = vkAllocateDescriptorSets(device.GetVkDevice(), &allocInfo, &descriptorSet);
-		if (result != VK_SUCCESS) {
-			throw std::runtime_error("Failed to allocate descriptor set!");
-		}
-
 		VkWriteDescriptorSet descriptorWrite{};
 		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrite.dstSet = descriptorSet;
+		descriptorWrite.dstSet = m_descriptorSets[currentFrame];
 		descriptorWrite.dstBinding = 0;
 		descriptorWrite.dstArrayElement = 0;
 		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -326,11 +344,27 @@ namespace Lemonade
 
 	void LRenderBlock::CreateVkDescriptors()
 	{
-		LVulkanDevice device = GraphicsServices::GetContext()->GetVulkanDevice();
+		const LVulkanDevice& device = GraphicsServices::GetContext()->GetVulkanDevice();
 
 		// Allocate Unifrom buffer memory 
 		for (auto& uniformBuffer : m_uniformBuffers)
 		{
+			uniformBuffer.DataSize = sizeof(VertexData);
+
+			if (uniformBuffer.Buffer == VK_NULL_HANDLE)
+			{
+				VkBufferCreateInfo bufferInfo{};
+				bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+				bufferInfo.size = uniformBuffer.DataSize;
+				bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+				bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		
+				if (vkCreateBuffer(device.GetVkDevice(), &bufferInfo, nullptr, &uniformBuffer.Buffer) != VK_SUCCESS) {
+					throw std::runtime_error("failed to create uniform buffer!");
+				}
+			}
+	
+
 			VkMemoryRequirements memRequirements;
 			vkGetBufferMemoryRequirements(device.GetVkDevice(), uniformBuffer.Buffer, &memRequirements);
 
@@ -356,11 +390,32 @@ namespace Lemonade
 		uboLayoutBinding.descriptorCount = 1; 
 		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		uboLayoutBinding.pImmutableSamplers = nullptr;   
+
+		uint32_t bindingCounter = 1;
+        VkDescriptorSetLayoutBinding imageLayoutBinding{};
+        imageLayoutBinding.binding = 1;
+        imageLayoutBinding.descriptorCount = 1;
+        imageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+        imageLayoutBinding.pImmutableSamplers = nullptr;
+        imageLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 2; 
+        samplerLayoutBinding.descriptorCount = 1;
+        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::vector<VkDescriptorSetLayoutBinding> bindings = {
+			uboLayoutBinding,
+            imageLayoutBinding,
+            samplerLayoutBinding
+        };
 		
-		VkDescriptorSetLayoutCreateInfo descriptorCreateInfo;
+		VkDescriptorSetLayoutCreateInfo descriptorCreateInfo{};
 		descriptorCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		descriptorCreateInfo.bindingCount = 1;
-		descriptorCreateInfo.pBindings = &uboLayoutBinding;
+		descriptorCreateInfo.bindingCount = 3;
+		descriptorCreateInfo.pBindings = bindings.data();
 
 		VkResult result = vkCreateDescriptorSetLayout(device.GetVkDevice(), &descriptorCreateInfo, nullptr, &m_vkDescriptorSetLayout);
 
@@ -369,22 +424,53 @@ namespace Lemonade
 			throw std::runtime_error("Unable to create descriptor set layout.");
 		}
 
-		VkDescriptorPoolSize poolSize{};
-		poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSize.descriptorCount = 10;
+		VkDescriptorPoolSize poolSize[] = {
+            {
+                .type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+                .descriptorCount = 100
+            },
+            {
+                .type = VK_DESCRIPTOR_TYPE_SAMPLER,
+                .descriptorCount = 100
+            },
+			{
+                .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .descriptorCount = 100
+            }
+        };
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		poolInfo.poolSizeCount = 1;
-		poolInfo.pPoolSizes = &poolSize;
-		poolInfo.maxSets = 5;
+		poolInfo.poolSizeCount = 3;
+		poolInfo.pPoolSizes = poolSize;
+		poolInfo.maxSets = 100;
 
-		VkDescriptorPool descriptorPool;
-		result = vkCreateDescriptorPool(device.GetVkDevice(), &poolInfo, nullptr, &descriptorPool);
+		result = vkCreateDescriptorPool(device.GetVkDevice(), &poolInfo, nullptr, &m_vkDescriptorPool);
 		
 		if (result != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to create descriptor pool!");
+		}
+
+		std::vector<VkDescriptorSetLayout> layouts(LRenderTarget::MAX_FRAMES_IN_FLIGHT, m_vkDescriptorSetLayout); 
+
+		VkDescriptorSetAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocInfo.pNext = nullptr; 
+		allocInfo.descriptorPool = m_vkDescriptorPool;
+		allocInfo.descriptorSetCount = layouts.size();
+		allocInfo.pSetLayouts = layouts.data();
+
+		result = vkAllocateDescriptorSets(device.GetVkDevice(), &allocInfo, m_descriptorSets.data());
+		
+		if (result != VK_SUCCESS) {
+			throw std::runtime_error("Failed to allocate descriptor set!");
+		}
+
+		for (int i = 0; i < LRenderTarget::MAX_FRAMES_IN_FLIGHT; ++i) {
+			if (m_descriptorSets[i] == VK_NULL_HANDLE) {
+				throw std::runtime_error("Descriptor set handle is null!");
+			}
 		}
 	}
 
@@ -392,7 +478,7 @@ namespace Lemonade
 	{
 		CreateVkDescriptors();
 
-		LVulkanDevice device = GraphicsServices::GetContext()->GetVulkanDevice();
+		const LVulkanDevice& device = GraphicsServices::GetContext()->GetVulkanDevice();
 		LRenderTarget* renderTarget = static_cast<LRenderTarget*>(GraphicsServices::GetRenderer()->GetActiveRenderTarget());
 
 		VkPushConstantRange pushConstantRange{};
@@ -400,9 +486,12 @@ namespace Lemonade
 		pushConstantRange.offset = 0;
 		pushConstantRange.size = 128;
 
+		std::vector<VkDescriptorSetLayout> layouts(LRenderTarget::MAX_FRAMES_IN_FLIGHT, m_vkDescriptorSetLayout); 
+
+		m_vkPipelineLayoutCreateInfo = {};
 		m_vkPipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		m_vkPipelineLayoutCreateInfo.setLayoutCount = 1;
-		m_vkPipelineLayoutCreateInfo.pSetLayouts = &m_vkDescriptorSetLayout;
+		m_vkPipelineLayoutCreateInfo.setLayoutCount = layouts.size();
+		m_vkPipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 		m_vkPipelineLayoutCreateInfo.pushConstantRangeCount = 1;
 		m_vkPipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -449,9 +538,11 @@ namespace Lemonade
 			.lineWidth = 1.0f
 		};
 
+		LRenderTarget* activeTarget = static_cast<LRenderTarget*>(GraphicsServices::GetRenderer()->GetActiveRenderTarget());
+
 		VkPipelineMultisampleStateCreateInfo multisampling = {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
-			.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
+			.rasterizationSamples = activeTarget->GetSampleCount(),
 			.sampleShadingEnable = VK_FALSE
 		};
 
@@ -464,7 +555,7 @@ namespace Lemonade
 		VkPipelineColorBlendStateCreateInfo colorBlending = {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
 			.logicOpEnable = VK_FALSE,
-			.attachmentCount = 1,
+			.attachmentCount = activeTarget->GetAttachmentCount(),
 			.pAttachments = &colorBlendAttachment
 		};
 

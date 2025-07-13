@@ -26,7 +26,9 @@ namespace Lemonade
 		void WaitForFence();
 		VkFence GetFence() { return m_fence[m_currentFrame]; }
 		VkSemaphore GetSemaphore(){ return m_imageAvailableSemaphore[m_currentFrame]; }
+		VkSemaphore GetTimelineSemaphore() { return m_timelineSemaphore[m_currentFrame]; }
 		uint64_t GetFrameSemaphoreTimelineValueAndIncrement();
+		uint64_t GetPassIndexAndIncrement();
 	protected:
 		virtual void Unload() override;
 		virtual bool Init() override;
@@ -42,8 +44,10 @@ namespace Lemonade
 		std::vector<VkImage> m_swapChainImages;
 		VkFence m_fence[4];
 		VkSemaphore m_imageAvailableSemaphore[4];
+		VkSemaphore m_timelineSemaphore[4];
 		VkFormat m_imageFormat;
 		uint32_t m_currentFrame = 0;
+		uint32_t m_passIndex = 0;
 		uint64_t m_currentSemaphoreValue = 0;
 	};
 }

@@ -31,6 +31,13 @@ namespace Lemonade
 
     LRenderTarget::LRenderTarget()
     {
+        auto window = GraphicsServices::GetWindowManager()->GetMainWindow();
+
+        if (window != nullptr)
+        {
+            // Default to window dimensions?
+            m_dimensions = glm::ivec2(window->GetWidth(), window->GetHeight());
+        }
     }
 
     LRenderTarget::LRenderTarget(glm::ivec2 dimensions)
@@ -64,6 +71,7 @@ namespace Lemonade
 
         VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 
+
         for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
         {
             VkSemaphoreCreateInfo semaphoreInfo{};
@@ -83,15 +91,66 @@ namespace Lemonade
             }
         }
 
+        VkDescriptorPoolSize poolSizes[] = {
+            {
+                .type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+                .descriptorCount = 100
+            },
+            {
+                .type = VK_DESCRIPTOR_TYPE_SAMPLER,
+                .descriptorCount = 100
+            }
+        };
+
+        VkDescriptorPoolCreateInfo poolInfo = {};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+        poolInfo.maxSets = 100;
+        poolInfo.poolSizeCount = 2;
+        poolInfo.pPoolSizes = poolSizes;
+
+        vkCreateDescriptorPool(device, &poolInfo, nullptr, &m_descriptorPool);
 
         return true;
     }
 
-    void LRenderTarget::bindColourAttachments()
+    void LRenderTarget::BindColourAttachments()
     {
+        VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
+		//std::vector<VkDescriptorSetLayout> layouts(LRenderTarget::MAX_FRAMES_IN_FLIGHT, m_vkDescriptorSetLayout); 
+
+		VkPushConstantRange pushConstantRange{};
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = 128;
+
+		VkPipelineLayoutCreateInfo m_vkPipelineLayoutCreateInfo = {};
+		m_vkPipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		m_vkPipelineLayoutCreateInfo.setLayoutCount = m_descriptorSetLayouts.size();
+		m_vkPipelineLayoutCreateInfo.pSetLayouts = m_descriptorSetLayouts.data();
+		m_vkPipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+		m_vkPipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+
+        if (m_vkPipelineLayout == VK_NULL_HANDLE)
+        {
+            vkCreatePipelineLayout(device, &m_vkPipelineLayoutCreateInfo, nullptr, &m_vkPipelineLayout);
+        }
+
+        LWindow* activeWindow = GraphicsServices::GetWindowManager()->GetActiveWindow();
+        uint32_t currentFrame = activeWindow->GetCurrentFrame();
+        LRenderTarget* activeTarget = static_cast<LRenderTarget*>(GraphicsServices::GetRenderer()->GetActiveRenderTarget());
+
+        for (auto& descriptors : m_colourAttachmentDescriptors)
+        {
+            vkCmdBindDescriptorSets(activeTarget->GetCommandBuffer(),
+                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                m_vkPipelineLayout,
+                0, 1, &descriptors,
+                0, nullptr);
+        }
     }
 
-    void LRenderTarget::bindColourAttachment(LColourAttachment colourAttachment, uint activeTarget)
+    void LRenderTarget::BindColourAttachment(LColourAttachment colourAttachment, uint activeTarget)
     {
     }
 
@@ -124,7 +183,7 @@ namespace Lemonade
         for (int i = 0; i < m_colourAttachments.size(); ++i)
         {
             VkAttachmentDescription colorAttachment = {};
-            colorAttachment.format = VK_FORMAT_R8G8B8A8_UNORM;
+            colorAttachment.format = VK_FORMAT_B8G8R8A8_UNORM;
             colorAttachment.samples = m_hasMultisampledColourAttachment ? m_sampleCount : VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
             colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
             colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -212,12 +271,18 @@ namespace Lemonade
         GraphicsServices::GetRenderer()->SetActiveRenderTarget(this);
         VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 
-        VkClearValue clearValues[2];
-        clearValues[0].color = { { m_clearColour.r, m_clearColour.g, m_clearColour.b, m_clearColour.a } };
+        std::vector<VkClearValue> clearValues;
+        clearValues.resize(m_colourAttachments.size() + ((m_bHasDepthAttachment) ? 1 : 0));
+        int c = 0;
+
+        for (auto& colourAttach : m_colourAttachments)
+        {
+            clearValues[c++].color = { { m_clearColour.r, m_clearColour.g, m_clearColour.b, m_clearColour.a } };
+        }
 
         if (m_bHasDepthAttachment)
         {
-            clearValues[1].depthStencil = {1.0f, 0};   
+            clearValues[c++].depthStencil = {1.0f, 0};   
         }
 
         LWindow* activeWindow = GraphicsServices::GetWindowManager()->GetActiveWindow();
@@ -232,17 +297,25 @@ namespace Lemonade
         renderPassInfo.renderArea.offset = { 0, 0 };
         renderPassInfo.renderArea.extent.width = m_dimensions.x;
         renderPassInfo.renderArea.extent.height = m_dimensions.y;
-        renderPassInfo.pClearValues = clearValues;
-        renderPassInfo.clearValueCount = (m_bHasDepthAttachment) ? 2 : 1;
+        renderPassInfo.pClearValues = clearValues.data();
+        renderPassInfo.clearValueCount = clearValues.size();
 
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.pNext = nullptr;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT; // Set command buffer usage flags
+        //beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT; // Set command buffer usage flags 
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT; // Set command buffer usage flags 
         beginInfo.pInheritanceInfo = nullptr; // Optional
 
         vkResetCommandBuffer(m_commandBuffer[currentFrame], 0); 
-        vkBeginCommandBuffer(m_commandBuffer[currentFrame], &beginInfo);
+        
+        VkResult result = vkBeginCommandBuffer(m_commandBuffer[currentFrame], &beginInfo);
+        
+        if (result != VK_SUCCESS)
+        {
+            Logger::Log(Logger::ERROR, "Begin command buffer failed.");
+        }
+        
         vkCmdBeginRenderPass(m_commandBuffer[currentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
         // TODO replace with viewport apply method
@@ -274,7 +347,6 @@ namespace Lemonade
         vkCmdEndRenderPass(m_commandBuffer[currentFrame]);
         VkResult endResult = vkEndCommandBuffer(m_commandBuffer[currentFrame]);
         
-        vkEndCommandBuffer(m_commandBuffer[currentFrame]);
         if (endResult != VK_SUCCESS) {
             Logger::Log(Logger::ERROR, "Failed to end command buffer: %d", endResult);
             return; // don't submit if ending failed
@@ -285,42 +357,58 @@ namespace Lemonade
         };        
         
         VkSemaphore semaphore = activeWindow->GetSemaphore();
+        VkSemaphore timelineSemaphore = activeWindow->GetTimelineSemaphore();
         //VkFence inFlightFrame = activeWindow->GetFence();
 
         uint64_t value = activeWindow->GetFrameSemaphoreTimelineValueAndIncrement();
         uint64_t nextValue = value + 1;
 
-        VkSemaphore signalSemaphores[] = { m_renderFinishedSemaphore[currentFrame], semaphore };
+        VkSemaphore signalSemaphores[] = { m_renderFinishedSemaphore[currentFrame], timelineSemaphore };
         uint64_t signalValues[] = {0,value + 1 }; 
+        uint64_t waitValues[] = {0,value  }; 
 
         VkTimelineSemaphoreSubmitInfo timelineInfo{};
+
         timelineInfo.sType = VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO;
         timelineInfo.signalSemaphoreValueCount = 2;
-        timelineInfo.pSignalSemaphoreValues = signalValues;
-        timelineInfo.pWaitSemaphoreValues = &value;
-        timelineInfo.waitSemaphoreValueCount = 1;
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
+        if (activeWindow->GetPassIndexAndIncrement() == 0)
+        {
+            // No wait on timeline semaphore, waits for frame aquired image semaphore
+            timelineInfo.pWaitSemaphoreValues = waitValues;
+            timelineInfo.waitSemaphoreValueCount = 1;
+            submitInfo.waitSemaphoreCount = 1;
+            submitInfo.pWaitSemaphores = &semaphore;
+        }
+        else 
+        {
+            timelineInfo.pWaitSemaphoreValues = &waitValues[1];
+            timelineInfo.waitSemaphoreValueCount = 1;
+            submitInfo.waitSemaphoreCount = 1;
+            submitInfo.pWaitSemaphores = &timelineSemaphore;
+        }
+
         if (m_bRenderToScreen)
         {
+            timelineInfo.signalSemaphoreValueCount = 2;
             submitInfo.signalSemaphoreCount = 2;
             submitInfo.pSignalSemaphores = signalSemaphores;
+            timelineInfo.pSignalSemaphoreValues = signalValues;
         }
         else {
             timelineInfo.signalSemaphoreValueCount = 1;
             timelineInfo.pSignalSemaphoreValues = &signalValues[1];
             submitInfo.signalSemaphoreCount = 1; 
-            submitInfo.pSignalSemaphores = &semaphore;
+            submitInfo.pSignalSemaphores = &timelineSemaphore;
         }
 
         submitInfo.pNext = &timelineInfo;
 
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &m_commandBuffer[currentFrame];
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = &semaphore;
         submitInfo.pWaitDstStageMask = waitStages;
 
         VkQueue graphicsQueue = GraphicsServices::GetContext()->GetVulkanDevice().GetGraphicsQueue();
@@ -353,7 +441,7 @@ namespace Lemonade
             }
 
         } else if (result == VK_SUCCESS) {
-            Logger::Log(Logger::INFO, "Fence signaled successfully within timeout.");
+            //Logger::Log(Logger::INFO, "Fence signaled successfully within timeout.");
         } else {
             Logger::Log(Logger::ERROR, "vkWaitForFences failed with error: %d", result);
         }
@@ -583,10 +671,10 @@ namespace Lemonade
         imageInfo.extent.depth = 1;
         imageInfo.mipLevels = 1;
         imageInfo.arrayLayers = 1;
-        imageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+        imageInfo.format = VK_FORMAT_B8G8R8A8_UNORM;
         imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         imageInfo.samples = multisampled ? m_sampleCount : VK_SAMPLE_COUNT_1_BIT;
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         imageInfo.flags = 0; 
@@ -599,10 +687,26 @@ namespace Lemonade
             throw std::runtime_error("Failed to create image!");
             return -1;
         }
+        
+        VulkanRenderTarget target = m_colourAttachments.at(colourAttachment);
+
+        VkMemoryRequirements memRequirements;
+        vkGetImageMemoryRequirements(device, target.Image, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+        if (vkAllocateMemory(device, &allocInfo, nullptr, &target.Memory) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to allocate memory for depth image!");
+        }
+
+        vkBindImageMemory(device, target.Image, target.Memory, 0);
 
         VkImageViewCreateInfo viewInfo = {};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.format = VK_FORMAT_R8G8B8A8_UNORM; 
+        viewInfo.format = VK_FORMAT_B8G8R8A8_UNORM; 
         viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; 
         viewInfo.image = m_colourAttachments.at(colourAttachment).Image;
         viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -616,6 +720,100 @@ namespace Lemonade
             throw std::runtime_error("Failed to create image view!");
             return -1;
         }
+
+
+		VkSamplerCreateInfo samplerInfo{};
+		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerInfo.magFilter = VK_FILTER_LINEAR;
+		samplerInfo.minFilter = VK_FILTER_LINEAR;
+		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.anisotropyEnable = VK_FALSE;
+		samplerInfo.maxAnisotropy = 1.0f;
+		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		samplerInfo.unnormalizedCoordinates = VK_FALSE;
+		samplerInfo.compareEnable = VK_FALSE;
+		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+		if (vkCreateSampler(device, &samplerInfo, nullptr, &m_colourAttachments.at(colourAttachment).Sampler)!= VK_SUCCESS) {
+            Logger::Log(Logger::ERROR,"Failed to create image sampler!");
+            throw std::runtime_error("Failed to create image sampler!");
+            return -1;
+        }
+
+        // Create image descriptor 
+        VkDescriptorImageInfo imageDescriptor = {};
+        imageDescriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageDescriptor.imageView = m_colourAttachments.at(colourAttachment).ImageView;
+
+        VkDescriptorImageInfo samplerDescriptor = {};
+        samplerDescriptor.sampler = m_colourAttachments.at(colourAttachment).Sampler;
+
+        uint32_t bindingCounter = 1;
+        VkDescriptorSetLayoutBinding imageLayoutBinding{};
+        imageLayoutBinding.binding = bindingCounter++ + ((uint32_t)colourAttachment - (uint32_t)LColourAttachment::LEMON_COLOR_ATTACHMENT0); 
+        imageLayoutBinding.descriptorCount = 1;
+        imageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+        imageLayoutBinding.pImmutableSamplers = nullptr;
+        imageLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = bindingCounter++ + ((uint32_t)colourAttachment - (uint32_t)LColourAttachment::LEMON_COLOR_ATTACHMENT0); 
+        samplerLayoutBinding.descriptorCount = 1;
+        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::vector<VkDescriptorSetLayoutBinding> bindings = {
+            imageLayoutBinding,
+            samplerLayoutBinding
+        };
+
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = bindings.size();
+        layoutInfo.pBindings = bindings.data();
+
+        VkDescriptorSetLayout descriptorSetLayout;
+        if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create descriptor set layout!");
+        }
+
+        m_descriptorSetLayouts.push_back(descriptorSetLayout);
+
+
+		VkDescriptorSetAllocateInfo desallocInfo{};
+		desallocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		desallocInfo.pNext = nullptr; 
+		desallocInfo.descriptorPool = m_descriptorPool;
+		desallocInfo.descriptorSetCount = 1;
+		desallocInfo.pSetLayouts = &descriptorSetLayout;
+
+        VkDescriptorSet descriptorSet;
+		vkAllocateDescriptorSets(device, &desallocInfo, &descriptorSet);
+        m_colourAttachmentDescriptors.push_back(descriptorSet);
+
+        VkWriteDescriptorSet writeImage = {};
+        writeImage.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeImage.dstSet = descriptorSet;
+        writeImage.dstBinding = imageLayoutBinding.binding;
+        writeImage.dstArrayElement = 0;
+        writeImage.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+        writeImage.descriptorCount = 1;
+        writeImage.pImageInfo = &imageDescriptor;
+
+        VkWriteDescriptorSet writeSampler = {};
+        writeSampler.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeSampler.dstSet = descriptorSet;
+        writeSampler.dstBinding = samplerLayoutBinding.binding;
+        writeSampler.dstArrayElement = 0;
+        writeSampler.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+        writeSampler.descriptorCount = 1;
+        writeSampler.pImageInfo = &samplerDescriptor;
+
+        VkWriteDescriptorSet writes[] = { writeImage, writeSampler };
+        vkUpdateDescriptorSets(device, 2, writes, 0, nullptr);
 
         return 0;
     }

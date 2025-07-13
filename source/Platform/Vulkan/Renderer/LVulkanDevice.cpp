@@ -109,8 +109,6 @@ namespace Lemonade
 
 	bool LVulkanDevice::CreateVulkanDevice()
 	{
-		VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-
 		uint32_t deviceCount = 0;	
 		const VkInstance& instance = GraphicsServices::GetContext()->GetVkInstance();
 		//const VkSurfaceKHR& surface = UServiceLocator::getInstance()->getWindowManager()->getMainWindow()->getVkSurface();
@@ -133,15 +131,13 @@ namespace Lemonade
 
 			if (score > bestScore) {
 				bestScore = score;
-				physicalDevice = device;
+				m_physicalDevice = device;
 			}
 		}
 
-		m_physicalDevice = physicalDevice;
-
-		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &m_queueFamilyCount, nullptr);
+		vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &m_queueFamilyCount, nullptr);
 		m_queueFamilyProperties.resize(m_queueFamilyCount);
-		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &m_queueFamilyCount, m_queueFamilyProperties.data());
+		vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &m_queueFamilyCount, m_queueFamilyProperties.data());
 
 		VkDeviceQueueCreateInfo queueCreateInfo[4];
 
@@ -155,6 +151,9 @@ namespace Lemonade
 		const char* enabledExtensions[] =
 		{
 			"VK_KHR_swapchain",
+			"VK_KHR_get_memory_requirements2",
+			"VK_KHR_dedicated_allocation",
+			VK_EXT_VERTEX_ATTRIBUTE_ROBUSTNESS_EXTENSION_NAME,
 		};
 
 		// Enabled Layers
@@ -163,10 +162,24 @@ namespace Lemonade
 			"VK_LAYER_RENDERDOC_Capture",
 		};
 
-		// Get supported features
-		VkPhysicalDeviceFeatures supportedFeatures;
-		vkGetPhysicalDeviceFeatures(m_physicalDevice, &supportedFeatures);
+		VkPhysicalDeviceVertexAttributeRobustnessFeaturesEXT robustFeature{
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_ROBUSTNESS_FEATURES_EXT,
+			.vertexAttributeRobustness = VK_TRUE,
+		};
 
+		VkPhysicalDeviceTimelineSemaphoreFeatures timelineFeatures = {
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES,
+			.pNext = nullptr,
+		};
+
+		// Get supported features
+		VkPhysicalDeviceFeatures2 supportedFeatures = {
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+			.pNext = &timelineFeatures
+		};
+		
+		vkGetPhysicalDeviceFeatures2(m_physicalDevice, &supportedFeatures);
+		
 		//VkPhysicalDeviceFeatures deviceFeatures = {};
 		//deviceFeatures.multiDrawIndirect = supportedFeatures.multiDrawIndirect;
 		//deviceFeatures.geometryShader = VK_TRUE;
@@ -177,13 +190,14 @@ namespace Lemonade
 		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		deviceCreateInfo.queueCreateInfoCount = 1;
 		deviceCreateInfo.pQueueCreateInfos = queueCreateInfo;
-		deviceCreateInfo.pEnabledFeatures = &supportedFeatures;
-		deviceCreateInfo.enabledExtensionCount = 1;
+		// old way.
+		//deviceCreateInfo.pEnabledFeatures = &supportedFeatures;
+		deviceCreateInfo.enabledExtensionCount = 3;
 		deviceCreateInfo.ppEnabledExtensionNames = enabledExtensions;
 		deviceCreateInfo.enabledLayerCount = 1;
 		deviceCreateInfo.ppEnabledLayerNames = enabledLayers;
 		deviceCreateInfo.flags = 0;
-		deviceCreateInfo.pNext = nullptr;
+		deviceCreateInfo.pNext = &supportedFeatures;
 
 
 		VkResult result = vkCreateDevice(m_physicalDevice, &deviceCreateInfo, nullptr, &m_vkDevice);

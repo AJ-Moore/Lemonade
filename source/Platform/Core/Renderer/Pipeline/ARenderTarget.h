@@ -45,8 +45,8 @@ namespace Lemonade
         virtual ~ARenderTarget();
         virtual bool Init() = 0;
         virtual void InitAsDefault() { m_bDoneInit = true; }
-        virtual void bindColourAttachments() = 0;
-        virtual void bindColourAttachment(LColourAttachment colourAttachment, uint activeTarget = 0) = 0;
+        virtual void BindColourAttachments() = 0;
+        virtual void BindColourAttachment(LColourAttachment colourAttachment, uint activeTarget = 0) = 0;
         virtual void bindDepthAttachment(uint activeTarget = 0) = 0;
         virtual void BeginRenderPass() = 0;
         virtual void EndRenderPass() = 0;
