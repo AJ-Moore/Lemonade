@@ -5,6 +5,7 @@
 #include <LCommon.h>
 #include <cstdint>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan_core.h>
 #if defined(RENDERER_VULKAN)
@@ -67,15 +68,18 @@ namespace Lemonade
         VulkanRenderTarget GetColourAttachment(LColourAttachment colourAttachment);
         VkFramebuffer getFrameBuffer() { return m_frameBuffer; }
         void GenerateBuffers();
+        void UpdateDescriptorSet(LColourAttachment colourAttachment);
 
         bool m_dirtyBuffer = false;
+        bool m_descriptorsDirty = true;
         bool m_hasMultisampledColourAttachment = false;
         uint m_depthBuffer = 0;
         uint m_depthTexture = 0;
         std::map<LColourAttachment, VulkanRenderTarget> m_colourAttachments;
 
-        std::vector<VkDescriptorSet> m_colourAttachmentDescriptors;
-        std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts;;
+        //std::vector<VkDescriptorSet> m_colourAttachmentDescriptors;
+        std::unordered_map<LColourAttachment, VkDescriptorSet> m_colourAttachmentDescriptors;
+        std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts;
 
         bool m_bHasDepthAttachment = false;
         VulkanRenderTarget m_depthAttachment;

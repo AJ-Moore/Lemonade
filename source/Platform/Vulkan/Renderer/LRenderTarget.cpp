@@ -142,12 +142,19 @@ namespace Lemonade
 
         for (auto& descriptors : m_colourAttachmentDescriptors)
         {
+            if (m_descriptorsDirty)
+            {
+                UpdateDescriptorSet(descriptors.first);
+            }
+
             vkCmdBindDescriptorSets(activeTarget->GetCommandBuffer(),
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
                 m_vkPipelineLayout,
-                0, 1, &descriptors,
+                0, 1, &descriptors.second,
                 0, nullptr);
         }
+
+        m_descriptorsDirty = false;
     }
 
     void LRenderTarget::BindColourAttachment(LColourAttachment colourAttachment, uint activeTarget)
@@ -742,14 +749,6 @@ namespace Lemonade
             return -1;
         }
 
-        // Create image descriptor 
-        VkDescriptorImageInfo imageDescriptor = {};
-        imageDescriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageDescriptor.imageView = m_colourAttachments.at(colourAttachment).ImageView;
-
-        VkDescriptorImageInfo samplerDescriptor = {};
-        samplerDescriptor.sampler = m_colourAttachments.at(colourAttachment).Sampler;
-
         uint32_t bindingCounter = 1;
         VkDescriptorSetLayoutBinding imageLayoutBinding{};
         imageLayoutBinding.binding = bindingCounter++ + ((uint32_t)colourAttachment - (uint32_t)LColourAttachment::LEMON_COLOR_ATTACHMENT0); 
@@ -792,8 +791,40 @@ namespace Lemonade
 
         VkDescriptorSet descriptorSet;
 		vkAllocateDescriptorSets(device, &desallocInfo, &descriptorSet);
-        m_colourAttachmentDescriptors.push_back(descriptorSet);
+        m_colourAttachmentDescriptors[colourAttachment] = (descriptorSet);
 
+        return 0;
+    }
+
+    void LRenderTarget::UpdateDescriptorSet(LColourAttachment colourAttachment)
+    {
+        VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
+
+        VkDescriptorSet descriptorSet = m_colourAttachmentDescriptors[colourAttachment];
+
+        uint32_t bindingCounter = 1;
+        VkDescriptorSetLayoutBinding imageLayoutBinding{};
+        imageLayoutBinding.binding = bindingCounter++ + ((uint32_t)colourAttachment - (uint32_t)LColourAttachment::LEMON_COLOR_ATTACHMENT0); 
+        imageLayoutBinding.descriptorCount = 1;
+        imageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+        imageLayoutBinding.pImmutableSamplers = nullptr;
+        imageLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = bindingCounter++ + ((uint32_t)colourAttachment - (uint32_t)LColourAttachment::LEMON_COLOR_ATTACHMENT0); 
+        samplerLayoutBinding.descriptorCount = 1;
+        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        // Create image descriptor 
+        VkDescriptorImageInfo imageDescriptor = {};
+        imageDescriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageDescriptor.imageView = m_colourAttachments.at(colourAttachment).ImageView;
+
+        VkDescriptorImageInfo samplerDescriptor = {};
+        samplerDescriptor.sampler = m_colourAttachments.at(colourAttachment).Sampler;
+        
         VkWriteDescriptorSet writeImage = {};
         writeImage.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         writeImage.dstSet = descriptorSet;
@@ -814,8 +845,6 @@ namespace Lemonade
 
         VkWriteDescriptorSet writes[] = { writeImage, writeSampler };
         vkUpdateDescriptorSets(device, 2, writes, 0, nullptr);
-
-        return 0;
     }
 
     void LRenderTarget::Clear(uint clearFlags)
