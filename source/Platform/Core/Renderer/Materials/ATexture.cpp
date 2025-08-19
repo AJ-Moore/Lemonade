@@ -1,4 +1,5 @@
 #include "ATexture.h"
+#include "Platform/Core/Renderer/Materials/TextureUtils.h"
 #include <Util/Logger.h>
 #include <filesystem>
 #include <Platform/Core/Renderer/Materials/TextureType.h>
@@ -41,17 +42,18 @@ namespace Lemonade
 		if (!std::filesystem::exists(fsPath))
 		{
 			Logger::Log(Logger::WARN, "Unable to find texture at path [%s]", path.c_str());
-			return false;
+			//return false;
 		}
-
-		try {
-			surface = IMG_Load(fsPath.generic_string().c_str());
-			bTextureLoadOK = true;
-		}
-		catch (std::exception e)
-		{
-			Logger::Log(Logger::ERROR, "Exception was thrown whilst trying to load texture [%s].", fsPath.generic_string().c_str());
-			bTextureLoadOK = false;
+		else {
+			try {
+				surface = IMG_Load(fsPath.generic_string().c_str());
+				bTextureLoadOK = true;
+			}
+			catch (std::exception e)
+			{
+				Logger::Log(Logger::ERROR, "Exception was thrown whilst trying to load texture [%s].", fsPath.generic_string().c_str());
+				bTextureLoadOK = false;
+			}
 		}
 
 		if (surface == nullptr)
@@ -73,13 +75,13 @@ namespace Lemonade
 		m_textureFormat = GetTextureFormat(surface);
 
 		// Not supported, log and convert to RGBA
-		if (TextureData::GetNativeTextureFormat(m_textureFormat) == -1)
+		if (TextureData::GetNativeTextureFormat(m_textureFormat) == VK_FORMAT_UNDEFINED)
 		{
 			Logger::Log(Logger::WARN, "Unsupported texture format, format being converted to RGBA");
 			SDL_Surface* original = surface;
 
-			SDL_ConvertSurface(surface, SDL_PixelFormat::SDL_PIXELFORMAT_RGBA8888);
-			SDL_DestroySurface(original);
+			surface = SDL_ConvertSurface(surface, SDL_PixelFormat::SDL_PIXELFORMAT_RGBA8888);
+			//SDL_DestroySurface(original);
 			m_textureFormat = TextureFormat::LEMONADE_RGBA8888;
 		}
 
@@ -133,23 +135,24 @@ namespace Lemonade
 		Logger::Log(Logger::VERBOSE, "Creating pink black debug texture.");
 
 		// Write pink/ black missing texture 64X64
-		for (int i = 0; i < 16; ++i)
+		for (int i = 0; i < 256; ++i)
 		{
-			for (int p = 0; p < 16; ++p)
+			for (int p = 0; p < 256; ++p)
 			{
-				if ((p % 2 == 0))
+				if ((p % 16 < 8))
 				{
-					m_pixelData.push_back((i % 2 == 0) ? Colour(0, 0, 0, 255) : Colour(255, 0, 255, 255));
+					m_pixelData.push_back((i % 16 < 8) ? Colour(0, 0, 0, 255) : Colour(255, 0, 255, 255));
 				}
 				else
 				{
-					m_pixelData.push_back((i % 2 != 0) ? Colour(0, 0, 0, 255) : Colour(255, 0, 255, 255));
+					m_pixelData.push_back((i % 16 >= 8) ? Colour(0, 0, 0, 255) : Colour(255, 0, 255, 255));
 				}
 			}
 		}
 
 		m_textureFilter = TextureFilter::NearestNeighbour;
-		LoadNativeTextureFromPixels(m_pixelData.data(), 16, 16);
+		m_textureFormat = TextureFormat::LEMONADE_RGBA8888;
+		LoadNativeTextureFromPixels(m_pixelData.data(), 256, 256);
 		m_bPinkBlackTextureLoaded = true;
 	}
 }

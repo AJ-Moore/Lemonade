@@ -17,11 +17,20 @@ namespace Lemonade
 
 	class LEMONADE_API Material : public CitrusCore::AResource<Material>
 	{
+		struct TextureMap : public std::unordered_map<TextureType, std::shared_ptr<TextureData>> {
+			TextureMap() = default;
+			TextureMap(const TextureMap&) = delete;
+			TextureMap& operator=(const TextureMap&) = delete;
+		};
+
 	public: 
+		Material() = default;
 		void Bind();
 
 		std::shared_ptr<AShaderProgram> GetShader() const;
 		ResourcePtr<ATexture> GetTexture() const;
+
+		const TextureMap& GetTextures() const noexcept { return m_textures; }
 	protected: 
 		virtual bool LoadResource(std::string path) override;
 		virtual void UnloadResource() override;
@@ -29,7 +38,7 @@ namespace Lemonade
 		std::shared_ptr<AShaderProgram> m_shader;
 		ResourcePtr<ATexture> m_texture;
 
-		std::unordered_map<TextureType, std::shared_ptr<TextureData>> m_textures;
+		TextureMap m_textures;
 
 		TextureFilter m_textureFilter = TextureFilter::Linear;
 		TextureClamp m_textureClamp = TextureClamp::Clamp;

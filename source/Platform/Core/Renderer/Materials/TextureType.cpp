@@ -9,26 +9,26 @@ namespace Lemonade
 
 	const std::unordered_map<std::string, TextureType> TextureData::m_textureLookup =
 	{
-		{"None", TextureType::None},
-		{"Diffuse", TextureType::Diffuse},
+		{"none", TextureType::None},
+		{"diffuse", TextureType::Diffuse},
 		{"texture", TextureType::Diffuse},
-		{"Specular", TextureType::Specular},
-		{"Ambient", TextureType::Ambient},
-		{"Emissive", TextureType::Emissive},
-		{"Height", TextureType::Height},
-		{"Normal", TextureType::Normal},
-		{"Shininess", TextureType::Shininess},
-		{"Opacity", TextureType::Opacity},
-		{"Displacement", TextureType::Displacement},
-		{"Lightmap", TextureType::Lightmap},
-		{"Reflection", TextureType::Reflection},
+		{"specular", TextureType::Specular},
+		{"ambient", TextureType::Ambient},
+		{"emissive", TextureType::Emissive},
+		{"height", TextureType::Height},
+		{"normal", TextureType::Normal},
+		{"shininess", TextureType::Shininess},
+		{"opacity", TextureType::Opacity},
+		{"displacement", TextureType::Displacement},
+		{"lightmap", TextureType::Lightmap},
+		{"reflection", TextureType::Reflection},
 
-		{"BaseColour", TextureType::BaseColour},
-		{"NormalCamera", TextureType::NormalCamera},
-		{"EmissionColour", TextureType::EmissionColour},
-		{"Metalness", TextureType::Metalness},
-		{"Roughness", TextureType::Roughness},
-		{"AmbientOcclusion", TextureType::AmbientOcclusion}
+		{"basecolour", TextureType::BaseColour},
+		{"normalcamera", TextureType::NormalCamera},
+		{"emissioncolour", TextureType::EmissionColour},
+		{"metalness", TextureType::Metalness},
+		{"roughness", TextureType::Roughness},
+		{"ambientocclusion", TextureType::AmbientOcclusion}
 	};
 
 	const std::unordered_map<std::string, TextureBindType> TextureData::m_textureBindLookup =
@@ -52,10 +52,11 @@ namespace Lemonade
 		{"nearest", TextureFilter::NearestNeighbour}
 	};
 
-	TextureData::TextureData(TextureType type, CitrusCore::ResourcePtr<ATexture> texture)
+	TextureData::TextureData(TextureType type, CitrusCore::ResourcePtr<ATexture> texture, int bindLocation)
 	{
 		m_textureType = type;
 		m_texture = texture;
+		m_bindLocation = bindLocation;
 	}
 
 	TextureType TextureData::GetTextureType(std::string type)

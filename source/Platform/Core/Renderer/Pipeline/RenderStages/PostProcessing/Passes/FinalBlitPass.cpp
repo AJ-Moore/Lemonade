@@ -29,17 +29,8 @@ namespace Lemonade
 
         screenTarget->BeginRenderPass();
         screenTarget->setClearColour(glm::vec4(1,0,1,1));
-        //previousTarget->bindColourAttachments();
-        //screenTarget->bindColourAttachments();
-        //screenTarget->BindColourAttachment(LColourAttachment::LEMON_COLOR_ATTACHMENT0);
-        //screenTarget->Clear((uint)LBufferBit::COLOUR);
         m_renderLayer.Render();
         screenTarget->EndRenderPass();
-//
-        //m_geometryTarget.BeginRenderPass();
-        //m_geometryTarget.Clear((uint)LBufferBit::COLOUR | (uint)LBufferBit::DEPTH);
-        //GraphicsServices::GetRenderer()->RenderScene();
-        //m_geometryTarget.EndRenderPass();
     }
 
     void FinalBlitPass::Update()

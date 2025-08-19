@@ -1,4 +1,5 @@
 #include "Platform/Core/Time/Time.h"
+#include <Platform/Vulkan/Materials/Texture.h>
 #include <Platform/Core/Renderer/Pipeline/ARenderTarget.h>
 #include <Platform/Core/Services/GraphicsServices.h>
 #include <Platform/Vulkan/WindowManager/LWindow.h>
@@ -205,7 +206,8 @@ namespace Lemonade
             attachmentDescription.push_back(colorAttachment);
 
             VkAttachmentReference attachmentRef = {};
-			attachmentRef.attachment = attachmentCount;
+            attachmentRef.attachment = i;
+			//attachmentRef.attachment = attachmentCount;
 			attachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 			attachmentRefs.push_back(attachmentRef);
 		}
@@ -221,8 +223,25 @@ namespace Lemonade
         renderPassInfo.pAttachments = attachmentDescription.data();
         renderPassInfo.subpassCount = 1; 
         renderPassInfo.pSubpasses = &subpass; 
+        VkSubpassDependency dependency = {};
 
-        vkCreateRenderPass(device, &renderPassInfo, nullptr, &m_renderPass);
+        if (m_bRenderToScreen)
+        {
+            dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+            dependency.dstSubpass = 0;
+            dependency.srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            dependency.srcAccessMask = 0;
+            dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+            renderPassInfo.dependencyCount = 1;
+            renderPassInfo.pDependencies = &dependency;
+        }
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &m_renderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create render pass!");
+        }
 
         VkFramebufferCreateInfo framebufferInfo = {};
 		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -317,11 +336,44 @@ namespace Lemonade
         vkResetCommandBuffer(m_commandBuffer[currentFrame], 0); 
         
         VkResult result = vkBeginCommandBuffer(m_commandBuffer[currentFrame], &beginInfo);
+
+        // Upload pending texture data to GPU
+        Texture::UploadTextures(m_commandBuffer[currentFrame]);
         
         if (result != VK_SUCCESS)
         {
             Logger::Log(Logger::ERROR, "Begin command buffer failed.");
         }
+
+        // Manual trans
+        if (m_bRenderToScreen)
+        {
+            VkImageMemoryBarrier barrier = {};
+            barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED; // current assumed
+            barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.image = m_colourAttachments[LColourAttachment::LEMON_COLOR_ATTACHMENT0].Image;
+            barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            barrier.subresourceRange.baseMipLevel = 0;
+            barrier.subresourceRange.levelCount = 1;
+            barrier.subresourceRange.baseArrayLayer = 0;
+            barrier.subresourceRange.layerCount = 1;
+            barrier.srcAccessMask = 0;
+            barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            
+            vkCmdPipelineBarrier(
+                m_commandBuffer[currentFrame],
+                VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                0,
+                0, nullptr,
+                0, nullptr,
+                1, &barrier
+            );
+        }
+
         
         vkCmdBeginRenderPass(m_commandBuffer[currentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -343,6 +395,39 @@ namespace Lemonade
         vkCmdSetScissor(m_commandBuffer[currentFrame], 0, 1, &scissor);
     }
 
+    void LRenderTarget::TransitionColourAttachments(VkCommandBuffer cmdBuffer) 
+    {
+        if (m_bRenderToScreen)
+        {
+            // Not valid to transition swap chain target.
+            return;
+        }
+
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        //barrier.image = colorAttachmentImage;
+        barrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+
+        std::vector<VkImageMemoryBarrier> barriers;
+        for (auto& attachment : m_colourAttachments)
+        {
+            VkImage image = attachment.second.Image;
+            barrier.image = image;
+            barriers.push_back(barrier);
+        }
+
+        vkCmdPipelineBarrier(
+            cmdBuffer,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+            0, 0, nullptr, 0, nullptr, barriers.size(), barriers.data()
+        );
+    }
+
     void LRenderTarget::EndRenderPass()
     {
         VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
@@ -352,6 +437,9 @@ namespace Lemonade
         uint32_t currentFrame = activeWindow->GetCurrentFrame();
         
         vkCmdEndRenderPass(m_commandBuffer[currentFrame]);
+
+        TransitionColourAttachments(m_commandBuffer[currentFrame]);
+
         VkResult endResult = vkEndCommandBuffer(m_commandBuffer[currentFrame]);
         
         if (endResult != VK_SUCCESS) {
@@ -902,7 +990,7 @@ namespace Lemonade
         }
 
         // Return target for current swap chain frame. 
-        return m_defaultTargets[window->GetUID()][window->GetCurrentFrame()].get();
+        return m_defaultTargets[window->GetUID()][window->GetSwapChainImageIndex()].get();
     }
 }
 

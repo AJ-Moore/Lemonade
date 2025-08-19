@@ -69,6 +69,7 @@ namespace Lemonade
         VkFramebuffer getFrameBuffer() { return m_frameBuffer; }
         void GenerateBuffers();
         void UpdateDescriptorSet(LColourAttachment colourAttachment);
+        void TransitionColourAttachments(VkCommandBuffer buffer);
 
         bool m_dirtyBuffer = false;
         bool m_descriptorsDirty = true;

@@ -1,3 +1,4 @@
+#include "Platform/Vulkan/Materials/Texture.h"
 #include <Platform/Core/Renderer/Pipeline/LCamera.h>
 #include <Platform/Core/Renderer/RenderBlock/ARenderBlock.h>
 #include <Platform/Core/Renderer/Pipeline/LRenderer.h>
@@ -80,6 +81,13 @@ namespace Lemonade
 
 		LRenderTarget* renderTarget = static_cast<LRenderTarget*>(GraphicsServices::GetRenderer()->GetActiveRenderTarget());
 		VkCommandBuffer commandBuffer = renderTarget->GetCommandBuffer();
+
+		// Copy any pending texture data basically. -> invalid here inside active render pass
+		//for (const auto& texture : m_material->GetResource()->GetTextures())
+		//{
+		//	Texture* tex = static_cast<Texture*>(texture.second->GetTexture()->GetResource());
+		//	tex->UpdateVKImage(commandBuffer);
+		//}
 
 		if (m_vkPipeline == VK_NULL_HANDLE)
 		{
@@ -321,6 +329,9 @@ namespace Lemonade
 		bufferInfo.offset = 0;
 		bufferInfo.range = sizeof(VertexData);
 
+
+		std::vector<VkWriteDescriptorSet> writes;
+
 		VkWriteDescriptorSet descriptorWrite{};
 		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		descriptorWrite.dstSet = m_descriptorSets[currentFrame];
@@ -336,10 +347,58 @@ namespace Lemonade
         m_vertexData.projection = activeCamera->GetProjMatrix();         
         m_vertexData.shadowPass = false;          
         m_vertexData.unlit = false;               
-        m_vertexData.emission = 0;                     
+        m_vertexData.emission = 0;     
+		writes.push_back(descriptorWrite);
+
+		int textureCount = 0;
+		int textureBindOffset = 1;
+
+		std::vector<VkDescriptorImageInfo> imageInfos;
+
+		for (const auto& texture : m_material->GetResource()->GetTextures())
+		{
+
+			Texture* tex = static_cast<Texture*>(texture.second->GetTexture()->GetResource());
+			uint32_t bindLocation = texture.second->GetBindLocation();
+
+			// Create image descriptor 
+
+			// Sampler
+			imageInfos.push_back({
+				.sampler   = tex->GetImageSampler(),
+			});
+
+			// Imaage View
+			imageInfos.push_back({
+				.imageView   = tex->GetImageView(),
+				.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+			});
+			
+			VkWriteDescriptorSet writeImage = {};
+			writeImage.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			writeImage.dstSet = m_descriptorSets[currentFrame];
+			writeImage.dstBinding = textureBindOffset + (bindLocation * textureCount);
+			writeImage.dstArrayElement = 0;
+			writeImage.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			writeImage.descriptorCount = 1;
+			writeImage.pImageInfo = &imageInfos.back();
+	
+			VkWriteDescriptorSet writeSampler = {};
+			writeSampler.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			writeSampler.dstSet = m_descriptorSets[currentFrame];
+			writeSampler.dstBinding = writeImage.dstBinding + 1;
+			writeSampler.dstArrayElement = 0;
+			writeSampler.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+			writeSampler.descriptorCount = 1;
+			writeSampler.pImageInfo = &imageInfos.back() - 1;
+			textureCount++;
+
+			writes.push_back(writeImage);
+			writes.push_back( writeSampler);
+		}                
 
 		std::memcpy(m_uniformBuffers[currentFrame].DataGPUMapped, m_uniformBuffers[currentFrame].DataCPUMapped, m_uniformBuffers[currentFrame].DataSize);
-		vkUpdateDescriptorSets(device.GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
+		vkUpdateDescriptorSets(device.GetVkDevice(), writes.size(), writes.data(), 0, nullptr);
 	}
 
 	void LRenderBlock::CreateVkDescriptors()
@@ -391,30 +450,41 @@ namespace Lemonade
 		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		uboLayoutBinding.pImmutableSamplers = nullptr;   
 
-		uint32_t bindingCounter = 1;
-        VkDescriptorSetLayoutBinding imageLayoutBinding{};
-        imageLayoutBinding.binding = 1;
-        imageLayoutBinding.descriptorCount = 1;
-        imageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-        imageLayoutBinding.pImmutableSamplers = nullptr;
-        imageLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 2; 
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        std::vector<VkDescriptorSetLayoutBinding> bindings = {
+		std::vector<VkDescriptorSetLayoutBinding> bindings = {
 			uboLayoutBinding,
-            imageLayoutBinding,
-            samplerLayoutBinding
-        };
+		};
+
+		uint32_t bindingOffset = 1;
+		int textureCount = 0;
+
+		for (const auto& texture : m_material->GetResource()->GetTextures())
+		{
+
+			Texture* tex = static_cast<Texture*>(texture.second->GetTexture()->GetResource());
+			uint32_t bindLocation = texture.second->GetBindLocation();
+
+			VkDescriptorSetLayoutBinding imageLayoutBinding{};
+			imageLayoutBinding.binding = bindingOffset + (bindLocation * textureCount);
+			imageLayoutBinding.descriptorCount = 1;
+			imageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			imageLayoutBinding.pImmutableSamplers = nullptr;
+			imageLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		
+			VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+			samplerLayoutBinding.binding = imageLayoutBinding.binding + 1; 
+			samplerLayoutBinding.descriptorCount = 1;
+			samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+			samplerLayoutBinding.pImmutableSamplers = nullptr;
+			samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+			bindings.push_back(imageLayoutBinding);
+			bindings.push_back(samplerLayoutBinding);
+			textureCount++;
+		}
+
 		VkDescriptorSetLayoutCreateInfo descriptorCreateInfo{};
 		descriptorCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		descriptorCreateInfo.bindingCount = 3;
+		descriptorCreateInfo.bindingCount = bindings.size();
 		descriptorCreateInfo.pBindings = bindings.data();
 
 		VkResult result = vkCreateDescriptorSetLayout(device.GetVkDevice(), &descriptorCreateInfo, nullptr, &m_vkDescriptorSetLayout);

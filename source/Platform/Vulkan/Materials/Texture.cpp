@@ -1,3 +1,4 @@
+#include "Platform/Core/Renderer/Materials/ATexture.h"
 #include "Platform/Core/Renderer/Materials/TextureUtils.h"
 #include "Platform/Core/Services/GraphicsServices.h"
 #include <LCommon.h>
@@ -10,6 +11,9 @@
 #include <Platform/Core/Renderer/Materials/TextureType.h>
 
 namespace Lemonade {
+
+	std::unordered_set<Texture*> Texture::m_texturesForUpload;
+
 	// Native Texture Format Lookup 
 	const std::unordered_map<TextureFormat, int> TextureData::m_nativeTextureFormatLookup = {
 	{ TextureFormat::LEMONADE_RGBA8888, VK_FORMAT_R8G8B8A8_UNORM },
@@ -31,6 +35,65 @@ namespace Lemonade {
 		return -1;
 	}
 
+	void Texture::UploadTextures(VkCommandBuffer cmdBuffer)
+	{
+		VkImageMemoryBarrier barrier{};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		barrier.subresourceRange.baseMipLevel = 0;
+		barrier.subresourceRange.levelCount = 1;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.layerCount = 1;
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+		std::vector<VkImageMemoryBarrier> barriers;
+		for (auto& texture : m_texturesForUpload)
+		{
+			barrier.image = texture->m_image;
+			barriers.push_back(barrier);
+		}
+
+		vkCmdPipelineBarrier(
+			cmdBuffer,
+			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			0,
+			0, nullptr,
+			0, nullptr,
+			static_cast<uint32_t>(barriers.size()), barriers.data()
+		);
+
+		for (auto& texture : m_texturesForUpload)
+		{
+			texture->UpdateVKImage(cmdBuffer);
+		}
+
+		for (auto& bar : barriers)
+		{
+			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		}
+		
+		vkCmdPipelineBarrier(
+			cmdBuffer,
+			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+			0,
+			0, nullptr,
+			0, nullptr,
+			static_cast<uint32_t>(barriers.size()), barriers.data()
+		);
+
+		m_texturesForUpload.clear();
+	}
+
 	void Texture::LoadNativeTextureFromSurface(SDL_Surface* surface)
 	{
 		LoadNativeTextureFromPixels(static_cast<Colour*>(surface->pixels), surface->w, surface->h);
@@ -38,8 +101,11 @@ namespace Lemonade {
 
 	void Texture::LoadNativeTextureFromPixels(const Colour* pixels, uint32_t width, uint32_t height)
 	{
+		m_width = width; 
+		m_height = height;
 		VkFormat format = (VkFormat) TextureData::GetNativeTextureFormat(GetTextureFormat());
 		VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
+		VkPhysicalDevice physicalDevice = GraphicsServices::GetContext()->GetVulkanDevice().GetPhysicalDevice();
 
 		VkImageCreateInfo imageInfo{};
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -68,6 +134,36 @@ namespace Lemonade {
 		viewInfo.subresourceRange.levelCount = 1;
 		viewInfo.subresourceRange.baseArrayLayer = 0;
 		viewInfo.subresourceRange.layerCount = 1;
+
+		VkMemoryRequirements imageMemRequirements;
+        vkGetImageMemoryRequirements(device, m_image, &imageMemRequirements);
+
+        VkMemoryAllocateInfo imgallocInfo = {};
+        imgallocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        imgallocInfo.allocationSize = imageMemRequirements.size;
+
+		VkPhysicalDeviceMemoryProperties memProps;
+		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProps);
+		VkPhysicalDeviceMemoryProperties memProperties;
+		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+		uint32_t properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+		uint32_t memoryTypeIndex = 0;
+
+		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+			if ((imageMemRequirements.memoryTypeBits & (1 << i)) &&
+				(memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+				memoryTypeIndex = i;
+			}
+		}
+
+        imgallocInfo.memoryTypeIndex = memoryTypeIndex;
+
+        if (vkAllocateMemory(device, &imgallocInfo, nullptr, &m_imageMemory) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to allocate memory for depth image!");
+        }
+
+        vkBindImageMemory(device, m_image, m_imageMemory, 0);
 
 		vkCreateImageView(device, &viewInfo, nullptr, &m_imageView);
 
@@ -99,10 +195,42 @@ namespace Lemonade {
 		VkMemoryRequirements memRequirements;
 		vkGetBufferMemoryRequirements(device, m_stagingBuffer,&memRequirements);
 
+		properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+		memoryTypeIndex = 0;
+
+		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+			if ((memRequirements.memoryTypeBits & (1 << i)) &&
+				(memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+				memoryTypeIndex = i;
+			}
+		}
+
+		VkMemoryAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = memRequirements.size;
+		allocInfo.memoryTypeIndex = memoryTypeIndex;
+
+		assert(allocInfo.memoryTypeIndex < memProps.memoryTypeCount);
+
+		if (vkAllocateMemory(device, &allocInfo, nullptr, &m_tempDeviceMemoryForCopy) != VK_SUCCESS) {
+			throw std::runtime_error("failed to allocate texture memory!");
+		}
+
+		vkBindBufferMemory(device, m_stagingBuffer, m_tempDeviceMemoryForCopy, 0);
+
 		void* mappedData;
 		vkMapMemory(device, m_tempDeviceMemoryForCopy, 0, bufferSize, 0, &mappedData);
 		memcpy(mappedData, pixels, bufferSize);
 		m_pendingCopy = true;
+		m_texturesForUpload.emplace(this);
+	}
+
+	void Texture::UnloadResource() 
+	{
+		ATexture::UnloadResource();
+
+		VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
+		vkUnmapMemory(device, m_imageMemory);
 	}
 
 	void Texture::UpdateVKImage(VkCommandBuffer commandBuffer)

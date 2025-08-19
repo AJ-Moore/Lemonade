@@ -117,14 +117,16 @@ namespace Lemonade
 				json textureData = it.value();
 				json::iterator bindloc = textureData.find("bindlocation");
 
+				int bindIndex = 0;
+
 				if (bindloc != textureData.end())
 				{
-					int bindIndex = bindloc.value().get<int>();
+					bindIndex = bindloc.value().get<int>();
 					bindLocation = bindIndex;
 				}
 				else
 				{
-					int bindIndex = bindLocation++;
+					bindIndex = bindLocation++;
 				}
 
 				// For ref - we want to load a texture regardless of whether we believe the path to be correct! 
@@ -133,11 +135,11 @@ namespace Lemonade
 
 				if (texturepath != textureData.end())
 				{
-					path = bindloc.value().get<std::string>();
+					path = texturepath.value().get<std::string>();
 				}
 
 				ResourcePtr<ATexture> texture = GraphicsServices::GetGraphicsResources()->GetTextureHandle(path);
-				std::shared_ptr<TextureData> textureDataPtr = std::make_shared<TextureData>(textureType, texture);
+				std::shared_ptr<TextureData> textureDataPtr = std::make_shared<TextureData>(textureType, texture, bindLocation);
 				m_textures.insert(std::make_pair(textureType, textureDataPtr));
 			}
 		}
