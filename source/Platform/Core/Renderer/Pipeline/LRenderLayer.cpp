@@ -2,6 +2,7 @@
 
 #include "Geometry/Rect.h"
 #include "Platform/Core/Renderer/RenderBlock/ARenderBlock.h"
+#include "Platform/Vulkan/Materials/Texture.h"
 #include <Platform/Core/Renderer/Geometry/Mesh.h>
 #include <Platform/Core/Renderer/Pipeline/LRenderLayer.h>
 #include <memory>
@@ -56,7 +57,10 @@ namespace Lemonade
 		//m_material->getShader().setUniformfv("height", window.Height);
         // BIND SSBO with layer dimensions?
 		m_renderBlock->OnPipelineBound.AddListener([this](ARenderBlock* block){
-			m_sourceTarget->BindColourAttachments();
+			if (m_sourceTarget != nullptr)
+			{
+				m_sourceTarget->BindColourAttachments();
+			}
 		});
 		m_renderBlock->Render();
 	}

@@ -82,20 +82,10 @@ namespace Lemonade
 		LRenderTarget* renderTarget = static_cast<LRenderTarget*>(GraphicsServices::GetRenderer()->GetActiveRenderTarget());
 		VkCommandBuffer commandBuffer = renderTarget->GetCommandBuffer();
 
-		// Copy any pending texture data basically. -> invalid here inside active render pass
-		//for (const auto& texture : m_material->GetResource()->GetTextures())
-		//{
-		//	Texture* tex = static_cast<Texture*>(texture.second->GetTexture()->GetResource());
-		//	tex->UpdateVKImage(commandBuffer);
-		//}
-
 		if (m_vkPipeline == VK_NULL_HANDLE)
 		{
 			CreateVkPipeline();
 		}
-
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_vkPipeline);
-		OnPipelineBound.Invoke(this);
 
 		SetUniforms();
 		
@@ -104,6 +94,9 @@ namespace Lemonade
 			m_vkPipelineLayout,
 			0, 1, &m_descriptorSets[currentFrame],
 			0, nullptr);
+
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_vkPipeline);
+		OnPipelineBound.Invoke(this);
 
 		vkCmdBindVertexBuffers(commandBuffer, /*firstBinding=*/0, 
 			static_cast<uint32_t>(m_vkBuffers.size()), 
@@ -556,12 +549,14 @@ namespace Lemonade
 		pushConstantRange.offset = 0;
 		pushConstantRange.size = 128;
 
-		std::vector<VkDescriptorSetLayout> layouts(LRenderTarget::MAX_FRAMES_IN_FLIGHT, m_vkDescriptorSetLayout); 
+		//std::vector<VkDescriptorSetLayout> layouts(LRenderTarget::MAX_FRAMES_IN_FLIGHT, m_vkDescriptorSetLayout); 
 
 		m_vkPipelineLayoutCreateInfo = {};
 		m_vkPipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		m_vkPipelineLayoutCreateInfo.setLayoutCount = layouts.size();
-		m_vkPipelineLayoutCreateInfo.pSetLayouts = layouts.data();
+		m_vkPipelineLayoutCreateInfo.setLayoutCount = 1; 
+		m_vkPipelineLayoutCreateInfo.pSetLayouts = &m_vkDescriptorSetLayout;
+		//m_vkPipelineLayoutCreateInfo.setLayoutCount = layouts.size();
+		//m_vkPipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 		m_vkPipelineLayoutCreateInfo.pushConstantRangeCount = 1;
 		m_vkPipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 

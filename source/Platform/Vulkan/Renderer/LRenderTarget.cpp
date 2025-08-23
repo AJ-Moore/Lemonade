@@ -92,13 +92,17 @@ namespace Lemonade
             }
         }
 
-        VkDescriptorPoolSize poolSizes[] = {
+		VkDescriptorPoolSize poolSize[] = {
             {
                 .type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
                 .descriptorCount = 100
             },
             {
                 .type = VK_DESCRIPTOR_TYPE_SAMPLER,
+                .descriptorCount = 100
+            },
+			{
+                .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                 .descriptorCount = 100
             }
         };
@@ -107,8 +111,8 @@ namespace Lemonade
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
         poolInfo.maxSets = 100;
-        poolInfo.poolSizeCount = 2;
-        poolInfo.pPoolSizes = poolSizes;
+        poolInfo.poolSizeCount = 3;
+        poolInfo.pPoolSizes = poolSize;
 
         vkCreateDescriptorPool(device, &poolInfo, nullptr, &m_descriptorPool);
 
@@ -192,6 +196,7 @@ namespace Lemonade
         {
             VkAttachmentDescription colorAttachment = {};
             colorAttachment.format = VK_FORMAT_B8G8R8A8_UNORM;
+            //colorAttachment.format = VK_FORMAT_R8G8B8A8_UNORM;
             colorAttachment.samples = m_hasMultisampledColourAttachment ? m_sampleCount : VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
             colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
             colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -407,6 +412,7 @@ namespace Lemonade
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        //barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
         barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
         //barrier.image = colorAttachmentImage;
@@ -767,6 +773,7 @@ namespace Lemonade
         imageInfo.mipLevels = 1;
         imageInfo.arrayLayers = 1;
         imageInfo.format = VK_FORMAT_B8G8R8A8_UNORM;
+        //imageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
         imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -802,6 +809,7 @@ namespace Lemonade
         VkImageViewCreateInfo viewInfo = {};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         viewInfo.format = VK_FORMAT_B8G8R8A8_UNORM; 
+        //viewInfo.format = VK_FORMAT_R8G8B8A8_UNORM; 
         viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; 
         viewInfo.image = m_colourAttachments.at(colourAttachment).Image;
         viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -837,6 +845,13 @@ namespace Lemonade
             return -1;
         }
 
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+		uboLayoutBinding.binding = 0;
+		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboLayoutBinding.descriptorCount = 1; 
+		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		uboLayoutBinding.pImmutableSamplers = nullptr;   
+
         uint32_t bindingCounter = 1;
         VkDescriptorSetLayoutBinding imageLayoutBinding{};
         imageLayoutBinding.binding = bindingCounter++ + ((uint32_t)colourAttachment - (uint32_t)LColourAttachment::LEMON_COLOR_ATTACHMENT0); 
@@ -853,6 +868,7 @@ namespace Lemonade
         samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         std::vector<VkDescriptorSetLayoutBinding> bindings = {
+            uboLayoutBinding,
             imageLayoutBinding,
             samplerLayoutBinding
         };

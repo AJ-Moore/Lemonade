@@ -59,7 +59,7 @@ namespace Lemonade
         virtual void SetColourAttachments(int count, bool multisampled) = 0;
         virtual void AddDepthAttachment(bool useRenderBufferStorage = true, int layers = 1) = 0;
         virtual void addMultiSampledDepthAttachment() = 0;
-        virtual uint CreateColourAttachment(LColourAttachment colourAttachment, bool multisampled = true, int internalFormat = U_RGBA32F) = 0;
+        virtual uint CreateColourAttachment(LColourAttachment colourAttachment, bool multisampled = false, int internalFormat = U_RGBA32F) = 0;
 
         void setClearColour(glm::vec4 clearColour) { m_clearColour = clearColour; }
         virtual void Clear(uint clearFlags) = 0;

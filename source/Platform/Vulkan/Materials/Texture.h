@@ -19,6 +19,7 @@ namespace Lemonade
 		virtual void LoadNativeTextureFromPixels(const Colour* data, uint32_t width, uint32_t height) override;
 
 		void UpdateVKImage(VkCommandBuffer commandBuffer);
+		void UpdateTextureWith(VkImage image, VkSampler imageSampler, VkImageView imageView);
 
 		VkImageView GetImageView() const noexcept { return m_imageView; }
 		VkSampler GetImageSampler() const noexcept { return m_imageSampler; }

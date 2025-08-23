@@ -1,6 +1,5 @@
 
 #include "Platform/Core/Renderer/Geometry/Mesh.h"
-#include "Platform/Core/Renderer/RenderBlock/ARenderBlock.h"
 #include "Resources/ResourceHandle.h"
 #include <Platform/Core/Components/Sprites/LSpriteRenderer.h>
 #include <memory>
@@ -46,9 +45,10 @@ namespace Lemonade {
         SetFrame(0);
 
         m_mesh = std::make_shared<Mesh>();
+        m_mesh->SetShouldGenerateTangents(false);
         m_mesh->SetVertices(vertices);
         m_mesh->SetUVS(m_uvs);
-        m_mesh->SetNormals(normals);
+        //m_mesh->SetNormals(normals);
         SetMesh(m_mesh);
         return true;
     }

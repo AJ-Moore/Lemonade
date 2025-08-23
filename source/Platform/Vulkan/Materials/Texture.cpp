@@ -75,10 +75,10 @@ namespace Lemonade {
 
 		for (auto& bar : barriers)
 		{
-			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			bar.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			bar.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			bar.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			bar.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 		}
 		
 		vkCmdPipelineBarrier(
@@ -231,6 +231,16 @@ namespace Lemonade {
 
 		VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 		vkUnmapMemory(device, m_imageMemory);
+	}
+
+	void Texture::UpdateTextureWith(VkImage image, VkSampler imageSampler, VkImageView imageView)
+	{
+		m_image = image; 
+		m_imageView = imageView; 
+		m_imageSampler = imageSampler;
+		VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
+		vkUnmapMemory(device, m_tempDeviceMemoryForCopy);
+		m_pendingCopy = false;
 	}
 
 	void Texture::UpdateVKImage(VkCommandBuffer commandBuffer)

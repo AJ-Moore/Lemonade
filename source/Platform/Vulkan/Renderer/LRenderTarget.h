@@ -86,7 +86,7 @@ namespace Lemonade
         VulkanRenderTarget m_depthAttachment;
         VkDeviceMemory m_depthMemory;
 
-        VkSampleCountFlagBits m_sampleCount = VK_SAMPLE_COUNT_8_BIT;
+        VkSampleCountFlagBits m_sampleCount = VK_SAMPLE_COUNT_1_BIT;
         VkFramebuffer m_frameBuffer = 0;
         VkRenderPass m_renderPass = 0;
         VkCommandBuffer m_commandBuffer[MAX_FRAMES_IN_FLIGHT];
