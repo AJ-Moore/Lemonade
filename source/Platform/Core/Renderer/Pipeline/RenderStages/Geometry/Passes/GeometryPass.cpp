@@ -15,14 +15,14 @@ namespace Lemonade
         m_renderLayer.Init();
         m_geometryTarget.Init();
 		m_geometryTarget.SetColourAttachments(1, false);
-        //m_geometryTarget.AddDepthAttachment();
+        m_geometryTarget.AddDepthAttachment();
         return true;
     }
 
     void GeometryPass::Render( const LRenderingData& renderingData)
     {
         m_geometryTarget.BeginRenderPass();
-        m_geometryTarget.setClearColour(glm::vec4(0,1,0,1));
+        m_geometryTarget.setClearColour(glm::vec4(0,0,0, 0));
         m_geometryTarget.Clear((uint)LBufferBit::COLOUR);// | (uint)LBufferBit::DEPTH);
         GraphicsServices::GetRenderer()->RenderScene();
         //m_renderLayer.Render();

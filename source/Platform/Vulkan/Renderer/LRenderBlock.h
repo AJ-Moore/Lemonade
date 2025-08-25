@@ -108,6 +108,7 @@ namespace Lemonade
 		};
 
 	private: 
+
 		void SetUniforms();
 		void CreateVkPipeline();
 		void CreateVkDescriptors();

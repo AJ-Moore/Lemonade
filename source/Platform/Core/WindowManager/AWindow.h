@@ -31,6 +31,8 @@ namespace Lemonade {
 		int GetWidth() const { return m_windowRect.Width; }
 		int GetHeight() const { return m_windowRect.Height; }
 
+		std::shared_ptr<AViewport> GetViewportAtIndex(int index);
+
 		virtual void ToggleFullscreen(bool value);
 
 	protected:

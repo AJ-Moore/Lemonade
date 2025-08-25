@@ -14,6 +14,8 @@ namespace Lemonade
 	class AViewport : public LObject
 	{
 		friend class AWindow;
+	public:
+		std::shared_ptr<LCamera> GetCameraAtIndex(int index);
 	protected:
 		virtual bool Init();
 		virtual void Unload();

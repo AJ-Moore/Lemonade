@@ -16,5 +16,6 @@ namespace Lemonade {
         virtual void Update() override;
     private:
         LRenderLayer m_renderLayer;
+        LRenderLayer m_sky;
     };
 }

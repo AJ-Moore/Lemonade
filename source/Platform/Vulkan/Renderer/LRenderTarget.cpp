@@ -222,9 +222,29 @@ namespace Lemonade
         subpass.colorAttachmentCount = m_colourAttachments.size();;
         subpass.pColorAttachments = attachmentRefs.data();
 
+        VkAttachmentReference depthAttachmentRef{};
+        depthAttachmentRef.attachment = 1;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        if (m_bHasDepthAttachment)
+        {
+            subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+            VkAttachmentDescription depthAttachment{};
+            depthAttachment.format = VK_FORMAT_D32_SFLOAT;
+            depthAttachment.samples = m_hasMultisampledColourAttachment ? m_sampleCount : VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;;
+            depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            attachmentDescription.push_back(depthAttachment);
+        }
+
         VkRenderPassCreateInfo renderPassInfo = {};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = m_colourAttachments.size();
+        renderPassInfo.attachmentCount = attachmentDescription.size();
         renderPassInfo.pAttachments = attachmentDescription.data();
         renderPassInfo.subpassCount = 1; 
         renderPassInfo.pSubpasses = &subpass; 
@@ -251,7 +271,7 @@ namespace Lemonade
         VkFramebufferCreateInfo framebufferInfo = {};
 		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebufferInfo.renderPass = m_renderPass;
-		framebufferInfo.attachmentCount = m_colourAttachments.size();
+		framebufferInfo.attachmentCount = attachmentDescription.size();
 		framebufferInfo.width = m_dimensions.x;
 		framebufferInfo.height = m_dimensions.y;
 		framebufferInfo.layers = 1;
@@ -263,6 +283,11 @@ namespace Lemonade
         {
             images.push_back(target.second.ImageView);
 		}
+
+        if (m_bHasDepthAttachment)
+        {
+            images.push_back(m_depthAttachment.ImageView);
+        }
 
         framebufferInfo.pAttachments = images.data();
 
@@ -386,8 +411,8 @@ namespace Lemonade
         VkViewport viewport = {};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = (float)800;
-        viewport.height = (float)600;
+        viewport.width = (float)1920;
+        viewport.height = (float)1080;
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         
@@ -395,7 +420,7 @@ namespace Lemonade
         
         VkRect2D scissor = {};
         scissor.offset = {0, 0};
-        scissor.extent = {800, 600};
+        scissor.extent = {1920, 1080};
         
         vkCmdSetScissor(m_commandBuffer[currentFrame], 0, 1, &scissor);
     }

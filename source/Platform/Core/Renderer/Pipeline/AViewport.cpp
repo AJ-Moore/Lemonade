@@ -11,9 +11,19 @@ namespace Lemonade
 	bool AViewport::Init()
 	{
 		// TODO remove Test
-		m_cameras.push_back(std::make_shared<LCamera>(new CitrusCore::Transform()));
+		m_cameras.push_back(std::make_shared<LCamera>(std::make_shared<CitrusCore::Transform>()));
 
 		return true;
+	}
+
+	std::shared_ptr<LCamera> AViewport::GetCameraAtIndex(int index)
+	{
+		if (m_cameras.size() <= index)
+		{
+			return nullptr;
+		}
+
+		return m_cameras[index];
 	}
 
 	void AViewport::Unload()

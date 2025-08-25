@@ -8,7 +8,8 @@
 namespace Lemonade
 {
     FinalBlitPass::FinalBlitPass() : 
-        m_renderLayer(GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/fullscreen.mat.json"))
+        m_renderLayer(GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/fullscreen.mat.json")),
+        m_sky(GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/skyray.mat.json"))
     {
 
     }
@@ -16,6 +17,8 @@ namespace Lemonade
     bool FinalBlitPass::Init()
     {
         m_renderLayer.Init();
+        m_sky.Init();
+        m_sky.SetBlendEnabled(false);
         return true;
     }
 
@@ -28,13 +31,15 @@ namespace Lemonade
         m_renderLayer.SetRenderTarget(GraphicsServices::GetRenderer()->GetActiveRenderTarget());
 
         screenTarget->BeginRenderPass();
-        screenTarget->setClearColour(glm::vec4(1,0,1,1));
+        screenTarget->setClearColour(glm::vec4(0,0,0,1));
+        m_sky.Render();
         m_renderLayer.Render();
         screenTarget->EndRenderPass();
     }
 
     void FinalBlitPass::Update()
     {
+        m_sky.Update();
         m_renderLayer.Update();
     }
 }

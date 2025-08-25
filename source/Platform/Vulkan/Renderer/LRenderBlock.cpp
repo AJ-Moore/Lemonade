@@ -334,7 +334,7 @@ namespace Lemonade
 		descriptorWrite.descriptorCount = 1;
 		descriptorWrite.pBufferInfo = &bufferInfo;
 
-		m_vertexData.cameraPosition = activeCamera->GetTransfrom()->GetPosition();
+		m_vertexData.cameraPosition = activeCamera->GetTransform()->GetPosition();
 		m_vertexData.model = m_transform->GetWorldMatrix();         
         m_vertexData.view = activeCamera->GetViewMatrix();          
         m_vertexData.projection = activeCamera->GetProjMatrix();         
@@ -597,7 +597,8 @@ namespace Lemonade
 			.depthClampEnable = VK_FALSE,
 			.rasterizerDiscardEnable = VK_FALSE,
 			.polygonMode = VK_POLYGON_MODE_FILL,
-			.cullMode = VK_CULL_MODE_BACK_BIT,
+			//.cullMode = VK_CULL_MODE_BACK_BIT,
+			.cullMode = VK_CULL_MODE_NONE,
 			.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
 			.depthBiasEnable = VK_FALSE,
 			.lineWidth = 1.0f
@@ -612,7 +613,13 @@ namespace Lemonade
 		};
 
 		VkPipelineColorBlendAttachmentState colorBlendAttachment = {
-			.blendEnable = VK_FALSE,
+			.blendEnable = m_bBlendEnabled ? VK_TRUE : VK_FALSE,
+			.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+			.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+			.colorBlendOp = VK_BLEND_OP_ADD,
+			.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+			.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+			.alphaBlendOp = VK_BLEND_OP_ADD,
 			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
 							  VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
 		};

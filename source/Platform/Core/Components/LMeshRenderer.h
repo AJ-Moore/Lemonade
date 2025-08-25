@@ -1,3 +1,4 @@
+#pragma once
 #include <Platform/Core/Renderer/Geometry/PrimitiveMode.h>
 #include <Resources/ResourceHandle.h>
 #include <LCommon.h>

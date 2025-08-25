@@ -46,6 +46,8 @@ namespace Lemonade
 		PrimitiveMode GetDrawMode() const { return (PrimitiveMode)m_primitiveMode; }
 
 		CitrusCore::Event<ARenderBlock*> OnPipelineBound;
+
+		void SetBlendEnabled(bool value){m_bBlendEnabled = value;}
 	protected:
 		/// Dumps the vertex data to the buffer
 		virtual void DumpBufferData() = 0;
@@ -83,5 +85,7 @@ namespace Lemonade
 
 		/// Reference to the renderer
 		Renderer* m_renderer = nullptr;
+
+		bool m_bBlendEnabled = true;
 	};
 }

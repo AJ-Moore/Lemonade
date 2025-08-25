@@ -1,5 +1,6 @@
 #include "ATexture.h"
 #include "Platform/Core/Renderer/Materials/TextureUtils.h"
+#include "SDL3/SDL_pixels.h"
 #include <Util/Logger.h>
 #include <filesystem>
 #include <Platform/Core/Renderer/Materials/TextureType.h>
@@ -80,7 +81,14 @@ namespace Lemonade
 			Logger::Log(Logger::WARN, "Unsupported texture format, format being converted to RGBA");
 			SDL_Surface* original = surface;
 
-			surface = SDL_ConvertSurface(surface, SDL_PixelFormat::SDL_PIXELFORMAT_RGBA8888);
+			//surface = SDL_ConvertSurface(surface, SDL_PixelFormat::SDL_PIXELFORMAT_RGBA8888);
+			surface = SDL_ConvertSurfaceAndColorspace(
+				surface,
+				SDL_PIXELFORMAT_RGBA8888,
+				NULL,
+				SDL_COLORSPACE_SRGB,
+				0
+			);
 			//SDL_DestroySurface(original);
 			m_textureFormat = TextureFormat::LEMONADE_RGBA8888;
 		}

@@ -32,15 +32,16 @@ namespace Lemonade
         SDL_Event event;
         SDL_PollEvent(&event);
 
+        // Will probably cause issues down line 
+        SDL_SetWindowRelativeMouseMode(m_window,true);
+
         return true;
     }
     
     void LSDLWindow::Render() 
     {
         AWindow::Render();
-
-        SDL_Event event;
-        SDL_PollEvent(&event);
+        SDL_PumpEvents();
     }
 
     void LSDLWindow::Unload() 

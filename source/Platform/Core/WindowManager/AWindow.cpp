@@ -81,6 +81,16 @@ namespace Lemonade {
 	{
 	}
 
+	std::shared_ptr<AViewport> AWindow::GetViewportAtIndex(int index)
+	{
+		if (m_viewports.size() <= index)
+		{
+			return nullptr;	
+		}
+
+		return m_viewports[index];
+	}
+
 	bool AWindow::Load(std::string configFile)
 	{
 		CitrusCore::Config config;

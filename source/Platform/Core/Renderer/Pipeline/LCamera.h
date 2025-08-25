@@ -3,6 +3,7 @@
 #include "Spatial/Transform.h"
 #include <Platform/Core/LObject.h>
 #include <glm/fwd.hpp>
+#include <memory>
 
 namespace Lemonade
 {
@@ -11,13 +12,13 @@ namespace Lemonade
 		friend class AViewport;
 	public:
 		LCamera() = delete; 
-		LCamera( CitrusCore::Transform* transform) : m_transform(transform){}
+		LCamera( std::shared_ptr<CitrusCore::Transform> transform) : m_transform(transform){}
 		const glm::mat4& GetViewMatrix() const { return m_viewMat; }
 		const glm::mat4& GetProjMatrix() const { return m_projMat; }
 		const glm::mat4& GetViewProjMatrix() const { return m_viewProjMatrix; }
 
-		CitrusCore::Transform* GetTransfrom() { return m_transform; }
-		void SetTransform(CitrusCore::Transform* transform) { m_transform = transform; }
+		CitrusCore::Transform* GetTransform() { return m_transform.get(); }
+		void SetTransform(std::shared_ptr<CitrusCore::Transform>transform) { m_transform = transform; }
 	protected:
 		virtual bool Init()override{ return true; }
 		virtual void Unload()override{}
@@ -27,7 +28,8 @@ namespace Lemonade
 		void SetOrthographicDimensions(glm::vec4 rect);
 
 		// TODO camera transform lifecycle non ownership is a bit hairy
-		CitrusCore::Transform* m_transform = nullptr;
+		//CitrusCore::Transform* m_transform = nullptr;
+		std::shared_ptr<CitrusCore::Transform> m_transform = nullptr;
 
 		glm::mat4 m_viewMat;
 		glm::mat4 m_projMat;

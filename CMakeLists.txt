@@ -129,7 +129,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glm::glm
     OpenGL::GL
     Vulkan::Vulkan
-    dxcompiler
+    #dxcompiler
     shaderc
     #${Vulkan_LIBRARIES}
     #Trying to stick to modern GL 3.x + glew/ glu should not be required
