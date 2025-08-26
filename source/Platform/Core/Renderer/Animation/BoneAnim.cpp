@@ -1,6 +1,6 @@
 #include <Platform/Core/Renderer/Animation/BoneAnim.h>
 
-Lemonade::BoneAnim::BoneAnim(std::string name, int boneId, int parentBoneId)
+Lemonade::LBoneAnim::LBoneAnim(std::string name, int boneId, int parentBoneId)
 {
 	m_boneName = name;
 	m_boneId = boneId;

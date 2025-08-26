@@ -19,7 +19,7 @@ namespace Lemonade
 
 		virtual void SetDrawMode(PrimitiveMode mode);
 		virtual void SetMaterial(CitrusCore::ResourcePtr<Material>);
-		void SetMesh(std::shared_ptr<Mesh>);
+		virtual void SetMesh(std::shared_ptr<Mesh>);
 		std::shared_ptr<Mesh> GetMesh() const { return m_mesh; }
 		virtual void setDirty();
 

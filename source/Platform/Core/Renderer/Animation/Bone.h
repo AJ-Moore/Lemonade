@@ -6,7 +6,7 @@
 
 namespace Lemonade
 {
-	class Bone {
+	class LBone {
 	public:
 		struct UVertexWeight
 		{
@@ -14,8 +14,8 @@ namespace Lemonade
 			float Weight;
 		};
 
-		Bone() = delete;
-		Bone(std::string name, int boneId, int parentBoneId = -1) {
+		LBone() = delete;
+		LBone(std::string name, int boneId, int parentBoneId = -1) {
 			m_name = name;
 			m_boneId = boneId;
 			m_parentBoneId = parentBoneId;

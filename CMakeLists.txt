@@ -76,6 +76,12 @@ CPMAddPackage(
     "BUILD_TESTING OFF"
 )
 
+CPMAddPackage(
+  NAME assimp
+  GITHUB_REPOSITORY assimp/assimp
+  GIT_TAG v6.0.2
+)
+
 # GLM
 CPMAddPackage("gh:g-truc/glm#1.0.1")
 
@@ -127,6 +133,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3
     SDL3_image::SDL3_image
     glm::glm
+    assimp
     OpenGL::GL
     Vulkan::Vulkan
     #dxcompiler

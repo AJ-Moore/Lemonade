@@ -26,10 +26,10 @@ namespace Lemonade
 		void SetUVS(std::shared_ptr<std::vector<glm::vec2>> textureCoords) { m_bDirtyTangents = true; m_uvs = textureCoords; }
 		void SetTexture3dCoords(std::shared_ptr<std::vector<glm::vec3>> textureCoords) { m_uvs3d = textureCoords; }
 		void SetColours(std::shared_ptr<std::vector<glm::vec4>> Colours) { m_colours = Colours; }
-		void setBones(std::shared_ptr<std::vector<std::shared_ptr<Bone>>> bones) { m_bones = bones; }
+		void setBones(std::shared_ptr<std::vector<std::shared_ptr<LBone>>> bones) { m_bones = bones; }
 		void setBoneWeights(std::shared_ptr<std::vector<glm::vec4>> bones) { m_boneWeights = bones; }
 		void setBoneIds(std::shared_ptr<std::vector<glm::vec4>> ids) { m_boneIds = ids; }
-		void setAnimation(std::shared_ptr<std::vector<std::shared_ptr<Animation>>> anim) { m_animationsRef = anim; }
+		void setAnimation(std::shared_ptr<std::vector<std::shared_ptr<LAnimation>>> anim) { m_animationsRef = anim; }
 
 		void SetDrawMode(PrimitiveMode mode) { m_drawMode = mode; }
 		PrimitiveMode GetDrawMode() const { return m_drawMode; }
@@ -81,8 +81,8 @@ namespace Lemonade
 		std::shared_ptr<std::vector<glm::vec3>> m_bitangents = nullptr;
 		std::shared_ptr<std::vector<glm::vec4>> m_boneWeights = nullptr;
 		std::shared_ptr<std::vector<glm::vec4>> m_boneIds = nullptr;
-		std::shared_ptr<std::vector<std::shared_ptr<Bone>>> m_bones = nullptr;
-		std::shared_ptr<std::vector<std::shared_ptr<Animation>>> m_animationsRef = nullptr;
+		std::shared_ptr<std::vector<std::shared_ptr<LBone>>> m_bones = nullptr;
+		std::shared_ptr<std::vector<std::shared_ptr<LAnimation>>> m_animationsRef = nullptr;
 
 		bool m_bShouldGenerateTangents = true;
 		bool m_bDirtyTangents = true;

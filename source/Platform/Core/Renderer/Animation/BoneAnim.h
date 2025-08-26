@@ -36,10 +36,10 @@ namespace Lemonade
 		float Time = 0;
 	};
 
-	class BoneAnim
+	class LBoneAnim
 	{
 	public:
-		BoneAnim(std::string name, int boneId, int parentBoneId = -1);
+		LBoneAnim(std::string name, int boneId, int parentBoneId = -1);
 
 		void AddPositionkey(VectorKey key) { m_positionKeys.push_back(key); }
 		void AddScalingkey(VectorKey key) { m_scalingKeys.push_back(key); }

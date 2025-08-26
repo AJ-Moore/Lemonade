@@ -7,12 +7,12 @@
 
 namespace Lemonade
 {
-	class Animation
+	class LAnimation
 	{
 	public:
-		Animation(std::string name, double duration, double ticksPerSecond);
-		void AddBoneAnimation(std::shared_ptr<BoneAnim> animation) { m_boneAnimations.push_back(animation); }
-		const std::vector<std::shared_ptr<BoneAnim>>& getBoneAnimations() { return m_boneAnimations; }
+		LAnimation(std::string name, double duration, double ticksPerSecond);
+		void AddBoneAnimation(std::shared_ptr<LBoneAnim> animation) { m_boneAnimations.push_back(animation); }
+		const std::vector<std::shared_ptr<LBoneAnim>>& getBoneAnimations() { return m_boneAnimations; }
 		double GetDuration() { return m_duration; }
 		double GetTicksPerSecond() { return m_ticksPerSecond; }
 	private:
@@ -21,6 +21,6 @@ namespace Lemonade
 		double m_duration = 0;
 		double m_ticksPerSecond = 0;
 
-		std::vector<std::shared_ptr<BoneAnim>> m_boneAnimations;
+		std::vector<std::shared_ptr<LBoneAnim>> m_boneAnimations;
 	};
 }

@@ -1,3 +1,4 @@
+#include "Platform/Core/Components/ModelLoader/LModelMesh.h"
 #include <Platform/Core/Renderer/Materials/Material.h>
 #include <Platform/Vulkan/Materials/Texture.h>
 #include <Platform/Vulkan/Renderer/LShader.h>
@@ -17,5 +18,10 @@ namespace Lemonade {
     CitrusCore::ResourcePtr<AShader> LGraphicsResources::GetShaderHandle(std::string path)
     {
         return m_shaders.Get<LShader>(path);
+    }
+
+    CitrusCore::ResourcePtr<LModel> LGraphicsResources::GetModelHandle(std::string path)
+    {
+        return m_models.Get<LModel>(path);
     }
 }
