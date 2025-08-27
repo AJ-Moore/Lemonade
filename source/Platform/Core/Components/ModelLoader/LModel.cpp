@@ -2,6 +2,7 @@
 #include "Platform/Core/Components/ModelLoader/LModelMesh.h"
 #include "Platform/Core/Renderer/Animation/Animation.h"
 #include "Platform/Core/Renderer/Materials/Material.h"
+#include "Platform/Core/Renderer/Materials/TextureType.h"
 #include "Platform/Core/Services/GraphicsServices.h"
 #include "Resources/ResourceHandle.h"
 #include "Spatial/Transform.h"
@@ -82,7 +83,7 @@ namespace Lemonade
 			//aiProcess_GenUVCoords |
 			//aiProcessPreset_TargetRealtime_Quality |
 			aiProcess_PopulateArmatureData |
-			aiProcess_ConvertToLeftHanded |
+			//aiProcess_ConvertToLeftHanded |
 			aiProcess_ValidateDataStructure |
 			aiProcess_GlobalScale |
 			aiProcess_SortByPType);
@@ -128,6 +129,14 @@ namespace Lemonade
 		}
 
 		glm::mat4 local(*node->mTransformation[0]);
+
+		glm::mat4 zUpToYUp(
+			1,  0,  0, 0,
+			0,  0,  1, 0,
+			0, -1,  0, 0,
+			0,  0,  0, 1
+		);
+		//local = zUpToYUp * local;
 		//glm::mat4 local(1);
 
 		std::shared_ptr<CitrusCore::Transform> transform = std::make_shared<CitrusCore::Transform>(local);
@@ -340,8 +349,8 @@ namespace Lemonade
 				aiMaterial* material = scene->mMaterials[aimesh->mMaterialIndex];
 				// AI_MATKEY_NAME
 				// Causes build error on linux undefined
-				//aiString name = material->GetName();
-				aiString name;
+				aiString name = material->GetName();
+				//aiString name;
 				aiString path;
 				material->Get(AI_MATKEY_NAME, name);
 				std::filesystem::path fspath(m_filePath);
@@ -352,19 +361,42 @@ namespace Lemonade
                 mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle(materialPath);
 
 				// try and get material from meta, else try and load material from .'/Material/mat_name.material'
-				//std::unordered_map<std::string, std::string>::iterator iter = m_meta.m_materials.find(name.C_Str());
-				//if (iter != m_meta.m_materials.end())
-				//{
-				//	if (mat->init(iter->second))
-				//	{
-				//		bMaterialFound = true;
-				//	}
-				//	else
-				//	{
-				//		Logger::Log(Logger::ERROR, "Failed to load material [%s].", name.C_Str());
-				//	}
-				//	// Fail fallback.
-				//}
+				std::unordered_map<std::string, std::string>::iterator iter = m_meta.m_materials.find(name.C_Str());
+				if (iter != m_meta.m_materials.end())
+				{
+					mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle(iter->second); 
+					bMaterialFound = true;
+				}
+
+				// Material not found in meta, try loading original material path
+				if (!bMaterialFound)
+				{
+					// Check if mat exists at path
+					bool pathValid = std::filesystem::exists(materialPath);
+
+					if (pathValid)
+					{
+						mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle(materialPath); 
+						baseColour = mat->GetResource()->GetBaseColour();
+						bMaterialFound = true;
+					}
+				}
+
+				// Material file doesn't yet exist? create it from scratch?
+				if (!bMaterialFound)
+				{
+					// Manually load textures
+					for (int i = 1; i < (int)TextureType::Unknown; ++i)
+					{
+						if (material->GetTexture((aiTextureType)i, 0, &path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS)
+						{
+							mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/default.mat.json"); 
+							mat->loadTexture(std::make_shared<UTextureData>((UTextureType)i, path.C_Str()));
+							LogGLErrors();
+							bMaterialFound = true;
+						}
+					}
+				}
 				//else if (mat->init(materialPath))
 				//{
 				//	baseColour = mat->getBaseColour();

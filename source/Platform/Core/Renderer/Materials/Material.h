@@ -7,6 +7,7 @@
 #include <Util/Logger.h>
 #include <Platform/Core/Renderer/Materials/AShaderProgram.h>
 #include <Platform/Core/Renderer/Materials/ATexture.h>
+#include <glm/fwd.hpp>
 #include <memory>
 #include <unordered_map>
 
@@ -31,12 +32,14 @@ namespace Lemonade
 		ResourcePtr<ATexture> GetTexture() const;
 
 		const TextureMap& GetTextures() const noexcept { return m_textures; }
+		glm::vec4 GetBaseColour() const { return m_baseColour; }
 	protected: 
 		virtual bool LoadResource(std::string path) override;
 		virtual void UnloadResource() override;
 	private:
 		std::shared_ptr<AShaderProgram> m_shader;
 		ResourcePtr<ATexture> m_texture;
+		glm::vec4 m_baseColour = glm::vec4(1);
 
 		TextureMap m_textures;
 
@@ -46,6 +49,7 @@ namespace Lemonade
 		const std::string m_materialType = "type";
 		const std::string m_materialShaders = "shaders";
 		const std::string m_materialTextures = "textures";
+		const std::string m_baseColourString = "basecolour";
 
 		const std::vector<std::string> m_materialShaderTypes = {
 			"fragment", 

@@ -94,6 +94,24 @@ namespace Lemonade
 			}
 		}
 
+		json::iterator baseColour = data.find(m_baseColourString);
+		
+		if (baseColour != data.end())
+		{
+			json colourArr = baseColour.value();
+
+			if (colourArr.is_array() && colourArr.size() == 4)
+			{
+				for (int i = 0; i <4; i++)
+				{
+					m_baseColour[i] = colourArr[i];
+				}
+			}
+			else {
+				Logger::Log(Logger::ERROR, "Base Colour incorrect format, expecting array of 4 floats");
+			}
+		}
+
 		// Load Textures
 		json::iterator textures = data.find(m_materialTextures);
 		int bindLocation = 0;// Implicit bind location fallback.

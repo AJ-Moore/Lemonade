@@ -7,6 +7,7 @@
 
 namespace Lemonade
 {
+	// Todo explicitly map to assimps texture types
 	enum class TextureType
 	{
 		None = 0x0,

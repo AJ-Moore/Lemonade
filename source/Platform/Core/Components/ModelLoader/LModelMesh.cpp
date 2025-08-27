@@ -13,7 +13,8 @@ namespace Lemonade
 
     bool LModelMesh::Init()
     {
-        LMeshRenderer::Init();
+        if (m_mesh != nullptr)
+            LMeshRenderer::Init();
 
         for (auto& child : m_children)
         {
@@ -24,7 +25,8 @@ namespace Lemonade
 
     void LModelMesh::Update()
     {
-        LMeshRenderer::Update();
+        if (m_mesh != nullptr)
+            LMeshRenderer::Update();
 
         for (auto& child : m_children)
         {
@@ -34,7 +36,8 @@ namespace Lemonade
 
     void LModelMesh::Render()
     {
-        LMeshRenderer::Render();
+        if (m_mesh != nullptr)
+            LMeshRenderer::Render();
 
         for (auto& child : m_children)
         {
