@@ -7,6 +7,7 @@
 #include "Resources/ResourceHandle.h"
 #include "Spatial/Transform.h"
 #include "Util/Logger.h"
+#include "assimp/postprocess.h"
 #include <memory>
 #include <filesystem>
 #include <fstream>
@@ -83,7 +84,7 @@ namespace Lemonade
 			//aiProcess_GenUVCoords |
 			//aiProcessPreset_TargetRealtime_Quality |
 			aiProcess_PopulateArmatureData |
-			//aiProcess_ConvertToLeftHanded |
+			aiProcess_MakeLeftHanded |
 			aiProcess_ValidateDataStructure |
 			aiProcess_GlobalScale |
 			aiProcess_SortByPType);
@@ -349,8 +350,8 @@ namespace Lemonade
 				aiMaterial* material = scene->mMaterials[aimesh->mMaterialIndex];
 				// AI_MATKEY_NAME
 				// Causes build error on linux undefined
-				aiString name = material->GetName();
-				//aiString name;
+				//aiString name = material->GetName();
+				aiString name;
 				aiString path;
 				material->Get(AI_MATKEY_NAME, name);
 				std::filesystem::path fspath(m_filePath);
@@ -391,8 +392,7 @@ namespace Lemonade
 						if (material->GetTexture((aiTextureType)i, 0, &path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS)
 						{
 							mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/default.mat.json"); 
-							mat->loadTexture(std::make_shared<UTextureData>((UTextureType)i, path.C_Str()));
-							LogGLErrors();
+							mat->GetResource()->LoadTexture((TextureType)i, path.C_Str(), i);
 							bMaterialFound = true;
 						}
 					}
@@ -415,9 +415,9 @@ namespace Lemonade
 				//		}
 				//	}
 //
-				//	aiColor4D color;
-				//	material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-				//	baseColour = { color.r, color.g, color.b, color.a };
+					aiColor4D color;
+					material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+					baseColour = { color.r, color.g, color.b, color.a };
 //
 				//	if (bMaterialFound)
 				//	{

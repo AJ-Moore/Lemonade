@@ -33,6 +33,10 @@ namespace Lemonade
 
 		const TextureMap& GetTextures() const noexcept { return m_textures; }
 		glm::vec4 GetBaseColour() const { return m_baseColour; }
+
+		/// Manually load a texture into this material. 
+		void LoadTexture(TextureType textureType, std::string path, int bindIndex);
+		void Save();
 	protected: 
 		virtual bool LoadResource(std::string path) override;
 		virtual void UnloadResource() override;

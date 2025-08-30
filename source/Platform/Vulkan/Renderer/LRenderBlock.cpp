@@ -370,7 +370,7 @@ namespace Lemonade
 			VkWriteDescriptorSet writeImage = {};
 			writeImage.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			writeImage.dstSet = m_descriptorSets[currentFrame];
-			writeImage.dstBinding = textureBindOffset + (bindLocation * textureCount);
+			writeImage.dstBinding = bindLocation;// textureBindOffset + (bindLocation * textureCount);
 			writeImage.dstArrayElement = 0;
 			writeImage.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			writeImage.descriptorCount = 1;

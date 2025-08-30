@@ -38,6 +38,19 @@ namespace Lemonade
         return m_texture;
     }
 
+	void Material::LoadTexture(TextureType textureType, std::string path, int bindLocation)
+	{
+		ResourcePtr<ATexture> texture = GraphicsServices::GetGraphicsResources()->GetTextureHandle(path);
+		std::shared_ptr<TextureData> textureDataPtr = std::make_shared<TextureData>(textureType, texture, bindLocation);
+		// Will override any existing textures of this type.
+		m_textures[textureType] =  textureDataPtr;
+	}
+
+	void Material::Save() 
+	{
+		// Todo refucktor
+	}
+
     bool Material::LoadResource(std::string path)
     {
 		std::ifstream ifStream(path, std::ios::binary);
