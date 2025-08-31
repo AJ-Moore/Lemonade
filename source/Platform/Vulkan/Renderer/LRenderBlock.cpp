@@ -1,3 +1,4 @@
+#include "Platform/Vulkan/Materials/LSampler.h"
 #include "Platform/Vulkan/Materials/Texture.h"
 #include <Platform/Core/Renderer/Pipeline/LCamera.h>
 #include <Platform/Core/Renderer/RenderBlock/ARenderBlock.h>
@@ -336,58 +337,67 @@ namespace Lemonade
 
 		m_vertexData.cameraPosition = activeCamera->GetTransform()->GetPosition();
 		m_vertexData.model = m_transform->GetWorldMatrix();         
+
+		glm::mat3 rotScale(m_vertexData.model); // extract upper-left 3x3
+		float det = glm::determinant(rotScale);
+		if (det < 0.0f)
+			printf( "Model is flipped / mirrored!\n");
+		else
+			printf( "Model is normal!\n");
+
+
+		glm::vec3 right   = glm::normalize(glm::vec3(m_vertexData.model[0])); // X-axis
+		glm::vec3 up      = glm::normalize(glm::vec3(m_vertexData.model[1])); // Y-axis
+		glm::vec3 forward = glm::normalize(glm::vec3(m_vertexData.model[2])); // Z-axis
+
         m_vertexData.view = activeCamera->GetViewMatrix();          
         m_vertexData.projection = activeCamera->GetProjMatrix();         
         m_vertexData.shadowPass = false;          
         m_vertexData.unlit = false;               
         m_vertexData.emission = 0;     
 		writes.push_back(descriptorWrite);
+		int sampleBindLocation = 0;
 
-		int textureCount = 0;
-		int textureBindOffset = 1;
+		for (auto& sampler : m_material->GetResource()->GetSamplers())
+		{
+			LSampler* nativeSampler = static_cast<LSampler*>(sampler.get());
 
-		std::vector<VkDescriptorImageInfo> imageInfos;
+			VkDescriptorImageInfo samplerDescriptor{
+				.sampler = nativeSampler->GetSampler()
+			};
+
+			VkWriteDescriptorSet writeSampler = {};
+			writeSampler.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			writeSampler.dstSet = m_descriptorSets[currentFrame];
+			writeSampler.dstBinding = 1;
+			writeSampler.dstArrayElement = sampleBindLocation;
+			writeSampler.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+			writeSampler.descriptorCount = 1;
+			writeSampler.pImageInfo = &samplerDescriptor;
+			writes.push_back( writeSampler);
+		}
 
 		for (const auto& texture : m_material->GetResource()->GetTextures())
 		{
-
 			Texture* tex = static_cast<Texture*>(texture.second->GetTexture()->GetResource());
 			uint32_t bindLocation = texture.second->GetBindLocation();
 
-			// Create image descriptor 
-
-			// Sampler
-			imageInfos.push_back({
-				.sampler   = tex->GetImageSampler(),
-			});
-
 			// Imaage View
-			imageInfos.push_back({
+			VkDescriptorImageInfo imageDescriptor{
 				.imageView   = tex->GetImageView(),
 				.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-			});
+			};
 			
 			VkWriteDescriptorSet writeImage = {};
 			writeImage.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			writeImage.dstSet = m_descriptorSets[currentFrame];
-			writeImage.dstBinding = bindLocation;// textureBindOffset + (bindLocation * textureCount);
+			writeImage.dstBinding = bindLocation;
 			writeImage.dstArrayElement = 0;
 			writeImage.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			writeImage.descriptorCount = 1;
-			writeImage.pImageInfo = &imageInfos.back();
-	
-			VkWriteDescriptorSet writeSampler = {};
-			writeSampler.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			writeSampler.dstSet = m_descriptorSets[currentFrame];
-			writeSampler.dstBinding = writeImage.dstBinding + 1;
-			writeSampler.dstArrayElement = 0;
-			writeSampler.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-			writeSampler.descriptorCount = 1;
-			writeSampler.pImageInfo = &imageInfos.back() - 1;
-			textureCount++;
+			writeImage.pImageInfo = &imageDescriptor;
 
 			writes.push_back(writeImage);
-			writes.push_back( writeSampler);
 		}                
 
 		std::memcpy(m_uniformBuffers[currentFrame].DataGPUMapped, m_uniformBuffers[currentFrame].DataCPUMapped, m_uniformBuffers[currentFrame].DataSize);

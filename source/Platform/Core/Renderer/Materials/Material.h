@@ -1,5 +1,6 @@
 #pragma once 
 
+#include "Platform/Core/Renderer/Materials/ASampler.h"
 #include <LCommon.h>
 #include <Platform/Core/Renderer/Materials/TextureType.h>
 #include <Resources/AResource.h>
@@ -10,6 +11,7 @@
 #include <glm/fwd.hpp>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace Lemonade
 {
@@ -24,6 +26,12 @@ namespace Lemonade
 			TextureMap& operator=(const TextureMap&) = delete;
 		};
 
+		struct SamplerMap : public std::unordered_set<std::shared_ptr<ASampler>> {
+			SamplerMap() = default;
+			SamplerMap(const SamplerMap&) = delete;
+			SamplerMap& operator=(const SamplerMap&) = delete;
+		};
+
 	public: 
 		Material() = default;
 		void Bind();
@@ -32,6 +40,7 @@ namespace Lemonade
 		ResourcePtr<ATexture> GetTexture() const;
 
 		const TextureMap& GetTextures() const noexcept { return m_textures; }
+		const SamplerMap& GetSamplers() const noexcept { return m_samplers; }
 		glm::vec4 GetBaseColour() const { return m_baseColour; }
 
 		/// Manually load a texture into this material. 
@@ -46,6 +55,7 @@ namespace Lemonade
 		glm::vec4 m_baseColour = glm::vec4(1);
 
 		TextureMap m_textures;
+		SamplerMap m_samplers;
 
 		TextureFilter m_textureFilter = TextureFilter::Linear;
 		TextureClamp m_textureClamp = TextureClamp::Clamp;

@@ -11,6 +11,7 @@
 #include <memory>
 #include <filesystem>
 #include <fstream>
+#include <unordered_set>
 
 namespace Lemonade
 {
@@ -84,7 +85,7 @@ namespace Lemonade
 			//aiProcess_GenUVCoords |
 			//aiProcessPreset_TargetRealtime_Quality |
 			aiProcess_PopulateArmatureData |
-			aiProcess_MakeLeftHanded |
+			//aiProcess_MakeLeftHanded |
 			aiProcess_ValidateDataStructure |
 			aiProcess_GlobalScale |
 			aiProcess_SortByPType);
@@ -386,13 +387,29 @@ namespace Lemonade
 				// Material file doesn't yet exist? create it from scratch?
 				if (!bMaterialFound)
 				{
+					std::unordered_set<TextureType> pbr ={
+						TextureType::Emissive,
+						TextureType::Normal,
+						TextureType::Diffuse,
+						TextureType::Roughness,
+						TextureType::AmbientOcclusion,
+						TextureType::Emissive, 
+						TextureType::Metalness,
+					};
+
 					// Manually load textures
 					for (int i = 1; i < (int)TextureType::Unknown; ++i)
 					{
+						// temporarily only allow modern pbr workflow 
+						if (!pbr.contains((TextureType)i))
+						{
+							continue;
+						}
+
 						if (material->GetTexture((aiTextureType)i, 0, &path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS)
 						{
-							mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/default.mat.json"); 
-							mat->GetResource()->LoadTexture((TextureType)i, path.C_Str(), i);
+							mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/defaultpbr.mat.json"); 
+							mat->GetResource()->LoadTexture((TextureType)i, path.C_Str(), i + 1);
 							bMaterialFound = true;
 						}
 					}

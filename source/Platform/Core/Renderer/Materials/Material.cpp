@@ -2,6 +2,7 @@
 #include "Platform/Core/Renderer/Materials/AShader.h"
 #include "Platform/Core/Renderer/Materials/ATexture.h"
 #include "Platform/Core/Services/GraphicsServices.h"
+#include "Platform/Vulkan/Materials/LSampler.h"
 #include "Resources/ResourceHandle.h"
 #include <fstream>
 #include <filesystem>
@@ -60,6 +61,10 @@ namespace Lemonade
 			Logger::Log(Logger::WARN, "Unable to load material [%s].", path.c_str());
 			return false;
 		}
+
+		std::shared_ptr<LSampler> defaultSampler = std::make_shared<LSampler>();
+		defaultSampler->Init();
+		m_samplers.insert(defaultSampler);
 
 		std::filesystem::path fspath = path;
 		int l2 = std::filesystem::file_size(fspath);
