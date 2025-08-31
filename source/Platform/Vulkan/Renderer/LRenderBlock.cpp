@@ -337,19 +337,6 @@ namespace Lemonade
 
 		m_vertexData.cameraPosition = activeCamera->GetTransform()->GetPosition();
 		m_vertexData.model = m_transform->GetWorldMatrix();         
-
-		glm::mat3 rotScale(m_vertexData.model); // extract upper-left 3x3
-		float det = glm::determinant(rotScale);
-		if (det < 0.0f)
-			printf( "Model is flipped / mirrored!\n");
-		else
-			printf( "Model is normal!\n");
-
-
-		glm::vec3 right   = glm::normalize(glm::vec3(m_vertexData.model[0])); // X-axis
-		glm::vec3 up      = glm::normalize(glm::vec3(m_vertexData.model[1])); // Y-axis
-		glm::vec3 forward = glm::normalize(glm::vec3(m_vertexData.model[2])); // Z-axis
-
         m_vertexData.view = activeCamera->GetViewMatrix();          
         m_vertexData.projection = activeCamera->GetProjMatrix();         
         m_vertexData.shadowPass = false;          
