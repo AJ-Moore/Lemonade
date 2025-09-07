@@ -143,10 +143,8 @@ namespace Lemonade
 
 		std::shared_ptr<CitrusCore::Transform> transform = std::make_shared<CitrusCore::Transform>(local);
 		std::shared_ptr<LModelMesh> entity = std::make_shared<LModelMesh>(node->mName.C_Str(), transform);
-        CitrusCore::ResourcePtr<Material> mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/default.mat.json");
-        entity->SetMaterial(mat);
+        CitrusCore::ResourcePtr<Material> mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/defaultpbr.mat.json");
 		parent->AddChild(entity);
-
 		//SharedPtr<UMaterial> mat = std::make_shared<UMaterial>();
 
 		for (uint32 i = 0; i < node->mNumMeshes; ++i)
@@ -360,7 +358,6 @@ namespace Lemonade
 
 		        std::string modelDirectory = fspath.parent_path().string();
 		        std::string materialPath = modelDirectory + "/materials/" + name.C_Str() + ".mat.json";
-                mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle(materialPath);
 
 				// try and get material from meta, else try and load material from .'/Material/mat_name.material'
 				std::unordered_map<std::string, std::string>::iterator iter = m_meta.m_materials.find(name.C_Str());
@@ -400,17 +397,26 @@ namespace Lemonade
 					// Manually load textures
 					for (int i = 1; i < (int)TextureType::Unknown; ++i)
 					{
-						// temporarily only allow modern pbr workflow 
+						// temporarily only allow modern pbr workflow aasswss
 						if (!pbr.contains((TextureType)i))
 						{
 							continue;
 						}
 
-						if (material->GetTexture((aiTextureType)i, 0, &path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS)
+						//if (material->GetTexture((aiTextureType)i, 0, &path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS)
+						if (material->GetTexture((aiTextureType)i, 0, &path) == AI_SUCCESS)
 						{
-							mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/defaultpbr.mat.json"); 
-							mat->GetResource()->LoadTexture((TextureType)i, path.C_Str(), i + 1);
-							bMaterialFound = true;
+							//mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/default.mat.json"); 
+							int bindLocation = mat->GetResource()->GetBindLocation(static_cast<TextureType>(i));
+
+							if (bindLocation == Material::INVALID_BIND_LOCATION)
+							{
+								Logger::Log(Logger::ERROR, "Material/ Shader does not support texture type [%i]", i);
+							}
+							else {
+								mat->GetResource()->LoadTexture((TextureType)i, path.C_Str(), bindLocation);
+								bMaterialFound = true;
+							}
 						}
 					}
 				}
@@ -446,13 +452,13 @@ namespace Lemonade
 				//}
 //
 				//// Use colour material if no materials present on mesh (this is correct functionality)
-				//if (!bMaterialFound)
-				//{
-				//	mat->init("assets/materials/default.material");
-				//	mat->setBaseColour(baseColour);
-				//	mat->getShader().setUniformVec4("baseColour", baseColour);
-				//	mat->save(materialPath);
-				//}
+				if (!bMaterialFound)
+				{
+					//mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/defaultpbr.mat.json"); 
+					mat->GetResource()->SetBaseColour(baseColour);
+					//mat->getShader().setUniformVec4("baseColour", baseColour);
+					//mat->save(materialPath);
+				}
 //
 				if (baseColour.a != 1)
 				{
@@ -501,6 +507,7 @@ namespace Lemonade
 			//	SharedPtr<UComponent> comp = UpsilonEngine::UServiceLocator::getInstance()->getRTTI()->createFromString<UComponent>(component);
 			//	entity->addComponent(comp);
 			//}
+			entity->SetMaterial(mat);
             entity->SetMesh(mesh);
             //entity->SetMaterial(mat);
 		}

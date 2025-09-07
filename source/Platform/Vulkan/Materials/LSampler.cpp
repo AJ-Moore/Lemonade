@@ -1,6 +1,7 @@
 
 #include "Platform/Vulkan/Materials/LSampler.h"
 #include "Platform/Core/Services/GraphicsServices.h"
+#include <vulkan/vulkan_core.h>
 
 namespace Lemonade {
     bool LSampler::Init() 
@@ -20,8 +21,14 @@ namespace Lemonade {
 		samplerInfo.compareEnable = VK_FALSE;
 		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-		vkCreateSampler(device, &samplerInfo, nullptr, &m_imageSampler);
+		VkResult result = vkCreateSampler(device, &samplerInfo, nullptr, &m_imageSampler);
+        
+        if (result != VK_SUCCESS)
+        {
+            throw("Create sampler failed.");
+        }
 
+        m_bDoneInit = true;
         return true;
     }
 

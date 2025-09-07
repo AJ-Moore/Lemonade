@@ -21,9 +21,9 @@ namespace Lemonade
 		case SDL_PIXELFORMAT_RGB24:
 			return TextureFormat::LEMONADE_RGB888;
 		case SDL_PIXELFORMAT_RGBA8888:
-			return TextureFormat::LEMONADE_RGBA8888;
 		case SDL_PIXELFORMAT_BGRA8888:
-			return TextureFormat::LEMONADE_BGRA8888;
+			return TextureFormat::LEMONADE_RGBA8888;
+			//return TextureFormat::LEMONADE_BGRA8888;
 		case SDL_PIXELFORMAT_BGR24:
 			return TextureFormat::LEMONADE_BGR888;
 		default:
@@ -76,19 +76,22 @@ namespace Lemonade
 		m_textureFormat = GetTextureFormat(surface);
 
 		// Not supported, log and convert to RGBA
-		if (TextureData::GetNativeTextureFormat(m_textureFormat) == VK_FORMAT_UNDEFINED)
+		//if (TextureData::GetNativeTextureFormat(m_textureFormat) == VK_FORMAT_UNDEFINED)
 		{
 			Logger::Log(Logger::WARN, "Unsupported texture format, format being converted to RGBA");
 			SDL_Surface* original = surface;
 
-			//surface = SDL_ConvertSurface(surface, SDL_PixelFormat::SDL_PIXELFORMAT_RGBA8888);
-			//surface = SDL_ConvertSurfaceAndColorspace(
-			//	surface,
-			//	SDL_PIXELFORMAT_RGBA8888,
-			//	NULL,
-			//	SDL_COLORSPACE_SRGB,
-			//	0
-			//);
+			//if (m_textureFormat != TextureFormat::LEMONADE_BGRA8888)
+			{
+				surface = SDL_ConvertSurface(surface, SDL_PixelFormat::SDL_PIXELFORMAT_RGBA8888);
+				//surface = SDL_ConvertSurfaceAndColorspace(
+				//	surface,
+				//	SDL_PIXELFORMAT_RGBA8888,
+				//	NULL,
+				//	SDL_COLORSPACE_SRGB,
+				//	0
+				//);
+			}
 			//SDL_DestroySurface(original);
 			m_textureFormat = TextureFormat::LEMONADE_RGBA8888;
 		}
@@ -160,7 +163,7 @@ namespace Lemonade
 
 		m_textureFilter = TextureFilter::NearestNeighbour;
 		m_textureFormat = TextureFormat::LEMONADE_RGBA8888;
-		LoadNativeTextureFromPixels(m_pixelData.data(), 256, 256);
+		LoadNativeTextureFromPixels(m_pixelData.data(), 256, 256, m_textureFormat);
 		m_bPinkBlackTextureLoaded = true;
 	}
 }

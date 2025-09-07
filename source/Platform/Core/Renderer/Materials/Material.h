@@ -12,11 +12,18 @@
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 namespace Lemonade
 {
 	using CitrusCore::ResourcePtr;
 	using CitrusCore::Logger;
+
+	enum class LEMONADE_API TextureStatus : int {
+		NotProvided = 0,
+		Loaded      = 1,
+		Missing     = -1
+	};	
 
 	class LEMONADE_API Material : public CitrusCore::AResource<Material>
 	{
@@ -30,7 +37,7 @@ namespace Lemonade
 			SamplerMap() = default;
 			SamplerMap(const SamplerMap&) = delete;
 			SamplerMap& operator=(const SamplerMap&) = delete;
-		};
+		};	
 
 	public: 
 		Material() = default;
@@ -42,17 +49,25 @@ namespace Lemonade
 		const TextureMap& GetTextures() const noexcept { return m_textures; }
 		const SamplerMap& GetSamplers() const noexcept { return m_samplers; }
 		glm::vec4 GetBaseColour() const { return m_baseColour; }
+		void SetBaseColour(glm::vec4 colour) { m_baseColour = colour;}
+		TextureStatus GetTextureStatus(TextureType textureType);
+		int GetBindLocation(TextureType);
 
 		/// Manually load a texture into this material. 
 		void LoadTexture(TextureType textureType, std::string path, int bindIndex);
 		void Save();
+
+		static const int INVALID_BIND_LOCATION = -1;
 	protected: 
 		virtual bool LoadResource(std::string path) override;
 		virtual void UnloadResource() override;
 	private:
+		std::unordered_map<TextureType, TextureStatus> m_textureStatus;
+
 		std::shared_ptr<AShaderProgram> m_shader;
 		ResourcePtr<ATexture> m_texture;
-		glm::vec4 m_baseColour = glm::vec4(1);
+		glm::vec4 m_baseColour = glm::vec4(1,1,1,1);
+		bool m_hasBaseColour = false; 
 
 		TextureMap m_textures;
 		SamplerMap m_samplers;

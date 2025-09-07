@@ -1,3 +1,5 @@
+#include "Platform/Core/Renderer/Materials/Material.h"
+#include "Platform/Core/Renderer/Materials/TextureType.h"
 #include "Platform/Vulkan/Materials/LSampler.h"
 #include "Platform/Vulkan/Materials/Texture.h"
 #include <Platform/Core/Renderer/Pipeline/LCamera.h>
@@ -33,6 +35,27 @@ namespace Lemonade
 	{
 		m_uniformBuffers.resize(LRenderTarget::MAX_FRAMES_IN_FLIGHT);
 		m_descriptorSets.resize(LRenderTarget::MAX_FRAMES_IN_FLIGHT);
+		
+		// 1x1 Colors for quiet defaults
+		Colour defaultWhite   = { 255, 255, 255, 255 };  // BaseColor / diffuse
+		Colour defaultFlatNormal = { 128, 128, 255, 255 }; // Normal map (flat)
+		Colour defaultORM     = { 255, 255, 0, 255 };    // Roughness (G)=1, Metallic(B)=0, AO(R)=1
+		Colour defaultBlack   = { 0, 0, 0, 255 };        // Emissive / optional Metalness
+
+		// Load defaults
+		m_defaultDiffuse.LoadNativeTextureFromPixels(&defaultWhite, 1, 1);
+		m_defaultRoughness.LoadNativeTextureFromPixels(&defaultORM, 1, 1); 
+		m_defaultNormal.LoadNativeTextureFromPixels(&defaultFlatNormal, 1, 1);
+		m_defaultAo.LoadNativeTextureFromPixels(&defaultORM, 1, 1); 
+		m_defaultEmission.LoadNativeTextureFromPixels(&defaultBlack, 1, 1);
+		m_defaultMetalness.LoadNativeTextureFromPixels(&defaultORM, 1, 1);
+
+		m_defaultTextures[TextureType::Diffuse] = &m_defaultDiffuse;
+		m_defaultTextures[TextureType::Normal]            = &m_defaultNormal;     
+		m_defaultTextures[TextureType::Roughness]         = &m_defaultRoughness;      
+		m_defaultTextures[TextureType::AmbientOcclusion]  = &m_defaultAo;     
+		m_defaultTextures[TextureType::Emissive]          = &m_defaultEmission;    
+		m_defaultTextures[TextureType::Metalness]         = &m_defaultMetalness;    
 
 		return true;
 	}
@@ -323,17 +346,16 @@ namespace Lemonade
 		bufferInfo.offset = 0;
 		bufferInfo.range = sizeof(VertexData);
 
-
 		std::vector<VkWriteDescriptorSet> writes;
 
-		VkWriteDescriptorSet descriptorWrite{};
-		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrite.dstSet = m_descriptorSets[currentFrame];
-		descriptorWrite.dstBinding = 0;
-		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrite.descriptorCount = 1;
-		descriptorWrite.pBufferInfo = &bufferInfo;
+		VkWriteDescriptorSet uniformBufferWrite{};
+		uniformBufferWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		uniformBufferWrite.dstSet = m_descriptorSets[currentFrame];
+		uniformBufferWrite.dstBinding = 0;
+		uniformBufferWrite.dstArrayElement = 0;
+		uniformBufferWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uniformBufferWrite.descriptorCount = 1;
+		uniformBufferWrite.pBufferInfo = &bufferInfo;
 
 		m_vertexData.cameraPosition = activeCamera->GetTransform()->GetPosition();
 		m_vertexData.model = m_transform->GetWorldMatrix();         
@@ -342,16 +364,32 @@ namespace Lemonade
         m_vertexData.shadowPass = false;          
         m_vertexData.unlit = false;               
         m_vertexData.emission = 0;     
-		writes.push_back(descriptorWrite);
+		m_vertexData.baseColour = m_material->GetResource()->GetBaseColour();
+		writes.push_back(uniformBufferWrite);
 		int sampleBindLocation = 0;
+
+		// Think twice this is to keep what would otherwise be locally allocated variables alive until  we update the descriptor set.
+		std::vector<VkDescriptorImageInfo> imageInfos;
+
+		int uniformCount = 1; 
+		int samplerCount = m_material->GetResource()->GetSamplers().size();
+		int textureCount = m_material->GetResource()->GetTextures().size();
+
+		// reserve to prevent segfault, we rely on pointers that may otherwise change when vector is resized behind the scenes
+		imageInfos.reserve(uniformCount + samplerCount + textureCount);
+
+		LSampler* dummy = static_cast<LSampler*>(m_material->GetResource()->GetSamplers().begin()->get());
 
 		for (auto& sampler : m_material->GetResource()->GetSamplers())
 		{
 			LSampler* nativeSampler = static_cast<LSampler*>(sampler.get());
 
-			VkDescriptorImageInfo samplerDescriptor{
-				.sampler = nativeSampler->GetSampler()
-			};
+			assert(nativeSampler->GetSampler() != VK_NULL_HANDLE);
+
+			VkDescriptorImageInfo info{};
+			info.sampler = nativeSampler->GetSampler();
+
+			imageInfos.push_back(info);
 
 			VkWriteDescriptorSet writeSampler = {};
 			writeSampler.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -360,7 +398,7 @@ namespace Lemonade
 			writeSampler.dstArrayElement = sampleBindLocation;
 			writeSampler.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
 			writeSampler.descriptorCount = 1;
-			writeSampler.pImageInfo = &samplerDescriptor;
+			writeSampler.pImageInfo = &imageInfos.back();
 			writes.push_back( writeSampler);
 		}
 
@@ -370,11 +408,22 @@ namespace Lemonade
 			uint32_t bindLocation = texture.second->GetBindLocation();
 
 			// Imaage View
-			VkDescriptorImageInfo imageDescriptor{
+			imageInfos.push_back({
 				.imageView   = tex->GetImageView(),
-				.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-			};
-			
+				.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			});
+
+			// Check material status of texture type, basically if pink black has been bound but we wern't expecting a texture we switch to a default "normal" texture.
+			TextureStatus status = m_material->GetResource()->GetTextureStatus(texture.first);
+
+			if (status == TextureStatus::NotProvided)
+			{
+				if (m_defaultTextures.contains(texture.first))
+				{
+					imageInfos.back().imageView = m_defaultTextures[texture.first]->GetImageView();
+				}
+			}
+
 			VkWriteDescriptorSet writeImage = {};
 			writeImage.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			writeImage.dstSet = m_descriptorSets[currentFrame];
@@ -382,7 +431,7 @@ namespace Lemonade
 			writeImage.dstArrayElement = 0;
 			writeImage.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			writeImage.descriptorCount = 1;
-			writeImage.pImageInfo = &imageDescriptor;
+			writeImage.pImageInfo = &imageInfos.back();
 
 			writes.push_back(writeImage);
 		}                
@@ -440,36 +489,35 @@ namespace Lemonade
 		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		uboLayoutBinding.pImmutableSamplers = nullptr;   
 
+		// Todo add support for multiple samplers
+		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+		samplerLayoutBinding.binding = 1; 
+		samplerLayoutBinding.descriptorCount = 1;
+		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+		samplerLayoutBinding.pImmutableSamplers = nullptr;
+		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
 		std::vector<VkDescriptorSetLayoutBinding> bindings = {
 			uboLayoutBinding,
+			samplerLayoutBinding
 		};
 
-		uint32_t bindingOffset = 1;
-		int textureCount = 0;
+		LSampler* dummy = static_cast<LSampler*>(m_material->GetResource()->GetSamplers().begin()->get());
 
 		for (const auto& texture : m_material->GetResource()->GetTextures())
 		{
-
 			Texture* tex = static_cast<Texture*>(texture.second->GetTexture()->GetResource());
 			uint32_t bindLocation = texture.second->GetBindLocation();
 
 			VkDescriptorSetLayoutBinding imageLayoutBinding{};
-			imageLayoutBinding.binding = bindingOffset + (bindLocation * textureCount);
+			imageLayoutBinding.binding = bindLocation;
 			imageLayoutBinding.descriptorCount = 1;
 			imageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			imageLayoutBinding.pImmutableSamplers = nullptr;
+			//imageLayoutBinding.pImmutableSamplers = dummy->GetSampler();
 			imageLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		
-			VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-			samplerLayoutBinding.binding = imageLayoutBinding.binding + 1; 
-			samplerLayoutBinding.descriptorCount = 1;
-			samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-			samplerLayoutBinding.pImmutableSamplers = nullptr;
-			samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
 			bindings.push_back(imageLayoutBinding);
-			bindings.push_back(samplerLayoutBinding);
-			textureCount++;
 		}
 
 		VkDescriptorSetLayoutCreateInfo descriptorCreateInfo{};

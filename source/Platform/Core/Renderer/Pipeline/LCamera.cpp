@@ -46,6 +46,6 @@ namespace Lemonade
             return;
         }
 
-        m_viewProjMatrix = this->m_projMat * this->m_viewMat;
+        m_viewProjMatrix = m_projMat * m_viewMat;
     }
 }

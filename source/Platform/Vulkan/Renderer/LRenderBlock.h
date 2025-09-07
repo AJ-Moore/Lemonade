@@ -1,4 +1,6 @@
 #pragma once
+#include "Platform/Core/Renderer/Materials/TextureType.h"
+#include "Platform/Vulkan/Materials/Texture.h"
 #include <Platform/Core/Renderer/Geometry/Mesh.h>
 #include <Platform/Core/Renderer/Geometry/PrimitiveMode.h>
 #include <Platform/Core/Renderer/Materials/Material.h>
@@ -134,6 +136,15 @@ namespace Lemonade
 		VkPipelineColorBlendAttachmentState m_colorBlendAttachment; 
 		VkPipelineMultisampleStateCreateInfo m_multisampling;
 		VkPipelineVertexInputStateCreateInfo m_vertexInputInfo;
+
+		Texture m_defaultDiffuse;
+		Texture m_defaultRoughness;
+		Texture m_defaultNormal;
+		Texture m_defaultAo;
+		Texture m_defaultEmission;
+		Texture m_defaultMetalness;
+
+		std::unordered_map<TextureType, Texture*> m_defaultTextures;
 	};
 }
 #endif

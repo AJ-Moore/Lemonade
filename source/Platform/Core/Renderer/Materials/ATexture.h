@@ -15,12 +15,13 @@ namespace Lemonade
 		virtual void Bind(uint textureUnit) = 0;
 
 		const TextureFormat& GetTextureFormat() const { return m_textureFormat; }
+		bool LoadedOK() const noexcept { return !m_bPinkBlackTextureLoaded; }
 	protected:
 		virtual bool LoadResource(std::string path) override;
 		virtual void UnloadResource() override{}
 		TextureFormat GetTextureFormat(SDL_Surface* surface) const;
 		virtual void LoadNativeTextureFromSurface(SDL_Surface* surface) = 0;
-		virtual void LoadNativeTextureFromPixels(const Colour* data, uint32_t width, uint32_t height) = 0;
+		virtual void LoadNativeTextureFromPixels(const Colour* data, uint32_t width, uint32_t height, TextureFormat textureformat = TextureFormat::LEMONADE_RGBA8888) = 0;
 
 		uint m_width = 0; 
 		uint m_height = 0;

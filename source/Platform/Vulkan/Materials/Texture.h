@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Platform/Core/Renderer/Materials/TextureUtils.h"
 #include <LCommon.h>
 
 #ifdef RENDERER_VULKAN
@@ -16,7 +17,7 @@ namespace Lemonade
 		virtual void Bind() override{}
 		virtual void Bind(uint textureUnit) override{}
 		virtual void LoadNativeTextureFromSurface(SDL_Surface* surface) override;
-		virtual void LoadNativeTextureFromPixels(const Colour* data, uint32_t width, uint32_t height) override;
+		virtual void LoadNativeTextureFromPixels(const Colour* data, uint32_t width, uint32_t height, TextureFormat textureformat = TextureFormat::LEMONADE_RGBA8888) override;
 
 		void UpdateVKImage(VkCommandBuffer commandBuffer);
 		void UpdateTextureWith(VkImage image, VkSampler imageSampler, VkImageView imageView);

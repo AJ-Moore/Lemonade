@@ -12,5 +12,6 @@ namespace Lemonade{
         int unlit;                // 4 bytes
         int emission;             // 4 bytes
         int padding2;             // 4 bytes padding to make size multiple of 16 bytes
+        glm::vec4 baseColour;     // 16 bytes
     };
 }

@@ -96,14 +96,14 @@ namespace Lemonade {
 
 	void Texture::LoadNativeTextureFromSurface(SDL_Surface* surface)
 	{
-		LoadNativeTextureFromPixels(static_cast<Colour*>(surface->pixels), surface->w, surface->h);
+		LoadNativeTextureFromPixels(static_cast<Colour*>(surface->pixels), surface->w, surface->h, GetTextureFormat());
 	}
 
-	void Texture::LoadNativeTextureFromPixels(const Colour* pixels, uint32_t width, uint32_t height)
+	void Texture::LoadNativeTextureFromPixels(const Colour* pixels, uint32_t width, uint32_t height, TextureFormat textureformat)
 	{
 		m_width = width; 
 		m_height = height;
-		VkFormat format = (VkFormat) TextureData::GetNativeTextureFormat(GetTextureFormat());
+		VkFormat format = (VkFormat) TextureData::GetNativeTextureFormat(textureformat);
 		VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 		VkPhysicalDevice physicalDevice = GraphicsServices::GetContext()->GetVulkanDevice().GetPhysicalDevice();
 

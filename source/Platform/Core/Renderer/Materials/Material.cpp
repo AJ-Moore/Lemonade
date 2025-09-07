@@ -39,12 +39,45 @@ namespace Lemonade
         return m_texture;
     }
 
+	TextureStatus Material::GetTextureStatus(TextureType textureType)
+	{
+		if (m_textureStatus.contains(textureType))
+		{
+			return m_textureStatus[textureType];
+		}
+
+		return TextureStatus::NotProvided;
+	}
+
 	void Material::LoadTexture(TextureType textureType, std::string path, int bindLocation)
 	{
 		ResourcePtr<ATexture> texture = GraphicsServices::GetGraphicsResources()->GetTextureHandle(path);
 		std::shared_ptr<TextureData> textureDataPtr = std::make_shared<TextureData>(textureType, texture, bindLocation);
+
+		// Update texture status
+		if (texture->GetResource()->LoadedOK())
+		{
+			m_textureStatus[textureType] = TextureStatus::Loaded;
+		}
+		else {
+			m_textureStatus[textureType] = TextureStatus::Missing;
+		}
+
 		// Will override any existing textures of this type.
 		m_textures[textureType] =  textureDataPtr;
+	}
+
+	int Material::GetBindLocation(TextureType textureType)
+	{
+		// when we refactor material loading we can optimise this method to use loaded values rather than getting it from texture data.
+		TextureMap::iterator iter = m_textures.find(textureType);
+
+		if (iter != m_textures.end())
+		{
+			return iter->second->GetBindLocation();
+		}
+
+		return INVALID_BIND_LOCATION;
 	}
 
 	void Material::Save() 
@@ -113,6 +146,8 @@ namespace Lemonade
 		}
 
 		json::iterator baseColour = data.find(m_baseColourString);
+
+		// If it has no baseColour and no texture
 		
 		if (baseColour != data.end())
 		{
@@ -120,6 +155,8 @@ namespace Lemonade
 
 			if (colourArr.is_array() && colourArr.size() == 4)
 			{
+				// This is more determine whether we want to show the base colour if intentional or the pink black if not specified, weird I know but better for debugging.
+				m_hasBaseColour = true;
 				for (int i = 0; i <4; i++)
 				{
 					m_baseColour[i] = colourArr[i];
@@ -165,9 +202,19 @@ namespace Lemonade
 					bindIndex = bindLocation++;
 				}
 
+
 				// For ref - we want to load a texture regardless of whether we believe the path to be correct! 
 				json::iterator texturepath = textureData.find("path");
 				std::string path;
+
+				bool required = true; 
+
+				json::iterator requiredit = textureData.find("required");
+
+				if (requiredit != textureData.end()) 
+				{
+					required = requiredit.value().get<bool>();
+				}
 
 				if (texturepath != textureData.end())
 				{
@@ -175,6 +222,24 @@ namespace Lemonade
 				}
 
 				ResourcePtr<ATexture> texture = GraphicsServices::GetGraphicsResources()->GetTextureHandle(path);
+
+				// flawed, needs rethink.
+				if (texture->GetResource()->LoadedOK())
+				{
+					m_textureStatus[textureType] = TextureStatus::Loaded;
+				}
+				else
+				{
+					if (required)
+					{
+						m_textureStatus[textureType] = TextureStatus::Missing;
+					}
+					else
+					{
+						m_textureStatus[textureType] = TextureStatus::NotProvided;
+					}
+				}
+
 				std::shared_ptr<TextureData> textureDataPtr = std::make_shared<TextureData>(textureType, texture, bindLocation);
 				m_textures.insert(std::make_pair(textureType, textureDataPtr));
 			}

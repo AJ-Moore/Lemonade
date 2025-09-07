@@ -33,7 +33,7 @@ namespace Lemonade
         SDL_PollEvent(&event);
 
         // Will probably cause issues down line 
-        SDL_SetWindowRelativeMouseMode(m_window,true);
+        //SDL_SetWindowRelativeMouseMode(m_window,true);
 
         return true;
     }
