@@ -1,14 +1,16 @@
 #pragma once
 
 #include "LCommon.h"
-#include "Platform/Core/Renderer/Materials/ATexture.h"
+// #include "Platform/Core/Renderer/Materials/ATexture.h"
+// //#include <Platform/Core/Renderer/Materials/ATexture.h>
 #include <Resources/ResourceHandle.h>
 #include <Platform/Core/Renderer/Materials/TextureUtils.h>
 
 namespace Lemonade
 {
+	class ATexture;
 	// Todo explicitly map to assimps texture types
-	enum class TextureType
+	enum class LEMONADE_API TextureType
 	{
 		None = 0x0,
 		Diffuse,
@@ -31,7 +33,7 @@ namespace Lemonade
 		Unknown
 	};
 
-	enum class TextureBindType {
+	enum class LEMONADE_API TextureBindType {
 		Texture2D,
 		TextureArray2D,
 		CubeMap,

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Platform/Core/Renderer/RenderBlock/ARenderBlock.h"
 #include <Platform/Vulkan/WindowManager/LWindow.h>
 #include <LCommon.h>
 
@@ -66,8 +67,9 @@ namespace Lemonade
 
         // Gets the screen target for a given window.
         virtual ARenderTarget* GetScreenTarget(LWindow* window) = 0;
-
+        void SetRenderBlock(ARenderBlock* block ){ m_renderBlock = block; }
     protected:
+        ARenderBlock* m_renderBlock = nullptr;
         bool m_bDoneInit = false;
         glm::ivec2 m_dimensions;
         glm::vec4 m_clearColour = glm::vec4(1,0,0,1);

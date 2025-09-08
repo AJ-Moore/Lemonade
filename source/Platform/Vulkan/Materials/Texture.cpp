@@ -16,11 +16,13 @@ namespace Lemonade {
 
 	// Native Texture Format Lookup 
 	const std::unordered_map<TextureFormat, int> TextureData::m_nativeTextureFormatLookup = {
-	{ TextureFormat::LEMONADE_RGBA8888, VK_FORMAT_R8G8B8A8_UNORM },
-	{ TextureFormat::LEMONADE_BGRA8888, VK_FORMAT_B8G8R8A8_UNORM },
-	{ TextureFormat::LEMONADE_RGB888, VK_FORMAT_R8G8B8_UNORM },
-	{ TextureFormat::LEMONADE_BGR888, VK_FORMAT_B8G8R8_UNORM },
-	{ TextureFormat::LEMONADE_UNKNOWN, VK_FORMAT_UNDEFINED },
+	{ TextureFormat::LEMONADE_FORMAT_RGBA8888, VK_FORMAT_R8G8B8A8_UNORM },
+	{ TextureFormat::LEMONADE_FORMAT_BGRA8888, VK_FORMAT_B8G8R8A8_UNORM },
+	{ TextureFormat::LEMONADE_FORMAT_RGB888, VK_FORMAT_R8G8B8_UNORM },
+	{ TextureFormat::LEMONADE_FORMAT_BGR888, VK_FORMAT_B8G8R8_UNORM },
+	{ TextureFormat::LEMONADE_FORMAT_R8, VK_FORMAT_R8_UNORM},
+	{ TextureFormat::LEMONADE_FORMAT_R16, VK_FORMAT_R16_UNORM},
+	{ TextureFormat::LEMONADE_FORMAT_UNKNOWN, VK_FORMAT_UNDEFINED },
 	};
 
 	int TextureData::GetNativeTextureFormat(const TextureFormat& format)
@@ -103,7 +105,11 @@ namespace Lemonade {
 	{
 		m_width = width; 
 		m_height = height;
-		VkFormat format = (VkFormat) TextureData::GetNativeTextureFormat(textureformat);
+		//VkFormat format = (VkFormat) TextureData::GetNativeTextureFormat(textureformat);
+
+		// TODO We need to determine whether to use RGB (gamma corrected) or linear colour data 
+		VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
+
 		VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 		VkPhysicalDevice physicalDevice = GraphicsServices::GetContext()->GetVulkanDevice().GetPhysicalDevice();
 
@@ -128,7 +134,7 @@ namespace Lemonade {
 		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		viewInfo.image = m_image;
 		viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		viewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+		viewInfo.format = format;
 		viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		viewInfo.subresourceRange.baseMipLevel = 0;
 		viewInfo.subresourceRange.levelCount = 1;

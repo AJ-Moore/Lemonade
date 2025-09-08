@@ -18,6 +18,18 @@
 
 namespace Lemonade
 {
+	struct LEMONADE_API LVKBuffer
+	{
+		VkBuffer Buffer;
+		void* DataCPUMapped = nullptr;
+		void* DataGPUMapped = nullptr;
+		size_t DataSize = 0;
+		VkDeviceMemory VKDeviceMemory;
+		size_t Stride;
+		int Binding = 0;
+		VkFormat Format = VK_FORMAT_R32G32B32_SFLOAT;
+	};
+
 	/** URender Block Class - Used to store render state information */
 	class LEMONADE_API LRenderBlock : public ARenderBlock
 	{
@@ -34,18 +46,6 @@ namespace Lemonade
 			BoneWeights, 
 			BoneIds,
 		};
-	
-		struct LVKBuffer
-		{
-			VkBuffer Buffer;
-			void* DataCPUMapped = nullptr;
-			void* DataGPUMapped = nullptr;
-			size_t DataSize = 0;
-			VkDeviceMemory VKDeviceMemory;
-			size_t Stride;
-			int Binding = 0;
-			VkFormat Format = VK_FORMAT_R32G32B32_SFLOAT;
-		};
 
 		friend class LRenderLayer;
 		friend class LRenderer;
@@ -57,6 +57,8 @@ namespace Lemonade
 		virtual void SetDrawMode(PrimitiveMode mode);
 
 		PrimitiveMode GetDrawMode() const { return (PrimitiveMode)m_primitiveMode; }
+
+		LVKBuffer GetLVKBuffer(uint32_t currentFrame) { return m_uniformBuffers.at(currentFrame); }
 
 	protected:
 		/// Called to perform initialisation 

@@ -337,9 +337,6 @@ namespace Lemonade
 		const LVulkanDevice& device = GraphicsServices::GetContext()->GetVulkanDevice();
 		LCamera* activeCamera = GraphicsServices::GetRenderer()->GetActiveCamera();
 		int currentFrame = GraphicsServices::GetWindowManager()->GetActiveWindow()->GetCurrentFrame();
-		
-		// Idiot allan we don't want to be doing this, clearly this was left from when we we're recreating descriptors each frame.
-		//vkResetDescriptorPool(device.GetVkDevice(), m_vkDescriptorPool, 0);
 
 		VkDescriptorBufferInfo bufferInfo{};
 		bufferInfo.buffer = m_uniformBuffers[currentFrame].Buffer;
@@ -409,6 +406,7 @@ namespace Lemonade
 
 			// Imaage View
 			imageInfos.push_back({
+				.sampler = dummy->GetSampler(),
 				.imageView   = tex->GetImageView(),
 				.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 			});

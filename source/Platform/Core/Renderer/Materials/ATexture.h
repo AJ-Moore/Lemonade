@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Platform/Core/Renderer/Materials/TextureType.h>
 #include <LCommon.h>
 #include <Resources/AResource.h>
 #include <Platform/Core/Renderer/Materials/TextureUtils.h>
@@ -20,8 +21,9 @@ namespace Lemonade
 		virtual bool LoadResource(std::string path) override;
 		virtual void UnloadResource() override{}
 		TextureFormat GetTextureFormat(SDL_Surface* surface) const;
+		TextureFormat GetTextureFormatForType(TextureType texture);
 		virtual void LoadNativeTextureFromSurface(SDL_Surface* surface) = 0;
-		virtual void LoadNativeTextureFromPixels(const Colour* data, uint32_t width, uint32_t height, TextureFormat textureformat = TextureFormat::LEMONADE_RGBA8888) = 0;
+		virtual void LoadNativeTextureFromPixels(const Colour* data, uint32_t width, uint32_t height, TextureFormat textureformat = TextureFormat::LEMONADE_FORMAT_RGBA8888) = 0;
 
 		uint m_width = 0; 
 		uint m_height = 0;
@@ -31,7 +33,7 @@ namespace Lemonade
 		TextureFilter m_textureFilter = TextureFilter::Linear;
 		TextureClamp m_textureClamp = TextureClamp::Repeat;
 		bool m_bStorePixelData = false;
-		TextureFormat m_textureFormat = TextureFormat::LEMONADE_UNKNOWN;
+		TextureFormat m_textureFormat = TextureFormat::LEMONADE_FORMAT_UNKNOWN;
 		bool m_bPinkBlackTextureLoaded = false;
 	};
 }

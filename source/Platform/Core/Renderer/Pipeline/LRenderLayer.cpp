@@ -59,6 +59,8 @@ namespace Lemonade
 		m_renderBlock->OnPipelineBound.AddListener([this](ARenderBlock* block){
 			if (m_sourceTarget != nullptr)
 			{
+				//SetRenderBlock ugliness -> Hopefully temporary but who knows, needed access to descriptor/ vertex data for updating descriptor with target.
+				m_sourceTarget->SetRenderBlock(block);
 				m_sourceTarget->BindColourAttachments();
 			}
 		});

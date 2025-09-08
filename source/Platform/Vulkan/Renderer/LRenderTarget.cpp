@@ -1,4 +1,5 @@
 #include "Platform/Core/Time/Time.h"
+#include "Platform/Vulkan/Renderer/LRenderBlock.h"
 #include <Platform/Vulkan/Materials/Texture.h>
 #include <Platform/Core/Renderer/Pipeline/ARenderTarget.h>
 #include <Platform/Core/Services/GraphicsServices.h>
@@ -122,7 +123,6 @@ namespace Lemonade
     void LRenderTarget::BindColourAttachments()
     {
         VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
-		//std::vector<VkDescriptorSetLayout> layouts(LRenderTarget::MAX_FRAMES_IN_FLIGHT, m_vkDescriptorSetLayout); 
 
 		VkPushConstantRange pushConstantRange{};
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -930,6 +930,21 @@ namespace Lemonade
         VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 
         VkDescriptorSet descriptorSet = m_colourAttachmentDescriptors[colourAttachment];
+        LRenderBlock* renderBlock = static_cast<LRenderBlock*>(m_renderBlock);
+        uint32_t currentFrame = GraphicsServices::GetWindowManager()->GetActiveWindow()->GetCurrentFrame();
+        LVKBuffer buffer = renderBlock->GetLVKBuffer(currentFrame);
+
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = buffer.Buffer;
+		bufferInfo.offset = 0;
+		bufferInfo.range = sizeof(VertexData);
+
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+		uboLayoutBinding.binding = 0;
+		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboLayoutBinding.descriptorCount = 1; 
+		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		uboLayoutBinding.pImmutableSamplers = nullptr;
 
         VkDescriptorSetLayoutBinding samplerLayoutBinding{};
         samplerLayoutBinding.binding = 1;
@@ -953,6 +968,15 @@ namespace Lemonade
 
         VkDescriptorImageInfo samplerDescriptor = {};
         samplerDescriptor.sampler = m_colourAttachments.at(colourAttachment).Sampler;
+
+        VkWriteDescriptorSet uniformBufferWrite{};
+		uniformBufferWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		uniformBufferWrite.dstSet = descriptorSet;
+		uniformBufferWrite.dstBinding = uboLayoutBinding.binding;
+		uniformBufferWrite.dstArrayElement = 0;
+		uniformBufferWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uniformBufferWrite.descriptorCount = 1;
+		uniformBufferWrite.pBufferInfo = &bufferInfo;
         
         VkWriteDescriptorSet writeImage = {};
         writeImage.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
