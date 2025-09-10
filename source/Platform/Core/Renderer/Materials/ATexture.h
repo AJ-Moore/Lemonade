@@ -5,6 +5,7 @@
 #include <Resources/AResource.h>
 #include <Platform/Core/Renderer/Materials/TextureUtils.h>
 #include <cstdint>
+#include <vector>
 
 namespace Lemonade
 {

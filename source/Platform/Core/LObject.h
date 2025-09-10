@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Interface/IInitialisable.h"
-#include "Interface/IRenderable.h"
-#include "Interface/IUpdateable.h"
+#include <Interface/IInitialisable.h>
+#include <Interface/IRenderable.h>
+#include <Interface/IUpdateable.h>
 #include <LCommon.h>
 #include <Util/Logger.h>
 #include <Base/Object.h>

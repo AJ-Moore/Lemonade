@@ -1,7 +1,7 @@
 #pragma once 
 
-#include "Platform/Core/LObject.h"
-#include "Platform/Core/Renderer/Pipeline/LRenderer.h"
+#include <Platform/Core/LObject.h>
+#include <Platform/Core/Renderer/Pipeline/LRenderer.h>
 #include <LCommon.h>
 
 namespace Lemonade {
@@ -14,6 +14,5 @@ namespace Lemonade {
         virtual void Render(const LRenderingData& renderingData) = 0; 
         virtual void Update(){}
         virtual void Unload(){}
-    private:
     };
 }

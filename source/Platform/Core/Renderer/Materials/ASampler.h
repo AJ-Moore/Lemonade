@@ -1,7 +1,7 @@
 #pragma once 
 
-#include "LCommon.h"
-#include "Platform/Core/LObject.h"
+#include <LCommon.h>
+#include <Platform/Core/LObject.h>
 
 namespace Lemonade 
 {

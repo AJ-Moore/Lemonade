@@ -70,17 +70,6 @@ namespace Lemonade {
 		{
 			return;
 		}
-//todo
-		// Get the texture coords for the current frame!
-		//std::array<glm::vec2, 4> coords = m_material->GetTextureCoordsForFrame(frame);
-//
-		//(*m_uvs)[0] = coords[0];
-		//(*m_uvs)[1] = coords[1];
-		//(*m_uvs)[2] = coords[2];
-		//(*m_uvs)[3] = coords[0];
-		//(*m_uvs)[4] = coords[2];
-		//(*m_uvs)[5] = coords[3];
-//
-		//this->setDirty();
+        //todo
 	}
 }

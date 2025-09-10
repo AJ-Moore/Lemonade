@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Base/Object.h"
-#include "Platform/Core/Components/ModelLoader/LModel.h"
-#include "Platform/Core/Renderer/Materials/Material.h"
+#include <Base/Object.h>
+#include <Platform/Core/Components/ModelLoader/LModel.h>
+#include <Platform/Core/Renderer/Materials/Material.h>
 #include <LCommon.h>
 #include <Resources/ResourceGroup.h>
 #include <Resources/ResourceHandle.h>

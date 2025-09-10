@@ -1,11 +1,11 @@
 
-#include "Platform/Core/Renderer/Pipeline/ARenderTarget.h"
-#include "Platform/Core/Services/GraphicsServices.h"
+#include <Platform/Core/Renderer/Pipeline/ARenderTarget.h>
+#include <Platform/Core/Services/GraphicsServices.h>
 #include <Platform/Core/Renderer/Pipeline/RenderStages/Geometry/Passes/GeometryPass.h>
 namespace Lemonade
 {
     GeometryPass::GeometryPass() : 
-        m_renderLayer(GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/fullscreen.mat.json"))
+        m_renderLayer(GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/deferred.mat.json"))
     {
 
     }

@@ -1,5 +1,5 @@
 
-#include "Platform/Core/Renderer/Pipeline/LRenderer.h"
+#include <Platform/Core/Renderer/Pipeline/LRenderer.h>
 #include <Platform/Core/Renderer/Pipeline/RenderStages/Geometry/GeometryStage.h>
 #include <Platform/Core/Renderer/Pipeline/RenderStages/PostProcessing/PostProcessingStage.h>
 #include <Platform/Core/Services/GraphicsServices.h>

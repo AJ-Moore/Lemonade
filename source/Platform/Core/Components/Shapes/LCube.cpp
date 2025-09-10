@@ -139,7 +139,6 @@ namespace Lemonade
         //}
 
         std::shared_ptr<std::vector<glm::vec2>> coords = std::make_shared<std::vector<glm::vec2>>();
-        //std::array<glm::vec2, 4> matcoords = m_material->getTextureCoordsForFrame(0);
 
         for (int i = 0; i < 6; i++)
         {

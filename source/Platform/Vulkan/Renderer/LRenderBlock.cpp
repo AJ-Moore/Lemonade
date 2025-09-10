@@ -1,7 +1,7 @@
-#include "Platform/Core/Renderer/Materials/Material.h"
-#include "Platform/Core/Renderer/Materials/TextureType.h"
-#include "Platform/Vulkan/Materials/LSampler.h"
-#include "Platform/Vulkan/Materials/Texture.h"
+#include <Platform/Core/Renderer/Materials/Material.h>
+#include <Platform/Core/Renderer/Materials/TextureType.h>
+#include <Platform/Vulkan/Materials/LSampler.h>
+#include <Platform/Vulkan/Materials/Texture.h>
 #include <Platform/Core/Renderer/Pipeline/LCamera.h>
 #include <Platform/Core/Renderer/RenderBlock/ARenderBlock.h>
 #include <Platform/Core/Renderer/Pipeline/LRenderer.h>
@@ -11,7 +11,6 @@
 #include <Platform/Vulkan/Renderer/LVulkanDevice.h>
 #include <Platform/Vulkan/Renderer/LRenderBlock.h>
 #include <LCommon.h>
-#include <algorithm>
 #include <alloca.h>
 #include <cstdint>
 #include <cstring>

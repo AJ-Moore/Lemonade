@@ -1,8 +1,7 @@
-#include "Platform/Core/Renderer/Materials/ATexture.h"
-#include "Platform/Core/Renderer/Materials/TextureUtils.h"
-#include "Platform/Core/Services/GraphicsServices.h"
+#include <Platform/Core/Renderer/Materials/ATexture.h>
+#include <Platform/Core/Renderer/Materials/TextureUtils.h>
+#include <Platform/Core/Services/GraphicsServices.h>
 #include <LCommon.h>
-#include <cmath>
 #include <cstdint>
 #include <vulkan/vulkan_core.h>
 

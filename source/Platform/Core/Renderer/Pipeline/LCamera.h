@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Spatial/Transform.h"
+#include <Spatial/Transform.h>
 #include <Platform/Core/LObject.h>
 #include <glm/fwd.hpp>
 #include <memory>
@@ -26,9 +26,6 @@ namespace Lemonade
 		virtual void Render()override{}
 	private:
 		void SetOrthographicDimensions(glm::vec4 rect);
-
-		// TODO camera transform lifecycle non ownership is a bit hairy
-		//CitrusCore::Transform* m_transform = nullptr;
 		std::shared_ptr<CitrusCore::Transform> m_transform = nullptr;
 
 		glm::mat4 m_viewMat;

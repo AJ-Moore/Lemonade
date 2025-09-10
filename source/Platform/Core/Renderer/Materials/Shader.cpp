@@ -1,4 +1,4 @@
-#include "Shader.h"
+#include <Platform/Core/Renderer/Materials/Shader.h>
 #include <filesystem>
 
 namespace Lemonade {

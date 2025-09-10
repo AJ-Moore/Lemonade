@@ -1,8 +1,6 @@
 #pragma once
 
-#include "LCommon.h"
-// #include "Platform/Core/Renderer/Materials/ATexture.h"
-// //#include <Platform/Core/Renderer/Materials/ATexture.h>
+#include <LCommon.h>
 #include <Resources/ResourceHandle.h>
 #include <Platform/Core/Renderer/Materials/TextureUtils.h>
 

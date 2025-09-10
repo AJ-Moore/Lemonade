@@ -29,6 +29,8 @@ namespace Lemonade
 			return TextureFormat::LEMONADE_FORMAT_BGRA8888;
 		case SDL_PIXELFORMAT_BGR24:
 			return TextureFormat::LEMONADE_FORMAT_BGR888;
+		case SDL_PIXELFORMAT_INDEX8:
+			return TextureFormat::LEMONADE_FORMAT_R8;
 		default:
 			Logger::Log(Logger::ERROR, "Texture unsupported format: %s", SDL_GetPixelFormatName(surface->format));
 			return TextureFormat::LEMONADE_FORMAT_UNKNOWN;
@@ -78,7 +80,7 @@ namespace Lemonade
 		if (!std::filesystem::exists(fsPath))
 		{
 			Logger::Log(Logger::WARN, "Unable to find texture at path [%s]", path.c_str());
-			//return false;
+			//dont't return here;
 		}
 		else {
 			try {
@@ -107,51 +109,45 @@ namespace Lemonade
 			Logger::Log(Logger::VERBOSE, "Texture loaded successfully: [%s]", fsPath.generic_string().c_str());
 		}
 
-		// check format supported
 		m_textureFormat = GetTextureFormat(surface);
 
-		// Not supported, log and convert to RGBA
-		//if (TextureData::GetNativeTextureFormat(m_textureFormat) == VK_FORMAT_UNDEFINED)
-		{
-			//Logger::Log(Logger::WARN, "Unsupported texture format, format being converted to RGBA");
-			if (m_textureFormat == TextureFormat::LEMONADE_FORMAT_RGB888 || m_textureFormat == TextureFormat::LEMONADE_FORMAT_BGR888)
-			{	
-				SDL_Surface* rgbaSurface = SDL_CreateSurface(
-					surface->w, surface->h, SDL_PIXELFORMAT_RGBA8888		
-				);
+		//Logger::Log(Logger::WARN, "Unsupported texture format, format being converted to RGBA");
+		if (m_textureFormat == TextureFormat::LEMONADE_FORMAT_RGB888 || m_textureFormat == TextureFormat::LEMONADE_FORMAT_BGR888)
+		{	
+			SDL_Surface* rgbaSurface = SDL_CreateSurface(
+				surface->w, surface->h, SDL_PIXELFORMAT_RGBA8888		
+			);
 
-				Uint8* src = (Uint8*)surface->pixels;
-				Uint8* dst = (Uint8*)rgbaSurface->pixels;
+			Uint8* src = (Uint8*)surface->pixels;
+			Uint8* dst = (Uint8*)rgbaSurface->pixels;
 
-				for (int y = 0; y < surface->h; y++) {
-					for (int x = 0; x < surface->w; x++) {
-						Uint8 r = src[y * surface->pitch + x * 3 + 0];
-						Uint8 g = src[y * surface->pitch + x * 3 + 1];
-						Uint8 b = src[y * surface->pitch + x * 3 + 2];
-				
-						dst[y * rgbaSurface->pitch + x * 4 + 0] = r;
-						dst[y * rgbaSurface->pitch + x * 4 + 1] = g;
-						dst[y * rgbaSurface->pitch + x * 4 + 2] = b;
-						dst[y * rgbaSurface->pitch + x * 4 + 3] = 255;
-					}
+			for (int y = 0; y < surface->h; y++) {
+				for (int x = 0; x < surface->w; x++) {
+					Uint8 r = src[y * surface->pitch + x * 3 + 0];
+					Uint8 g = src[y * surface->pitch + x * 3 + 1];
+					Uint8 b = src[y * surface->pitch + x * 3 + 2];
+			
+					dst[y * rgbaSurface->pitch + x * 4 + 0] = r;
+					dst[y * rgbaSurface->pitch + x * 4 + 1] = g;
+					dst[y * rgbaSurface->pitch + x * 4 + 2] = b;
+					dst[y * rgbaSurface->pitch + x * 4 + 3] = 255;
 				}
+			}
 
-				surface = rgbaSurface;
-					
-			}
-			else if (m_textureFormat != TextureFormat::LEMONADE_FORMAT_ABGR8888)
-			{
-				//surface = SDL_ConvertSurface(surface, SDL_PixelFormat::SDL_PIXELFORMAT_RGBA8888);
-				surface = SDL_ConvertSurfaceAndColorspace(
-					surface,
-					SDL_PIXELFORMAT_RGBA8888,
-					NULL,
-					SDL_COLORSPACE_SRGB_LINEAR,
-					0
-				);
-			}
-			m_textureFormat = TextureFormat::LEMONADE_FORMAT_RGBA8888;
+			surface = rgbaSurface;
+				
 		}
+		else if (m_textureFormat != TextureFormat::LEMONADE_FORMAT_ABGR8888)
+		{
+			surface = SDL_ConvertSurfaceAndColorspace(
+				surface,
+				SDL_PIXELFORMAT_RGBA8888,
+				NULL,
+				SDL_COLORSPACE_SRGB_LINEAR,
+				0
+			);
+		}
+		m_textureFormat = TextureFormat::LEMONADE_FORMAT_RGBA8888;
 
 		LoadNativeTextureFromSurface(surface);
 
@@ -188,8 +184,6 @@ namespace Lemonade
 		m_height = surface->h;
 
 		SDL_DestroySurface(surface);
-		// TODO - graphics error logging.
-		//LogGraphicsErrors();
 		return true;
 	}
 

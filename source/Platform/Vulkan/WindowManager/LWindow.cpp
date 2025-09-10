@@ -1,9 +1,9 @@
 #include <Platform/Core/Services/GraphicsServices.h>
 #include <Platform/Vulkan/Renderer/Core/LGraphicsContext.h>
-#include "Platform/Core/WindowManager/LSDLWindow.h"
-#include "Platform/Vulkan/Renderer/LRenderTarget.h"
-#include "SDL3/SDL_vulkan.h"
-#include "Util/Logger.h"
+#include <Platform/Core/WindowManager/LSDLWindow.h>
+#include <Platform/Vulkan/Renderer/LRenderTarget.h>
+#include <SDL3/SDL_vulkan.h>
+#include <Util/Logger.h>
 #include <Platform/Vulkan/WindowManager/LWindow.h>
 #include <SDL3/SDL_vulkan.h>
 #include <cstdint>
@@ -41,34 +41,6 @@ namespace Lemonade
 	void LWindow::Render()
 	{
 		VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
-
-		// Check if timeline semaphore is waiting to be signaled, not equal to 0 almost certainly triggered 
-		//if (m_currentSemaphoreValue != 0)
-		//{
-		//	uint64_t currentValue = 0;
-		//	vkGetSemaphoreCounterValue(device, m_timelineSemaphore[m_currentFrame], &currentValue);
-		//	uint64_t waitvalue = m_currentSemaphoreValue;
-//
-		//	//if (currentValue < waitvalue)
-		//	{
-		//		// Still waiting — semaphore hasn't been signaled to targetValue yet
-//
-		//		VkSemaphoreWaitInfo waitInfo{};
-		//		waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
-		//		waitInfo.pNext = nullptr;
-		//		waitInfo.flags = 0; 
-		//		waitInfo.semaphoreCount = 1;
-		//		waitInfo.pSemaphores = &m_timelineSemaphore[m_currentFrame];
-		//		waitInfo.pValues = &waitvalue;
-//
-		//		// Wait forever until the semaphore reaches at least '5'
-		//		VkResult result = vkWaitSemaphores(device, &waitInfo, UINT64_MAX);
-//
-		//		if (result != VK_SUCCESS) {
-		//			throw std::runtime_error("Failed to wait on timeline semaphore!");
-		//		}
-		//	}
-		//}
 
 		m_currentFrame = ++m_currentFrame % LRenderTarget::MAX_FRAMES_IN_FLIGHT;
 

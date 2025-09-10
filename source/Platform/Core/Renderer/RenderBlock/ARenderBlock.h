@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Events/Event.h"
-#include "Resources/ResourceHandle.h"
+#include <Events/Event.h>
+#include <Resources/ResourceHandle.h>
 #include <Spatial/Transform.h>
 #include <LCommon.h>
 #include <Platform/Core/LObject.h>

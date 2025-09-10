@@ -1,10 +1,9 @@
 #pragma once
 
-#include "Platform/Core/LObject.h"
+#include <Platform/Core/LObject.h>
 #include <Resources/AResource.h>
 #include <Resources/ResourceHandle.h>
 #include <Platform/Core/Renderer/Materials/AShader.h>
-#include <memory>
 #include <vector>
 
 namespace Lemonade

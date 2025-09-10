@@ -33,7 +33,7 @@ namespace Lemonade
         SDL_PollEvent(&event);
 
         // Will probably cause issues down line 
-        //SDL_SetWindowRelativeMouseMode(m_window,true);
+        SDL_SetWindowRelativeMouseMode(m_window,true);
 
         return true;
     }
@@ -67,9 +67,7 @@ namespace Lemonade
         {
             const SDL_DisplayMode* mode = SDL_GetDesktopDisplayMode(0);
             SDL_SetWindowSize(m_window, mode->w, mode->h);
-            m_windowRect = Rect<uint32>(0, 0, mode->w, mode->h);
-            //m_geometryBuffer->setDimensions(glm::ivec2(mode->w, mode->h));
-        
+            m_windowRect = Rect<uint32>(0, 0, mode->w, mode->h);   
             SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN);
         }
         else

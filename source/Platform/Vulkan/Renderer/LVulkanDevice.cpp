@@ -1,4 +1,4 @@
-#include "Platform/Vulkan/Renderer/LVulkanDevice.h"
+#include <Platform/Vulkan/Renderer/LVulkanDevice.h>
 #include <LCommon.h>
 #include <Util/Logger.h>
 
@@ -12,10 +12,6 @@ using Logger = CitrusCore::Logger;
 
 namespace Lemonade
 {
-	LVulkanDevice::LVulkanDevice()
-	{
-	}
-
 	LVulkanDevice::~LVulkanDevice()
 	{
 		DestroyVulkanDevice();

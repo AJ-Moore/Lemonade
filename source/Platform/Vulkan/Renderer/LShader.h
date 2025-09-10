@@ -1,7 +1,6 @@
 #pragma once
-#include "Platform/Vulkan/Renderer/LGLSLShader.h"
+#include <Platform/Vulkan/Renderer/LGLSLShader.h>
 #include <LCommon.h>
-#include <Platform/Vulkan/Renderer/LSpirVShader.h>
 #include <cstdint>
 #include <vector>
 #include <vulkan/vulkan_core.h>

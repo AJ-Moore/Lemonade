@@ -2,9 +2,9 @@
 #include <LCommon.h>
 #include <Util/Config.h>
 #include <memory>
-#include "Platform/Core/Renderer/Pipeline/LCamera.h"
-#include "Platform/Vulkan/Renderer/Pipeline/LViewport.h"
-#include "Util/Logger.h"
+#include <Platform/Core/Renderer/Pipeline/LCamera.h>
+#include <Platform/Vulkan/Renderer/Pipeline/LViewport.h>
+#include <Util/Logger.h>
 
 
 namespace Lemonade {
@@ -31,40 +31,12 @@ namespace Lemonade {
 
 	bool AWindow::Init() 
 	{
-		InitFramebuffer();
-
-//		auto input = UServiceLocator::getInstance()->getInputManager();
-//#ifdef RENDERER_OPENGL
-//		input->addBind(SDL_SCANCODE_F, &AWindow::ToggleFullscreen, this);
-//#endif
-
 		return true;
-	}
-
-	void AWindow::InitFramebuffer()
-	{
-		Logger::Log(Logger::INFO, "Initialising framebuffer.");
-		Rect<uint32> windowRect = m_windowRect;
-
-		//LogGLErrors();
-		//m_geometryBuffer = std::make_shared<URenderTarget>(glm::vec2(windowRect.Width, windowRect.Height));
-		//LogGLErrors();
-//
-		//m_geometryBuffer->setColourAttachments({ 
-		//	UColourAttachment::UP_COLOR_ATTACHMENT0, 
-		//	UColourAttachment::UP_COLOR_ATTACHMENT1, 
-		//	UColourAttachment::UP_COLOR_ATTACHMENT2, 
-		//	UColourAttachment::UP_COLOR_ATTACHMENT3, 
-		//	UColourAttachment::UP_COLOR_ATTACHMENT4,
-		//	UColourAttachment::UP_COLOR_ATTACHMENT5,
-		//	UColourAttachment::UP_COLOR_ATTACHMENT6 }, true);
-//
-		//m_geometryBuffer->addDepthAttachment();
 	}
 
 	void AWindow::ToggleFullscreen(bool value)
 	{
-		if (!value)
+		if (value == m_fullscreen)
 		{
 			return;
 		}
@@ -116,9 +88,6 @@ namespace Lemonade {
 	{
 		float depthRange = 1.0f / (float)m_cameras.size();
 		float index = 0; 
-
-		// Will break shadows.
-		//glDepthRange(index * depthRange, (index + 1) * depthRange);
 
 		for (auto& viewport : m_viewports)
 		{

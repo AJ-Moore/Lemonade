@@ -1,13 +1,13 @@
-#include "Platform/Core/Components/ModelLoader/LModel.h"
-#include "Platform/Core/Components/ModelLoader/LModelMesh.h"
-#include "Platform/Core/Renderer/Animation/Animation.h"
-#include "Platform/Core/Renderer/Materials/Material.h"
-#include "Platform/Core/Renderer/Materials/TextureType.h"
-#include "Platform/Core/Services/GraphicsServices.h"
-#include "Resources/ResourceHandle.h"
-#include "Spatial/Transform.h"
-#include "Util/Logger.h"
-#include "assimp/postprocess.h"
+#include <Platform/Core/Components/ModelLoader/LModel.h>
+#include <Platform/Core/Components/ModelLoader/LModelMesh.h>
+#include <Platform/Core/Renderer/Animation/Animation.h>
+#include <Platform/Core/Renderer/Materials/Material.h>
+#include <Platform/Core/Renderer/Materials/TextureType.h>
+#include <Platform/Core/Services/GraphicsServices.h>
+#include <Resources/ResourceHandle.h>
+#include <Spatial/Transform.h>
+#include <Util/Logger.h>
+#include <assimp/postprocess.h>
 #include <memory>
 #include <filesystem>
 #include <fstream>
@@ -16,7 +16,6 @@
 namespace Lemonade
 {
     using CitrusCore::Logger;
-
 
     void LModel::Init()
     {
@@ -56,12 +55,7 @@ namespace Lemonade
 		char* buffer = new char[length];
 		ifStream.read(buffer, length);
 
-		//json meta = json::parse(buffer);
-		//
-		//if (meta.contains("Meshes"))
-		//{
-		//
-		//}
+		//TODO
 	}
 
 	void LModel::SaveMeta()
@@ -177,10 +171,10 @@ namespace Lemonade
 				}
 			}
 
-			//mesh->setBones(bones);
-			//mesh->setAnimation(animationData);
-			//mesh->setBoneWeights(boneWeights);
-			//mesh->setBoneIds(boneIds);
+			mesh->SetBones(bones);
+			mesh->SetAnimation(animationData);
+			mesh->SetBoneWeights(boneWeights);
+			mesh->SetBoneIds(boneIds);
 
 			if (aimesh->mNumAnimMeshes)
 			{
@@ -420,55 +414,17 @@ namespace Lemonade
 						}
 					}
 				}
-				//else if (mat->init(materialPath))
-				//{
-				//	baseColour = mat->getBaseColour();
-				//	bMaterialFound = true;
-				//}
-				//else
-				//{
-				//	for (int i = 1; i < (int)UTextureType::Unknown; ++i)
-				//	{
-				//		if (material->GetTexture((aiTextureType)i, 0, &path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS)
-				//		{
-				//			mat->init("assets/materials/default.material");
-				//			mat->loadTexture(std::make_shared<UTextureData>((UTextureType)i, path.C_Str()));
-				//			LogGLErrors();
-				//			bMaterialFound = true;
-				//		}
-				//	}
-//
-					aiColor4D color;
-					material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-					baseColour = { color.r, color.g, color.b, color.a };
-//
-				//	if (bMaterialFound)
-				//	{
-				//		mat->init("assets/materials/default.material");
-				//		mat->setBaseColour(baseColour);
-				//		mat->getShader().setUniformVec4("baseColour", baseColour);
-				//		mat->save(materialPath);
-				//	}
-				//}
-//
-				//// Use colour material if no materials present on mesh (this is correct functionality)
-				if (!bMaterialFound)
-				{
-					//mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/defaultpbr.mat.json"); 
-					mat->GetResource()->SetBaseColour(baseColour);
-					//mat->getShader().setUniformVec4("baseColour", baseColour);
-					//mat->save(materialPath);
-				}
-//
+
+				aiColor4D color;
+				material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+				baseColour = { color.r, color.g, color.b, color.a };
+				mat->GetResource()->SetBaseColour(baseColour);
+
 				if (baseColour.a != 1)
 				{
+					// TODO
 					//entity->setRenderPriority((uint)URenderPriority::Transparent);
 				}
-			}
-			else
-			{
-				//mat->init("assets/materials/default.material");
-				//mat->getShader().setUniformVec4("baseColour", baseColour);
 			}
 
 			mesh->SetNormals(normals);
@@ -479,42 +435,19 @@ namespace Lemonade
 			//mesh->SetTangents(tangents);
 			//mesh->SetBiTangents(biTangents);
 
-			// Add collider experiment 
-			//if (m_filePath.find("mike.fbx") == std::string::npos)
-			//if (m_filePath.find("FpsProto.fbx") != std::string::npos)
-			//{		
-			//	if (mat->hasProperty("prop_physics"))
-			//	{
-			//		auto box = entity->addComponent<UNewtonBox>(glm::vec3(1,1,1));
-			//		SharedPtr<UNewtonBody> body = entity->addComponent<UNewtonBody>(box.get(), false, false);
-			//	}
-			//	else
-			//	{
-			//		SharedPtr<UNewtonTreeCollision> hull = entity->addComponent<UNewtonTreeCollision>(mesh);
-			//		SharedPtr<UNewtonBody> body = entity->addComponent<UNewtonBody>(hull.get(), true, false);
-			//	}
-			//}
-
-			// Uncomment for Everything has collisions... for now.
-			//if (mat->hasProperty("prop_physics_newton_tree"))
-			//{
-			//	SharedPtr<UNewtonTreeCollision> hull = entity->addComponent<UNewtonTreeCollision>(mesh);
-			//	SharedPtr<UNewtonBody> body = entity->addComponent<UNewtonBody>(hull.get(), true, false);
-			//}
-
 			//for (const std::string& component : mat->getUserComponents())
 			//{
 			//	SharedPtr<UComponent> comp = UpsilonEngine::UServiceLocator::getInstance()->getRTTI()->createFromString<UComponent>(component);
 			//	entity->addComponent(comp);
 			//}
+
 			entity->SetMaterial(mat);
             entity->SetMesh(mesh);
-            //entity->SetMaterial(mat);
 		}
 
 		//if (node->mMetaData)
 		//{
-		//	// Unclear is assimp has a way to import custom attributes exported from blender
+		//	// Unclear if assimp has a way to import custom attributes exported from blender
 		//	if (node->mMetaData->HasKey("Component"))
 		//	{
 		//		const char* componentName = "";
@@ -535,7 +468,7 @@ namespace Lemonade
 
 	void LModel::CreateModelFromData(LModelData* Model)
 	{
-		// Cameras ?
+		// TODO Cameras ?
 
 		// Meshes/ Materials
 		const aiScene* scene = m_modelData->Importer->GetScene();

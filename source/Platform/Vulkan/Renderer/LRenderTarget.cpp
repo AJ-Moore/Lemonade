@@ -1,5 +1,4 @@
-#include "Platform/Core/Time/Time.h"
-#include "Platform/Vulkan/Renderer/LRenderBlock.h"
+#include <Platform/Vulkan/Renderer/LRenderBlock.h>
 #include <Platform/Vulkan/Materials/Texture.h>
 #include <Platform/Core/Renderer/Pipeline/ARenderTarget.h>
 #include <Platform/Core/Services/GraphicsServices.h>
@@ -145,6 +144,8 @@ namespace Lemonade
         uint32_t currentFrame = activeWindow->GetCurrentFrame();
         LRenderTarget* activeTarget = static_cast<LRenderTarget*>(GraphicsServices::GetRenderer()->GetActiveRenderTarget());
 
+        std::vector<VkDescriptorSet> des;
+
         for (auto& descriptors : m_colourAttachmentDescriptors)
         {
             if (m_descriptorsDirty)
@@ -152,12 +153,15 @@ namespace Lemonade
                 UpdateDescriptorSet(descriptors.first);
             }
 
-            vkCmdBindDescriptorSets(activeTarget->GetCommandBuffer(),
-                VK_PIPELINE_BIND_POINT_GRAPHICS,
-                m_vkPipelineLayout,
-                0, 1, &descriptors.second,
-                0, nullptr);
+            des.push_back(descriptors.second);
         }
+
+
+        vkCmdBindDescriptorSets(activeTarget->GetCommandBuffer(),
+        VK_PIPELINE_BIND_POINT_GRAPHICS,
+        m_vkPipelineLayout,
+        0, des.size(), &des[0],
+        0, nullptr);
 
         m_descriptorsDirty = false;
     }
@@ -484,7 +488,6 @@ namespace Lemonade
         
         VkSemaphore semaphore = activeWindow->GetSemaphore();
         VkSemaphore timelineSemaphore = activeWindow->GetTimelineSemaphore();
-        //VkFence inFlightFrame = activeWindow->GetFence();
 
         uint64_t value = activeWindow->GetFrameSemaphoreTimelineValueAndIncrement();
         uint64_t nextValue = value + 1;
@@ -546,11 +549,6 @@ namespace Lemonade
             printf("vkQueueSubmit failed with error %d\n", result);
         }
 
-		//vkQueueWaitIdle(graphicsQueue);
-
-        // Wait until frame finished rendering.
-        //activeWindow->WaitForFence();
-
         uint64_t timeout = 100000000; // 100ms
         result = vkWaitForFences(device, 1, &m_inFlightFence[currentFrame], VK_TRUE, timeout);
 
@@ -572,7 +570,6 @@ namespace Lemonade
             Logger::Log(Logger::ERROR, "vkWaitForFences failed with error: %d", result);
         }
 
-        //vkWaitForFences(device, 1, &m_inFlightFence, VK_TRUE, UINT64_MAX);
         vkResetFences(device, 1, &m_inFlightFence[currentFrame]);
         
 
@@ -595,19 +592,6 @@ namespace Lemonade
                 printf("present failed with error %d\n", result);
             }
         }
-
-        //vkQueueSubmit(graphicsQueue, 0, nullptr, m_inFlightFence);
-//
-        //if (result != VK_SUCCESS) {
-        //    // Handle error — log it, abort, whatever
-        //    printf("vkQueueSubmit failed with error %d\n", result);
-        //}
-//
-        //vkWaitForFences(device, 1, &m_inFlightFence, VK_TRUE, UINT64_MAX);
-        //vkResetFences(device, 1, &m_inFlightFence);
-
-
-        //vkQueueWaitIdle(presentationQueue);
     }
 
     void LRenderTarget::blit(ARenderTarget& target)

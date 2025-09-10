@@ -10,11 +10,6 @@
 #define RENDERER_VULKAN
 //#define RENDERER_DX12
 
-// C++ Standard Library Includes
-#include <string>
-#include <memory>
-#include <vector>
-
 // Third Party Includes
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>

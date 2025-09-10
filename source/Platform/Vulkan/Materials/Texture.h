@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Platform/Core/Renderer/Materials/TextureUtils.h"
+#include <Platform/Core/Renderer/Materials/TextureUtils.h>
 #include <LCommon.h>
 
 #ifdef RENDERER_VULKAN

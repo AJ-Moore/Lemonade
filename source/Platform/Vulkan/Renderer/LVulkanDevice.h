@@ -11,7 +11,7 @@ namespace Lemonade
 	class LEMONADE_API LVulkanDevice : public LObject
 	{
 	public:
-		LVulkanDevice();
+		LVulkanDevice() = default;
 		virtual ~LVulkanDevice();
 
 		virtual bool Init() override;

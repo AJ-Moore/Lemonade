@@ -55,7 +55,7 @@ namespace Lemonade
 		int GetParentId() { return m_parentBoneId; }
 		glm::vec3 GetBoneOrigin() { return m_boneOrigin; }
 	private:
-		// Name of bone animation applies to?
+		// Name of bone animation applies to.
 		std::string m_boneName;
 		int m_boneId;
 		int m_parentBoneId;

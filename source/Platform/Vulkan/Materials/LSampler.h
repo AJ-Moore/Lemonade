@@ -1,7 +1,7 @@
 #pragma once 
 
-#include "LCommon.h"
-#include "Platform/Core/Renderer/Materials/ASampler.h"
+#include <LCommon.h>
+#include <Platform/Core/Renderer/Materials/ASampler.h>
 #include <vulkan/vulkan_core.h>
 
 namespace Lemonade 

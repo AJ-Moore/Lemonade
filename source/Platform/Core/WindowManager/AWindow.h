@@ -6,7 +6,6 @@
 #include <Platform/Core/LObject.h>
 #include <Platform/Core/Renderer/Pipeline/LCamera.h>
 #include <Platform/Core/Renderer/Pipeline/AViewport.h>
-#include <unordered_set>
 
 namespace Lemonade {
 
@@ -19,8 +18,8 @@ namespace Lemonade {
 		friend class LWindowManager; 
 		friend class LRenderer;
 	public: 
-		AWindow(){}
-		virtual ~AWindow(){}
+		AWindow() = default;
+		virtual ~AWindow() = default;
 		LCamera* GetActiveCamera() const;
 		void SetActiveCamera(LCamera* Camera);
 		void AddCamera(std::shared_ptr<LCamera> camera) { m_cameras[camera->GetUID().GetID()] = camera; }
@@ -51,10 +50,8 @@ namespace Lemonade {
 		CitrusCore::Rect<uint32> m_windowRect = CitrusCore::Rect<uint32>(50, 50, 800, 600);
 		std::string	m_windowCaption = "Game";
 	private:
-		void InitFramebuffer();
 		void SetParent(LWindowManager* windowManager) { m_windowManager = windowManager; }
 
-		/// The camera linked with this window, acts as a view into the scene
 		LCamera* m_viewCamera = nullptr;
 		LRenderer* m_renderer = nullptr;
 		LWindowManager* m_windowManager = nullptr; 
@@ -63,8 +60,5 @@ namespace Lemonade {
 		std::vector<std::shared_ptr<AViewport>> m_viewports;
 
 		std::shared_ptr<LCamera> m_postProcessingCamera;
-
-		// Render Target/ framebuffer 
-		//std::shared_ptr<ARenderTarget>  m_geometryBuffer;
 	};
 }

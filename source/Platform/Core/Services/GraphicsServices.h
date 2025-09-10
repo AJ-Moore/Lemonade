@@ -1,8 +1,8 @@
 #pragma once
 
 #include <Platform/Core/WindowManager/LWindowManager.h>
-#include "Platform/Core/Resources/GraphicsResources.h"
-#include "Services/Services.h"
+#include <Platform/Core/Resources/GraphicsResources.h>
+#include <Services/Services.h>
 #include <Platform/Core/LObject.h>
 #include <LCommon.h>
 #include <Platform/Core/Time/Time.h>
