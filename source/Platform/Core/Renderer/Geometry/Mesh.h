@@ -1,5 +1,6 @@
 #pragma once 
 
+#include "Platform/Core/Renderer/Animation/BoneAnim.h"
 #include <LCommon.h>
 #include <memory>
 #include <vector>
@@ -52,6 +53,7 @@ namespace Lemonade
 		const std::shared_ptr<std::vector<glm::vec4>> GetBoneWeights() const { return m_boneWeights; }
 		const std::shared_ptr<std::vector<glm::vec4>> GetBoneIds() const { return m_boneIds; }
 
+		std::shared_ptr<LAnimation> GetAnimation(int index) { return m_animationsRef->at(index);}
 		size_t GetVertexBufferSize() { return (m_vertices) ? m_vertices->size() * Vec3Size() : 0; }
 		size_t GetTextureBufferSize() { return (m_uvs) ? m_uvs->size() * 2 : 0; }
 		size_t GetTexture3dBufferSize() { return (m_uvs3d) ? m_uvs3d->size() * Vec3Size() : 0; }
@@ -68,6 +70,8 @@ namespace Lemonade
 		size_t GetColourSize() { return (m_colours) ? m_colours->size() : 0; }
 		size_t GetTangentSize() { return (m_tangents) ? m_tangents->size() : 0; }
 		size_t GetBiTangentSize() { return (m_bitangents) ? m_bitangents->size() : 0; }
+		size_t GetBoneCount() { return m_bones == nullptr ? 0 : m_bones->size(); }
+		size_t GetAnimationCount() { return m_animationsRef == nullptr ? 0 : m_animationsRef->size();}
 	private:
 		void GenerateTangents();
 

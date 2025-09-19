@@ -12,9 +12,10 @@ namespace Lemonade
 	public:
 		LAnimation(std::string name, double duration, double ticksPerSecond);
 		void AddBoneAnimation(std::shared_ptr<LBoneAnim> animation) { m_boneAnimations.push_back(animation); }
-		const std::vector<std::shared_ptr<LBoneAnim>>& getBoneAnimations() { return m_boneAnimations; }
+		const std::vector<std::shared_ptr<LBoneAnim>>& GetBoneAnimations() { return m_boneAnimations; }
 		double GetDuration() { return m_duration; }
 		double GetTicksPerSecond() { return m_ticksPerSecond; }
+		double GetAnimationTime(float timeElapsedSeconds);
 	private:
 		// Name of mesh to be animated, name is passed to shader to identify mesh.
 		std::string m_name;

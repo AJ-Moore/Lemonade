@@ -24,6 +24,8 @@ namespace Lemonade
 
     void LModel::Update()
     {
+		float delta = Lemonade::GraphicsServices::GetTime()->GetDeltaTime();
+		
         m_root->Update();
     }
 
@@ -104,7 +106,47 @@ namespace Lemonade
 		{
 			LoadMeta();
 			CreateModelFromData(m_modelData.get());
+			CreateBoneHierarchy();
 			SaveMeta();
+		}
+	}
+
+	void LModel::UpdateAnimation(const LBone& bone, glm::mat4& parentTransform)
+	{
+		glm::mat4 globalTransform = parentTransform * bone.GetBoneMatrix();
+		m_boneMatrices[bone.GetBoneId()] = globalTransform * bone.GetOffsetMatrix();
+
+		for (auto& child : bone.GetChildren()) {
+			UpdateAnimation(*child.second, globalTransform);
+		}
+	}
+
+	void LModel::UpdateAnimation(LAnimation* animation, float timeInSeconds)
+	{
+		m_boneMatrices.resize(animation->GetBoneAnimations().size());
+		float ticks = animation->GetAnimationTime(timeInSeconds);
+
+		for (auto& boneAnim : animation->GetBoneAnimations())
+		{
+			m_skeleton[boneAnim->GetId()]->SetBoneMatrix(boneAnim->GetBoneMatrixForAnimTime(timeInSeconds));
+		}
+	}
+
+	void LModel::CreateBoneHierarchy()
+	{
+		for (auto& bone : m_skeleton)
+		{
+			int parentid = bone.second->GetParentBoneId();
+
+			if (parentid == -1)
+			{
+				m_rootBoneId = bone.second->GetBoneId();
+			}
+
+			if (m_skeleton.contains(parentid))
+			{
+				m_skeleton[parentid]->AddChild(bone.second);
+			}
 		}
 	}
 
@@ -213,7 +255,6 @@ namespace Lemonade
 						bone->mOffsetMatrix.a4, bone->mOffsetMatrix.b4, bone->mOffsetMatrix.c4, bone->mOffsetMatrix.d4
 					);
 
-
 					ubone->SetOffsetMatrix(ConvertMatrixToGLMFormat(bone->mOffsetMatrix));
 					//ubone->setOffsetMatrix(offsetMatrix);
 
@@ -247,6 +288,7 @@ namespace Lemonade
 
 					ubone->SetWeights(weights);
 					bones->push_back(ubone);
+					m_skeleton[ubone->GetBoneId()] = ubone;				
 				}
 			}
 

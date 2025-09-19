@@ -117,6 +117,7 @@ namespace Lemonade
 		void CreateVkPipeline();
 		void CreateVkDescriptors();
 		std::vector<LVKBuffer> m_uniformBuffers;
+		std::vector<LVKBuffer> m_boneMatBuffer;
 		std::vector<VkDescriptorSet> m_descriptorSets;
 
 		// Vertex Input

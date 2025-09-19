@@ -33,6 +33,7 @@ namespace Lemonade
 	bool LRenderBlock::Init()
 	{
 		m_uniformBuffers.resize(LRenderTarget::MAX_FRAMES_IN_FLIGHT);
+		m_boneMatBuffer.resize(LRenderTarget::MAX_FRAMES_IN_FLIGHT);
 		m_descriptorSets.resize(LRenderTarget::MAX_FRAMES_IN_FLIGHT);
 		
 		// 1x1 Colors for quiet defaults
@@ -75,7 +76,7 @@ namespace Lemonade
 	{
 		if (m_animationBufferDirty)
 		{
-			///dumpAnimationData();
+			DumpAnimationData();
 			m_animationBufferDirty = false;
 		}
 
@@ -142,6 +143,18 @@ namespace Lemonade
 
 	void LRenderBlock::DumpAnimationData()
 	{
+		int currentFrame = GraphicsServices::GetWindowManager()->GetActiveWindow()->GetCurrentFrame();
+
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = m_boneMatBuffer[currentFrame].Buffer;
+		bufferInfo.offset = 0;
+
+		// cpy mem here
+		void* data;
+	vkMapMemory(device, boneBufferMemory, 0, bufferInfo.size, 0, &data);
+	memcpy(data, bones.data(), bufferInfo.size); // bones is std::vector<glm::mat4>
+	vkUnmapMemory(device, boneBufferMemory);
+
 	}
 
 	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
@@ -246,7 +259,7 @@ namespace Lemonade
 			m_vertexBuffers[VKBufferType::BiTangents].Format = VK_FORMAT_R32G32B32_SFLOAT;
 		}
 
-		if (m_mesh->GetBoneWeights() != nullptr)
+		if (m_mesh->GetWeightBufferSize() > 0)
 		{
 			m_vertexBuffers[VKBufferType::BoneWeights].DataCPUMapped = static_cast<void*>(glm::value_ptr(m_mesh->GetBoneWeights()->front()));
 			m_vertexBuffers[VKBufferType::BoneWeights].DataSize = weightSize * sizeof(float);
@@ -255,7 +268,7 @@ namespace Lemonade
 			m_vertexBuffers[VKBufferType::BoneWeights].Format = VK_FORMAT_R32G32B32A32_SFLOAT;
 		}
 
-		if (m_mesh->GetBoneIds() != nullptr)
+		if (m_mesh->GetBoneIdBufferSize() > 0)
 		{
 			m_vertexBuffers[VKBufferType::BoneIds].DataCPUMapped = static_cast<void*>(glm::value_ptr(m_mesh->GetBoneIds()->front()));
 			m_vertexBuffers[VKBufferType::BoneIds].DataSize = boneIdSize * sizeof(float);
@@ -268,7 +281,6 @@ namespace Lemonade
 		m_attributeDescriptions.clear(); 
 		m_bindingDescriptions.clear();
 
-		//for (auto& vertexBuffer : m_vertexBuffers)
 		for (VKBufferType bufferType : m_bufferOrder)
 		{
 			auto& vertexBuffer = m_vertexBuffers[bufferType];
@@ -440,6 +452,43 @@ namespace Lemonade
 	void LRenderBlock::CreateVkDescriptors()
 	{
 		const LVulkanDevice& device = GraphicsServices::GetContext()->GetVulkanDevice();
+
+		int numBones = m_mesh->GetBoneCount();
+
+		// Bone matrices storage buffer
+		for (auto& boneBuffer : m_boneMatBuffer)
+		{
+			if (boneBuffer.Buffer == VK_NULL_HANDLE)
+			{
+				VkBufferCreateInfo createInfo{};
+				createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+				createInfo.size = sizeof(glm::mat4) * numBones;
+				createInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+				createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+			
+				if (vkCreateBuffer(device.GetVkDevice(), &createInfo, nullptr, &boneBuffer.Buffer) != VK_SUCCESS) {
+					throw std::runtime_error("failed to create bone buffers!");
+				}
+			}
+
+			VkMemoryRequirements memRequirements;
+			vkGetBufferMemoryRequirements(device.GetVkDevice(), boneBuffer.Buffer, &memRequirements);
+
+			VkMemoryAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+			allocInfo.allocationSize = memRequirements.size;
+			allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+			if (vkAllocateMemory(device.GetVkDevice(), &allocInfo, nullptr, &boneBuffer.VKDeviceMemory) != VK_SUCCESS) {
+				throw std::runtime_error("failed to allocate bone buffer memory!");
+			}
+
+			vkBindBufferMemory(device.GetVkDevice(), boneBuffer.Buffer, boneBuffer.VKDeviceMemory, 0);
+			boneBuffer.DataSize = sizeof(glm::mat4) * numBones;
+			vkMapMemory(device.GetVkDevice(), boneBuffer.VKDeviceMemory, 0, boneBuffer.DataSize, 0, &boneBuffer.DataGPUMapped);
+			boneBuffer.DataCPUMapped = &m_mesh->ani;
+			std::memcpy(boneBuffer.DataGPUMapped, boneBuffer.DataCPUMapped, boneBuffer.DataSize);
+		}
 
 		// Allocate Unifrom buffer memory 
 		for (auto& uniformBuffer : m_uniformBuffers)

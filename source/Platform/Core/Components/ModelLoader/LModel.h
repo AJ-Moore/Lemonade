@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Platform/Core/Renderer/Animation/Bone.h"
 #include <assimp/Importer.hpp>
 #include <LCommon.h>
 #include <Platform/Core/Components/ModelLoader/LModelMesh.h>
@@ -39,7 +40,7 @@ namespace Lemonade
 		virtual void UnloadResource() override{};
 
 	private:
-		/// Model data from assimp.
+	    std::unordered_map<int, std::shared_ptr<LBone>> m_skeleton;
         std::shared_ptr<LModelMesh> m_root;
 		std::shared_ptr<LModelData> m_modelData;
 		uint m_customFlags = aiProcess_PreTransformVertices;
@@ -55,7 +56,13 @@ namespace Lemonade
 		void LoadModel();
 		void CreateMesh(LModelMesh* parent, aiNode*);
 		void CreateModelFromData(LModelData* Model);
+		void CreateBoneHierarchy();
 		int GetBoneId(std::string boneName);
+
+		void UpdateAnimation(LAnimation* animation, float timeInSeconds);
+		void UpdateAnimation(const LBone& bone, glm::mat4& parentTransform);
+		std::vector<glm::mat4> m_boneMatrices;
+		int m_rootBoneId;
 
 		std::vector<std::shared_ptr<LAnimation>> m_animationData;
 		std::unordered_map<std::string, int> m_boneIdMap;
