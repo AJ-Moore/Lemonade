@@ -27,8 +27,8 @@ namespace Lemonade
 		void SetWeights(std::shared_ptr<std::vector<UVertexWeight>> weights) { m_weights = weights; }
 		int GetBoneId() const { return m_boneId; }
 		int GetParentBoneId() const { return m_parentBoneId; }
-		glm::mat4 GetOffsetMatrix() const { return m_boneMatrix; }
-		glm::mat4 GetBoneMatrix() const { return m_offsetMatrix; }
+		glm::mat4 GetOffsetMatrix() const { return m_offsetMatrix; }
+		glm::mat4 GetBoneMatrix() const { return m_boneMatrix; }
 		void AddChild(std::shared_ptr<LBone>);
 		void RemoveChild(int id);
 

@@ -1,6 +1,7 @@
 #include <Platform/Core/Components/LMeshRenderer.h>
 #include <Spatial/Transform.h>
 #include <Platform/Core/Components/ModelLoader/LModelMesh.h>
+#include <memory>
 
 namespace Lemonade
 {
@@ -10,11 +11,24 @@ namespace Lemonade
         SetTransform(transform);
     }
 
-
-    bool LModelMesh::Init()
+    LModelNode::LModelNode(std::string meshName, std::shared_ptr<CitrusCore::Transform> transform)
     {
-        if (m_mesh != nullptr)
-            LMeshRenderer::Init();
+        SetName(meshName);
+        SetTransform(transform);
+    }
+
+    void LModelNode::AddMeshRenderer(std::shared_ptr<Lemonade::LMeshRenderer> mesh)
+    {
+        mesh->SetTransform(m_transform);
+        m_meshes.insert(mesh);
+    }
+
+    bool LModelNode::Init()
+    {
+        for (auto& mr : m_meshes)
+        {
+            mr->Init();
+        }
 
         for (auto& child : m_children)
         {
@@ -23,40 +37,37 @@ namespace Lemonade
         return true;
     }
 
-    void LModelMesh::Update()
+    void LModelNode::Update()
     {
-        if (m_mesh != nullptr)
-            LMeshRenderer::Update();
-
+        for (auto& mr : m_meshes)
+        {
+            mr->Update();
+        }
         for (auto& child : m_children)
         {
             child->Update();
         }
     }
 
-    void LModelMesh::Render()
+    void LModelNode::Render()
     {
-        if (m_mesh != nullptr)
-            LMeshRenderer::Render();
-
+        for (auto& mr : m_meshes)
+        {
+            mr->Render();
+        }
         for (auto& child : m_children)
         {
             child->Render();
         }
     }
 
-    void LModelMesh::SetMesh(std::shared_ptr<Mesh> mesh)
-    {
-        LMeshRenderer::SetMesh(mesh);
-    }
-
-    void LModelMesh::AddChild(std::shared_ptr<LModelMesh> child)
+    void LModelNode::AddChild(std::shared_ptr<LModelNode> child)
     {
         m_children.insert(child);
         CitrusCore::Transform::MakeParent(child->m_transform,m_transform);
     }
 
-    void LModelMesh::RemoveChild(std::shared_ptr<LModelMesh> child)
+    void LModelNode::RemoveChild(std::shared_ptr<LModelNode> child)
     {
         m_children.erase(child);
         m_transform->RemoveChild(child->m_transform.get());

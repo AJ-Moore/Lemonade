@@ -63,20 +63,23 @@ namespace Lemonade
 	void LRenderBlock::Unload()
 	{
 		const LVulkanDevice& device = GraphicsServices::GetContext()->GetVulkanDevice();
-		//vkDestroyBuffer(device.GetVkDevice(), m_vertexBuffer, nullptr);
+		int currentFrame = GraphicsServices::GetWindowManager()->GetActiveWindow()->GetCurrentFrame();
 
 		for (auto& vertexBuffer : m_vertexBuffers)
 		{
 			vkUnmapMemory(device.GetVkDevice(), vertexBuffer.second.VKDeviceMemory);
 			vkDestroyBuffer(device.GetVkDevice(), vertexBuffer.second.Buffer, nullptr);
 		}
+
+		vkUnmapMemory(device.GetVkDevice(), m_boneMatBuffer[currentFrame].VKDeviceMemory);
+		vkDestroyBuffer(device.GetVkDevice(), m_boneMatBuffer[currentFrame].Buffer, nullptr);
 	}
 
 	void LRenderBlock::Update()
 	{
 		if (m_animationBufferDirty)
 		{
-			DumpAnimationData();
+			//DumpAnimationData();
 			m_animationBufferDirty = false;
 		}
 
@@ -143,18 +146,14 @@ namespace Lemonade
 
 	void LRenderBlock::DumpAnimationData()
 	{
+		const LVulkanDevice& device = GraphicsServices::GetContext()->GetVulkanDevice();
 		int currentFrame = GraphicsServices::GetWindowManager()->GetActiveWindow()->GetCurrentFrame();
 
-		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = m_boneMatBuffer[currentFrame].Buffer;
-		bufferInfo.offset = 0;
+		LVKBuffer boneBuffer = m_boneMatBuffer[currentFrame];
 
 		// cpy mem here
-		void* data;
-	vkMapMemory(device, boneBufferMemory, 0, bufferInfo.size, 0, &data);
-	memcpy(data, bones.data(), bufferInfo.size); // bones is std::vector<glm::mat4>
-	vkUnmapMemory(device, boneBufferMemory);
-
+		boneBuffer.DataCPUMapped = static_cast<void*>(m_mesh->GetBoneMatrix().get()->data());
+		std::memcpy(boneBuffer.DataGPUMapped, boneBuffer.DataCPUMapped, boneBuffer.DataSize);
 	}
 
 	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
@@ -261,7 +260,7 @@ namespace Lemonade
 
 		if (m_mesh->GetWeightBufferSize() > 0)
 		{
-			m_vertexBuffers[VKBufferType::BoneWeights].DataCPUMapped = static_cast<void*>(glm::value_ptr(m_mesh->GetBoneWeights()->front()));
+			m_vertexBuffers[VKBufferType::BoneWeights].DataCPUMapped = static_cast<void*>(m_mesh->GetBoneWeights()->data());
 			m_vertexBuffers[VKBufferType::BoneWeights].DataSize = weightSize * sizeof(float);
 			m_vertexBuffers[VKBufferType::BoneWeights].Stride = sizeof(glm::vec4);
 			m_vertexBuffers[VKBufferType::BoneWeights].Binding = binding++;
@@ -270,7 +269,7 @@ namespace Lemonade
 
 		if (m_mesh->GetBoneIdBufferSize() > 0)
 		{
-			m_vertexBuffers[VKBufferType::BoneIds].DataCPUMapped = static_cast<void*>(glm::value_ptr(m_mesh->GetBoneIds()->front()));
+			m_vertexBuffers[VKBufferType::BoneIds].DataCPUMapped = static_cast<void*>(m_mesh->GetBoneIds()->data());
 			m_vertexBuffers[VKBufferType::BoneIds].DataSize = boneIdSize * sizeof(float);
 			m_vertexBuffers[VKBufferType::BoneIds].Stride = sizeof(glm::vec4);
 			m_vertexBuffers[VKBufferType::BoneIds].Binding = binding++;
@@ -349,17 +348,26 @@ namespace Lemonade
 		LCamera* activeCamera = GraphicsServices::GetRenderer()->GetActiveCamera();
 		int currentFrame = GraphicsServices::GetWindowManager()->GetActiveWindow()->GetCurrentFrame();
 
+		// Vertex data - uniform buffer
 		VkDescriptorBufferInfo bufferInfo{};
 		bufferInfo.buffer = m_uniformBuffers[currentFrame].Buffer;
 		bufferInfo.offset = 0;
 		bufferInfo.range = sizeof(VertexData);
 
+		// Bone matrices(animation) - storage buffer 
+		LVKBuffer boneBuffer = m_boneMatBuffer[currentFrame];
+		VkDescriptorBufferInfo boneBufferInfo{};
+		boneBufferInfo.buffer = m_boneMatBuffer[currentFrame].Buffer;
+		boneBufferInfo.offset = 0;
+		boneBufferInfo.range = m_boneMatBuffer[currentFrame].DataSize;
+
 		std::vector<VkWriteDescriptorSet> writes;
+		int bindLocation = 0;
 
 		VkWriteDescriptorSet uniformBufferWrite{};
 		uniformBufferWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		uniformBufferWrite.dstSet = m_descriptorSets[currentFrame];
-		uniformBufferWrite.dstBinding = 0;
+		uniformBufferWrite.dstBinding = bindLocation++;
 		uniformBufferWrite.dstArrayElement = 0;
 		uniformBufferWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		uniformBufferWrite.descriptorCount = 1;
@@ -376,15 +384,28 @@ namespace Lemonade
 		writes.push_back(uniformBufferWrite);
 		int sampleBindLocation = 0;
 
+		// Write bones s
+		if (m_mesh->GetBoneCount())
+		{
+			VkWriteDescriptorSet boneDescriptor{};
+			boneDescriptor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			boneDescriptor.dstSet = m_descriptorSets[currentFrame];
+			boneDescriptor.dstBinding = bindLocation++;
+			boneDescriptor.dstArrayElement = 0;
+			boneDescriptor.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			boneDescriptor.descriptorCount = 1;
+			boneDescriptor.pBufferInfo = &boneBufferInfo;
+			writes.push_back(boneDescriptor);
+		}
+
 		// Think twice this is to keep what would otherwise be locally allocated variables alive until  we update the descriptor set.
 		std::vector<VkDescriptorImageInfo> imageInfos;
 
-		int uniformCount = 1; 
 		int samplerCount = m_material->GetResource()->GetSamplers().size();
 		int textureCount = m_material->GetResource()->GetTextures().size();
 
 		// reserve to prevent segfault, we rely on pointers that may otherwise change when vector is resized behind the scenes
-		imageInfos.reserve(uniformCount + samplerCount + textureCount);
+		imageInfos.reserve(samplerCount + textureCount);
 
 		LSampler* dummy = static_cast<LSampler*>(m_material->GetResource()->GetSamplers().begin()->get());
 
@@ -402,7 +423,7 @@ namespace Lemonade
 			VkWriteDescriptorSet writeSampler = {};
 			writeSampler.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			writeSampler.dstSet = m_descriptorSets[currentFrame];
-			writeSampler.dstBinding = 1;
+			writeSampler.dstBinding = bindLocation++;
 			writeSampler.dstArrayElement = sampleBindLocation;
 			writeSampler.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
 			writeSampler.descriptorCount = 1;
@@ -413,7 +434,7 @@ namespace Lemonade
 		for (const auto& texture : m_material->GetResource()->GetTextures())
 		{
 			Texture* tex = static_cast<Texture*>(texture.second->GetTexture()->GetResource());
-			uint32_t bindLocation = texture.second->GetBindLocation();
+			uint32_t textureBindLocation = texture.second->GetBindLocation();
 
 			// Imaage View
 			imageInfos.push_back({
@@ -436,7 +457,7 @@ namespace Lemonade
 			VkWriteDescriptorSet writeImage = {};
 			writeImage.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			writeImage.dstSet = m_descriptorSets[currentFrame];
-			writeImage.dstBinding = bindLocation;
+			writeImage.dstBinding = textureBindLocation;
 			writeImage.dstArrayElement = 0;
 			writeImage.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			writeImage.descriptorCount = 1;
@@ -444,6 +465,13 @@ namespace Lemonade
 
 			writes.push_back(writeImage);
 		}                
+
+		// Copy anim mats 
+		if (m_mesh->GetBoneCount())
+		{
+			boneBuffer.DataCPUMapped = static_cast<void*>(m_mesh->GetBoneMatrix().get()->data());
+			std::memcpy(boneBuffer.DataGPUMapped, boneBuffer.DataCPUMapped, boneBuffer.DataSize);
+		}
 
 		std::memcpy(m_uniformBuffers[currentFrame].DataGPUMapped, m_uniformBuffers[currentFrame].DataCPUMapped, m_uniformBuffers[currentFrame].DataSize);
 		vkUpdateDescriptorSets(device.GetVkDevice(), writes.size(), writes.data(), 0, nullptr);
@@ -456,38 +484,42 @@ namespace Lemonade
 		int numBones = m_mesh->GetBoneCount();
 
 		// Bone matrices storage buffer
-		for (auto& boneBuffer : m_boneMatBuffer)
+		if (numBones > 0)
 		{
-			if (boneBuffer.Buffer == VK_NULL_HANDLE)
+			for (auto& boneBuffer : m_boneMatBuffer)
 			{
-				VkBufferCreateInfo createInfo{};
-				createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-				createInfo.size = sizeof(glm::mat4) * numBones;
-				createInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-				createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-			
-				if (vkCreateBuffer(device.GetVkDevice(), &createInfo, nullptr, &boneBuffer.Buffer) != VK_SUCCESS) {
-					throw std::runtime_error("failed to create bone buffers!");
+				if (boneBuffer.Buffer == VK_NULL_HANDLE)
+				{
+					VkBufferCreateInfo createInfo{};
+					createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+					// ensure size is min of 1, dummy mat4 identity when bones is 0 
+					createInfo.size = sizeof(glm::mat4) * std::max(1, numBones);
+					createInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+					createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+				
+					if (vkCreateBuffer(device.GetVkDevice(), &createInfo, nullptr, &boneBuffer.Buffer) != VK_SUCCESS) {
+						throw std::runtime_error("failed to create bone buffers!");
+					}
 				}
+	
+				VkMemoryRequirements memRequirements;
+				vkGetBufferMemoryRequirements(device.GetVkDevice(), boneBuffer.Buffer, &memRequirements);
+	
+				VkMemoryAllocateInfo allocInfo{};
+				allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+				allocInfo.allocationSize = memRequirements.size;
+				allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+	
+				if (vkAllocateMemory(device.GetVkDevice(), &allocInfo, nullptr, &boneBuffer.VKDeviceMemory) != VK_SUCCESS) {
+					throw std::runtime_error("failed to allocate bone buffer memory!");
+				}
+	
+				vkBindBufferMemory(device.GetVkDevice(), boneBuffer.Buffer, boneBuffer.VKDeviceMemory, 0);
+				boneBuffer.DataSize = sizeof(glm::mat4) * std::max(1, numBones);
+				vkMapMemory(device.GetVkDevice(), boneBuffer.VKDeviceMemory, 0, boneBuffer.DataSize, 0, &boneBuffer.DataGPUMapped);
+				boneBuffer.DataCPUMapped = static_cast<void*>(m_mesh->GetBoneMatrix().get()->data());
+				std::memcpy(boneBuffer.DataGPUMapped, boneBuffer.DataCPUMapped, boneBuffer.DataSize);
 			}
-
-			VkMemoryRequirements memRequirements;
-			vkGetBufferMemoryRequirements(device.GetVkDevice(), boneBuffer.Buffer, &memRequirements);
-
-			VkMemoryAllocateInfo allocInfo{};
-			allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-			allocInfo.allocationSize = memRequirements.size;
-			allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-			if (vkAllocateMemory(device.GetVkDevice(), &allocInfo, nullptr, &boneBuffer.VKDeviceMemory) != VK_SUCCESS) {
-				throw std::runtime_error("failed to allocate bone buffer memory!");
-			}
-
-			vkBindBufferMemory(device.GetVkDevice(), boneBuffer.Buffer, boneBuffer.VKDeviceMemory, 0);
-			boneBuffer.DataSize = sizeof(glm::mat4) * numBones;
-			vkMapMemory(device.GetVkDevice(), boneBuffer.VKDeviceMemory, 0, boneBuffer.DataSize, 0, &boneBuffer.DataGPUMapped);
-			boneBuffer.DataCPUMapped = &m_mesh->ani;
-			std::memcpy(boneBuffer.DataGPUMapped, boneBuffer.DataCPUMapped, boneBuffer.DataSize);
 		}
 
 		// Allocate Unifrom buffer memory 
@@ -528,35 +560,46 @@ namespace Lemonade
 			std::memcpy(uniformBuffer.DataGPUMapped, uniformBuffer.DataCPUMapped, uniformBuffer.DataSize);
 		}
 
+		int bindLocation = 0;
+		std::vector<VkDescriptorSetLayoutBinding> bindings;
+
 		VkDescriptorSetLayoutBinding uboLayoutBinding{};
-		uboLayoutBinding.binding = 0;
+		uboLayoutBinding.binding = bindLocation++;
 		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		uboLayoutBinding.descriptorCount = 1; 
 		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		uboLayoutBinding.pImmutableSamplers = nullptr;   
+		bindings.push_back(uboLayoutBinding);
+
+		if (m_mesh->GetBoneCount())
+		{
+			VkDescriptorSetLayoutBinding boneLayoutBinding{};
+			boneLayoutBinding.binding = bindLocation++;
+			boneLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			boneLayoutBinding.descriptorCount = 1;
+			boneLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			boneLayoutBinding.pImmutableSamplers = nullptr;
+			bindings.push_back(boneLayoutBinding);
+		}
 
 		// Todo add support for multiple samplers
 		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-		samplerLayoutBinding.binding = 1; 
+		samplerLayoutBinding.binding = bindLocation++; 
 		samplerLayoutBinding.descriptorCount = 1;
 		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
 		samplerLayoutBinding.pImmutableSamplers = nullptr;
 		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-		std::vector<VkDescriptorSetLayoutBinding> bindings = {
-			uboLayoutBinding,
-			samplerLayoutBinding
-		};
+		bindings.push_back(samplerLayoutBinding);
 
 		LSampler* dummy = static_cast<LSampler*>(m_material->GetResource()->GetSamplers().begin()->get());
 
 		for (const auto& texture : m_material->GetResource()->GetTextures())
 		{
 			Texture* tex = static_cast<Texture*>(texture.second->GetTexture()->GetResource());
-			uint32_t bindLocation = texture.second->GetBindLocation();
+			uint32_t texturebindLocation = texture.second->GetBindLocation();
 
 			VkDescriptorSetLayoutBinding imageLayoutBinding{};
-			imageLayoutBinding.binding = bindLocation;
+			imageLayoutBinding.binding = texturebindLocation;
 			imageLayoutBinding.descriptorCount = 1;
 			imageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			imageLayoutBinding.pImmutableSamplers = nullptr;
@@ -590,12 +633,16 @@ namespace Lemonade
 			{
                 .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                 .descriptorCount = 100
+            },
+			{
+                .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                .descriptorCount = 100
             }
         };
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		poolInfo.poolSizeCount = 3;
+		poolInfo.poolSizeCount = 4;
 		poolInfo.pPoolSizes = poolSize;
 		poolInfo.maxSets = 100;
 

@@ -1,3 +1,4 @@
+#include "Platform/Core/Components/LMeshRenderer.h"
 #include <Platform/Core/Components/ModelLoader/LModel.h>
 #include <Platform/Core/Components/ModelLoader/LModelMesh.h>
 #include <Platform/Core/Renderer/Animation/Animation.h>
@@ -8,6 +9,7 @@
 #include <Spatial/Transform.h>
 #include <Util/Logger.h>
 #include <assimp/postprocess.h>
+#include <glm/fwd.hpp>
 #include <memory>
 #include <filesystem>
 #include <fstream>
@@ -25,7 +27,12 @@ namespace Lemonade
     void LModel::Update()
     {
 		float delta = Lemonade::GraphicsServices::GetTime()->GetDeltaTime();
-		
+
+		if (m_animationData.size() > 0)
+		{
+			UpdateAnimation(m_animationData[0].get(), delta);
+		}
+
         m_root->Update();
     }
 
@@ -73,18 +80,22 @@ namespace Lemonade
 			importFlags |
 			aiProcess_CalcTangentSpace |
 			aiProcess_Triangulate |
-			aiProcess_JoinIdenticalVertices |
+			// Can break skinning? -> do if non skinned mesh?
+			//aiProcess_JoinIdenticalVertices |
 
-			// Should this be disabled for animations?
-			aiProcess_PreTransformVertices |
-			 
+			////aiProcess_LimitBoneWeights |
+
+			//// Should this be disabled for animations? Yes! -> do if not skinned?
+			//aiProcess_PreTransformVertices |
+			// 
 			//aiProcess_GenUVCoords |
-			//aiProcessPreset_TargetRealtime_Quality |
+			////aiProcessPreset_TargetRealtime_Quality |
 			aiProcess_PopulateArmatureData |
 			//aiProcess_MakeLeftHanded |
 			aiProcess_ValidateDataStructure |
 			aiProcess_GlobalScale |
-			aiProcess_SortByPType);
+			aiProcess_SortByPType
+		);
 
 		if (!scene)
 		{
@@ -100,6 +111,7 @@ namespace Lemonade
 
 	void LModel::LoadModel()
 	{
+		m_boneMatrices = std::make_shared<std::vector<glm::mat4>>();
 		m_modelData =LoadAssimpModelData(m_filePath, m_customFlags);
 
 		if (m_modelData != nullptr)
@@ -111,25 +123,58 @@ namespace Lemonade
 		}
 	}
 
-	void LModel::UpdateAnimation(const LBone& bone, glm::mat4& parentTransform)
+	void LModel::UpdateAnimation(LAnimation* animation, const LModelNode& node, glm::mat4 parentTransform)
 	{
-		glm::mat4 globalTransform = parentTransform * bone.GetBoneMatrix();
-		m_boneMatrices[bone.GetBoneId()] = globalTransform * bone.GetOffsetMatrix();
-
-		for (auto& child : bone.GetChildren()) {
-			UpdateAnimation(*child.second, globalTransform);
+		glm::mat4 nodeTransform = node.GetTransform(); // static bind-pose
+		glm::mat4 keyframeTransform = glm::mat4(1.0f);
+		
+		auto it = m_boneIdMap.find(node.GetName());
+		if (it != m_boneIdMap.end())
+		{
+			LBone* bone = m_skeleton[it->second].get();
+			keyframeTransform = bone->GetBoneMatrix(); // local keyframe
 		}
+		
+		// compute global transform for this node
+		glm::mat4 globalTransform = parentTransform * nodeTransform;//* keyframeTransform;
+		
+		// if this node is a bone, write final matrix
+		if (it != m_boneIdMap.end())
+		{
+			LBone* bone = m_skeleton[it->second].get();
+			glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 10.0f, 10.0f));
+			(*m_boneMatrices)[bone->GetBoneId()] = scaleMatrix * m_globalInverseRoot * globalTransform * bone->GetOffsetMatrix();
+		}
+		
+		for (const std::shared_ptr<LModelNode>& child : node.GetChildren())
+		{
+			UpdateAnimation(animation, *child.get(), globalTransform);
+		}
+		//glm::mat4 globalTransform = parentTransform * bone.GetBoneMatrix();
+		//(*m_boneMatrices)[bone.GetBoneId()] = globalTransform * bone.GetOffsetMatrix();
+//
+		//for (auto& child : bone.GetChildren()) {
+		//	UpdateAnimation(*child.second, globalTransform);
+		//}
 	}
 
 	void LModel::UpdateAnimation(LAnimation* animation, float timeInSeconds)
 	{
-		m_boneMatrices.resize(animation->GetBoneAnimations().size());
+		(*m_boneMatrices).resize(m_boneIdMap.size());
+		
+		for (int i = 0; i < m_boneIdMap.size(); ++i)
+		{
+			(*m_boneMatrices)[i] = glm::mat4(1.0f);
+		}
+
 		float ticks = animation->GetAnimationTime(timeInSeconds);
 
 		for (auto& boneAnim : animation->GetBoneAnimations())
 		{
 			m_skeleton[boneAnim->GetId()]->SetBoneMatrix(boneAnim->GetBoneMatrixForAnimTime(timeInSeconds));
 		}
+
+		UpdateAnimation(animation, *m_root.get(), glm::mat4(1));
 	}
 
 	void LModel::CreateBoneHierarchy()
@@ -150,7 +195,7 @@ namespace Lemonade
 		}
 	}
 
-	void LModel::CreateMesh(LModelMesh* parent, aiNode* node)
+	void LModel::CreateMesh(LModelNode* parent, aiNode* node)
 	{
 		const aiScene* scene = m_modelData->Importer->GetScene();
 		float scale = 1.0f;
@@ -166,7 +211,11 @@ namespace Lemonade
 			return;
 		}
 
-		glm::mat4 local(*node->mTransformation[0]);
+		glm::mat4 local = ConvertMatrixToGLMFormat(node->mTransformation);
+
+		if (node == scene->mRootNode) {
+			local = glm::mat4(1.0f);
+		}
 
 		glm::mat4 zUpToYUp(
 			1,  0,  0, 0,
@@ -175,17 +224,43 @@ namespace Lemonade
 			0,  0,  0, 1
 		);
 		//local = zUpToYUp * local;
-		//glm::mat4 local(1);
 
-		std::shared_ptr<CitrusCore::Transform> transform = std::make_shared<CitrusCore::Transform>(local);
-		std::shared_ptr<LModelMesh> entity = std::make_shared<LModelMesh>(node->mName.C_Str(), transform);
-        CitrusCore::ResourcePtr<Material> mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/defaultpbr.mat.json");
+		bool hasBones = false;
+
+		for (uint32 i = 0; i < node->mNumMeshes; ++i)
+		{
+			aiMesh* aimesh = scene->mMeshes[node->mMeshes[i]];
+
+
+			if (aimesh->HasBones())
+			{
+				hasBones = true;
+			}
+		}
+
+		glm::mat4 localTransform = hasBones ? glm::mat4(1.0f) : local;
+
+		std::shared_ptr<CitrusCore::Transform> transform = std::make_shared<CitrusCore::Transform>(localTransform);
+		std::shared_ptr<LModelNode> entity = std::make_shared<LModelNode>(node->mName.C_Str(), transform);
+		entity->SetNodeTransform(local);
+
+        CitrusCore::ResourcePtr<Material> mat;
+		
+		if (hasBones)
+		{
+			mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/defaultskinnedpbr.mat.json");
+		}
+		else {
+			mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/defaultpbr.mat.json");
+		}
+
 		parent->AddChild(entity);
 		//SharedPtr<UMaterial> mat = std::make_shared<UMaterial>();
 
 		for (uint32 i = 0; i < node->mNumMeshes; ++i)
 		{
 			aiMesh* aimesh = scene->mMeshes[node->mMeshes[i]];
+			std::shared_ptr<LModelMesh> lmesh = std::make_shared<LModelMesh>(aimesh->mName.C_Str(), transform);
 
 			if (aimesh == nullptr)
 			{
@@ -217,6 +292,7 @@ namespace Lemonade
 			mesh->SetAnimation(animationData);
 			mesh->SetBoneWeights(boneWeights);
 			mesh->SetBoneIds(boneIds);
+			mesh->SetBoneMatrix(m_boneMatrices);
 
 			if (aimesh->mNumAnimMeshes)
 			{
@@ -226,27 +302,42 @@ namespace Lemonade
 			uint32 vbufferSize = aimesh->mNumFaces * 3;
 			uint32 cbufferSize = aimesh->mNumFaces * 4;
 
-			std::vector<glm::vec4> boneweights;
+			std::vector<glm::vec4> locboneweights;
 			std::vector<glm::vec4> boneids;
 
 			if (aimesh->HasBones())
 			{
-				boneweights.resize(aimesh->mNumVertices);
+				locboneweights.resize(aimesh->mNumVertices);
 				boneids.resize(aimesh->mNumVertices);
 
 				boneWeights->resize(vbufferSize);
 				boneIds->resize(vbufferSize);
 
-				std::fill(boneIds->begin(), boneIds->end(), glm::vec4(-1, -1, -1, -1));
-
+				std::fill(boneIds->begin(), boneIds->end(), glm::vec4(0,0,0,0));
 				glm::vec4 weight;
 
 				for (uint ibone = 0; ibone < aimesh->mNumBones; ++ibone)
 				{
 					aiBone* bone = aimesh->mBones[ibone];
+
+					// Crawl up hierachy and find first parent that is a bone.
+					int parentBoneId = -1;
+					aiNode* parent = bone->mNode->mParent;
+
+					while(parent != nullptr && parentBoneId < 0)
+					{
+						parentBoneId = GetBoneId(parent->mName.C_Str());
+
+						if (parentBoneId < 0)
+						{
+							parent = parent->mParent;
+						}
+					}
+
+
 					auto ubone = std::make_shared<LBone>(bone->mName.C_Str(), 
 														GetBoneId(bone->mNode->mName.C_Str()), 
-														GetBoneId(bone->mNode->mParent->mName.C_Str()));
+														parentBoneId);
 
 					glm::mat4 offsetMatrix(
 						bone->mOffsetMatrix.a1, bone->mOffsetMatrix.b1, bone->mOffsetMatrix.c1, bone->mOffsetMatrix.d1,
@@ -261,25 +352,23 @@ namespace Lemonade
 					auto weights = std::make_shared<std::vector<LBone::UVertexWeight>>();
 					weights->resize(bone->mNumWeights);
 
+					int maxBonesPerVertex = 4;
+					int boneId = GetBoneId(bone->mName.C_Str());
+
 					for (uint p = 0; p < bone->mNumWeights; ++p)
 					{
-						//if (ibone < 4)
+						for (int index = 0; index < maxBonesPerVertex; ++index)
 						{
-							for (int pbonindex = 0; pbonindex < 4; ++pbonindex)
+							int vertexId = bone->mWeights[p].mVertexId;
+
+							if ((*boneIds)[vertexId][index] == 0)
 							{
-								// needs some work to check if they are already set
-								if ((*boneIds)[bone->mWeights[p].mVertexId][pbonindex] == -1)
-								{
-									(*boneWeights)[bone->mWeights[p].mVertexId][pbonindex] = bone->mWeights[p].mWeight;
-									std::string nameyname = bone->mNode->mName.C_Str();
-									(*boneIds)[bone->mWeights[p].mVertexId][pbonindex] = GetBoneId(bone->mName.C_Str());
-									boneweights[bone->mWeights[p].mVertexId][pbonindex] = bone->mWeights[p].mWeight;
-									boneids[bone->mWeights[p].mVertexId][pbonindex] = GetBoneId(bone->mName.C_Str());
-									break;
-								}
+								(*boneWeights)[vertexId][index] = bone->mWeights[p].mWeight;
+								(*boneIds)[vertexId][index] = boneId;
+								locboneweights[vertexId][index] = bone->mWeights[p].mWeight;
+								boneids[vertexId][index] = boneId;
+								break; // move to next bone
 							}
-
-
 						}
 
 						(*weights)[p].VertexIndex = bone->mWeights[p].mVertexId;
@@ -288,7 +377,8 @@ namespace Lemonade
 
 					ubone->SetWeights(weights);
 					bones->push_back(ubone);
-					m_skeleton[ubone->GetBoneId()] = ubone;				
+					m_skeleton[ubone->GetBoneId()] = ubone;		
+					lmesh->AddBone(ubone);		
 				}
 			}
 
@@ -329,15 +419,15 @@ namespace Lemonade
 					aiVector3D vertex = aimesh->mVertices[face->mIndices[q]];
 					(*vertices)[index] = std::move(glm::vec3(vertex.x, vertex.y, vertex.z) * (float)scale);
 
-					if (boneweights.size())
-					{
-						(*boneWeights)[index] = boneweights[face->mIndices[q]];
-					}
-
-					if (boneids.size())
-					{
-						(*boneIds)[index] = boneids[face->mIndices[q]];
-					}
+					//if (locboneweights.size())
+					//{
+					//	(*boneWeights)[index] = locboneweights[face->mIndices[q]];
+					//}
+//
+					//if (boneids.size())
+					//{
+					//	(*boneIds)[index] = boneids[face->mIndices[q]];
+					//}
 
 					if (bHasNormals)
 					{
@@ -483,8 +573,9 @@ namespace Lemonade
 			//	entity->addComponent(comp);
 			//}
 
-			entity->SetMaterial(mat);
-            entity->SetMesh(mesh);
+			lmesh->SetMesh(mesh);
+			lmesh->SetMaterial(mat);
+            entity->AddMeshRenderer(lmesh);
 		}
 
 		//if (node->mMetaData)
@@ -505,6 +596,29 @@ namespace Lemonade
 		for (uint32 i = 0; i < node->mNumChildren; ++i)
 		{
 			CreateMesh(entity.get(), node->mChildren[i]);
+			m_globalInverseRoot = glm::inverse(ConvertMatrixToGLMFormat(scene->mRootNode->mTransformation));
+		}
+	}
+
+	void LModel::PopulateBones(aiNode* node, const aiScene* scene)
+	{
+		for (uint i = 0; i < node->mNumMeshes; ++i)
+		{
+			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+
+			if (mesh->HasBones())
+			{
+				for (uint ibone = 0; ibone < mesh->mNumBones; ++ibone)
+				{
+					aiBone* bone = mesh->mBones[ibone];
+					GetBoneId(bone->mNode->mName.C_Str(), true);
+				}
+			}
+		}
+	
+		for (uint i = 0; i < node->mNumChildren; ++i)
+		{
+			PopulateBones(node->mChildren[i], scene);
 		}
 	}
 
@@ -516,9 +630,12 @@ namespace Lemonade
 		const aiScene* scene = m_modelData->Importer->GetScene();
 
 		std::filesystem::path path(m_filePath);
-		m_root = std::make_shared<LModelMesh>(path.filename().string(), std::make_shared<CitrusCore::Transform>());
+		m_root = std::make_shared<LModelNode>(path.filename().string(), std::make_shared<CitrusCore::Transform>());
 
 		//getParent()->addChild(root);
+
+		// Populate bone ids 
+		PopulateBones(scene->mRootNode, scene);
 
 		// Animations - Need to be loaded prior to mesh!
 		for (uint i = 0; i < scene->mNumAnimations; ++i)
@@ -529,6 +646,13 @@ namespace Lemonade
 			for (uint p = 0; p < animation->mNumChannels; ++p)
 			{
 				aiNodeAnim* node = animation->mChannels[p];
+			
+				if (!m_boneIdMap.contains(node->mNodeName.C_Str()))
+				{
+					printf("invalid bone - non bone skinned based animation not currently supported sorry");
+					continue;
+				}
+
 				std::shared_ptr<LBoneAnim> boneAnim = std::make_shared<LBoneAnim>(node->mNodeName.C_Str(), GetBoneId(node->mNodeName.C_Str()));
 
 				for (uint j = 0; j < node->mNumPositionKeys; ++j)
@@ -557,11 +681,12 @@ namespace Lemonade
 
 		if (scene->mRootNode != nullptr)
 		{
+			//CreateMesh(m_root.get(), scene->mRootNode);
 			CreateMesh(m_root.get(), scene->mRootNode);
 		}
 	}
 
-	int LModel::GetBoneId(std::string boneName)
+	int LModel::GetBoneId(std::string boneName, bool insert)
 	{
 		auto entry = m_boneIdMap.find(boneName);
 
@@ -570,9 +695,13 @@ namespace Lemonade
 			return entry->second;
 		}
 
+		if (!insert)
+		{
+			return -1;
+		}
+
+		m_boneIdMap[boneName] = m_boneCount;
 		m_boneCount++;
-		int boneId = m_boneCount;
-		m_boneIdMap.insert(std::make_pair(boneName, boneId));
-		return boneId;
+		return m_boneCount;
 	}
 }

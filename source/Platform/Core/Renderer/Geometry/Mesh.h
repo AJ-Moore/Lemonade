@@ -20,6 +20,8 @@ namespace Lemonade
 	public:
 		void Clear();
 
+		using BoneMatrix = std::shared_ptr<std::vector<glm::mat4>>;
+
 		void SetVertices(std::shared_ptr<std::vector<glm::vec3>> vertices) { m_bDirtyTangents = true; m_vertices = vertices; GenerateTangents(); }
 		void SetNormals(std::shared_ptr<std::vector<glm::vec3>> normals) { m_normals = normals; }
 		void SetTangents(std::shared_ptr<std::vector<glm::vec3>> tangents) { m_bShouldGenerateTangents = false; m_tangents = tangents; }
@@ -31,6 +33,7 @@ namespace Lemonade
 		void SetBoneWeights(std::shared_ptr<std::vector<glm::vec4>> bones) { m_boneWeights = bones; }
 		void SetBoneIds(std::shared_ptr<std::vector<glm::vec4>> ids) { m_boneIds = ids; }
 		void SetAnimation(std::shared_ptr<std::vector<std::shared_ptr<LAnimation>>> anim) { m_animationsRef = anim; }
+		void SetBoneMatrix(BoneMatrix boneMatrix){ m_boneMatrix = boneMatrix;}
 
 		void SetDrawMode(PrimitiveMode mode) { m_drawMode = mode; }
 		PrimitiveMode GetDrawMode() const { return m_drawMode; }
@@ -72,6 +75,7 @@ namespace Lemonade
 		size_t GetBiTangentSize() { return (m_bitangents) ? m_bitangents->size() : 0; }
 		size_t GetBoneCount() { return m_bones == nullptr ? 0 : m_bones->size(); }
 		size_t GetAnimationCount() { return m_animationsRef == nullptr ? 0 : m_animationsRef->size();}
+		BoneMatrix GetBoneMatrix() { return m_boneMatrix; }
 	private:
 		void GenerateTangents();
 
@@ -87,6 +91,7 @@ namespace Lemonade
 		std::shared_ptr<std::vector<glm::vec4>> m_boneIds = nullptr;
 		std::shared_ptr<std::vector<std::shared_ptr<LBone>>> m_bones = nullptr;
 		std::shared_ptr<std::vector<std::shared_ptr<LAnimation>>> m_animationsRef = nullptr;
+		BoneMatrix m_boneMatrix = nullptr;
 
 		bool m_bShouldGenerateTangents = true;
 		bool m_bDirtyTangents = true;

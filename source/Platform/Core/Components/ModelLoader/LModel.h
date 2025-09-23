@@ -30,7 +30,7 @@ namespace Lemonade
 	class LEMONADE_API LModel : public CitrusCore::AResource<LModel>
 	{
 	public:
-        std::shared_ptr<LModelMesh> GetRoot() { return m_root; }
+        std::shared_ptr<LModelNode> GetRoot() { return m_root; }
 
         virtual void Init(); 
         virtual void Update(); 
@@ -41,9 +41,9 @@ namespace Lemonade
 
 	private:
 	    std::unordered_map<int, std::shared_ptr<LBone>> m_skeleton;
-        std::shared_ptr<LModelMesh> m_root;
+        std::shared_ptr<LModelNode> m_root;
 		std::shared_ptr<LModelData> m_modelData;
-		uint m_customFlags = aiProcess_PreTransformVertices;
+		uint m_customFlags = 0;
 		std::string m_filePath;
 		std::string m_metaPath;
 		bool m_bGenerateCollider = false;
@@ -54,19 +54,21 @@ namespace Lemonade
 		void SaveMeta();
         std::shared_ptr<LModelData> LoadAssimpModelData(std::string filePath, unsigned int importFlags);
 		void LoadModel();
-		void CreateMesh(LModelMesh* parent, aiNode*);
+		void CreateMesh(LModelNode* parent, aiNode*);
 		void CreateModelFromData(LModelData* Model);
+		void PopulateBones(aiNode* node, const aiScene* scene);
 		void CreateBoneHierarchy();
-		int GetBoneId(std::string boneName);
+		int GetBoneId(std::string boneName, bool insert = false);
 
 		void UpdateAnimation(LAnimation* animation, float timeInSeconds);
-		void UpdateAnimation(const LBone& bone, glm::mat4& parentTransform);
-		std::vector<glm::mat4> m_boneMatrices;
+		void UpdateAnimation(LAnimation* animation, const LModelNode& mesh, glm::mat4 parentTransform);
+		std::shared_ptr<std::vector<glm::mat4>> m_boneMatrices;
 		int m_rootBoneId;
 
 		std::vector<std::shared_ptr<LAnimation>> m_animationData;
 		std::unordered_map<std::string, int> m_boneIdMap;
 		int m_boneCount = 0;
+		glm::mat4 m_globalInverseRoot;
 
 		static inline glm::mat4 ConvertMatrixToGLMFormat(const aiMatrix4x4& from)
 		{
