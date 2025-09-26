@@ -29,10 +29,10 @@ namespace Lemonade
 	struct QuatKey
 	{
 		QuatKey() = default;
-		QuatKey(float time, glm::vec4 value) { Time = time; Value = value; }
+		QuatKey(float time, glm::quat value) { Time = time; Value = value; }
 
 		// WARNING: Order must be maintained/ match GLSL code - best left alone.
-		alignas(4) glm::vec4 Value = glm::vec4(0, 0, 0, 0);
+		alignas(4) glm::quat Value = glm::quat(0, 0, 0, 0);
 		float Time = 0;
 	};
 

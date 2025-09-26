@@ -61,7 +61,7 @@ namespace Lemonade
 		int GetBoneId(std::string boneName, bool insert = false);
 
 		void UpdateAnimation(LAnimation* animation, float timeInSeconds);
-		void UpdateAnimation(LAnimation* animation, const LModelNode& mesh, glm::mat4 parentTransform);
+		void UpdateAnimation(LAnimation* animation, const LModelNode& mesh, glm::mat4 parentTransform, float time);
 		std::shared_ptr<std::vector<glm::mat4>> m_boneMatrices;
 		int m_rootBoneId;
 

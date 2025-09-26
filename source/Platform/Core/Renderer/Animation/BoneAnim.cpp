@@ -19,12 +19,15 @@ namespace Lemonade
 
 		for (int i = 0; i < m_positionKeys.size() -1; ++i)
 		{
+			if (time > m_positionKeys[i + 1].Time){
+				continue;
+			}
+
 			float t = CitrusCore::Math::InverseLerp(m_positionKeys[i].Time, m_positionKeys[i + 1].Time, time);
 			return glm::mix(m_positionKeys[i].Value, m_positionKeys[i + 1].Value,t);
 		}
 
-		// Will never get hit.
-		return glm::vec3(0);
+		return m_positionKeys.back().Value;
 	}
 
 	glm::quat LBoneAnim::GetBoneRotationForAnimTime(float time)
@@ -34,27 +37,33 @@ namespace Lemonade
 
 		for (int i = 0; i < m_rotationKeys.size() -1; ++i)
 		{
+			if (time > m_rotationKeys[i + 1].Time){
+				continue;
+			}
+
 			float t = CitrusCore::Math::InverseLerp(m_rotationKeys[i].Time, m_rotationKeys[i + 1].Time, time);
-			return glm::normalize(glm::slerp(glm::quat(m_rotationKeys[i].Value), glm::quat(m_rotationKeys[i + 1].Value), t));
+			return glm::normalize(glm::slerp(m_rotationKeys[i].Value, m_rotationKeys[i + 1].Value, t));
 		}
 
-		// Will never get hit.	
-		return glm::quat();
+		return glm::quat(m_rotationKeys.back().Value);
 	}
 
 	glm::vec3 LBoneAnim::GetBoneScaleForAnimTime(float time)
 	{
-		if (m_scalingKeys.empty()) return glm::vec3(0.0f);
+		if (m_scalingKeys.empty()) return glm::vec3(1.0f);
 		if (m_scalingKeys.size() == 1) return glm::vec3(m_scalingKeys[0].Value);
 
 		for (int i = 0; i < m_scalingKeys.size() -1; ++i)
 		{
+			if (time > m_scalingKeys[i + 1].Time){
+				continue;
+			}
+
 			float t = CitrusCore::Math::InverseLerp(m_scalingKeys[i].Time, m_scalingKeys[i + 1].Time, time);
 			return glm::mix(m_scalingKeys[i].Value, m_scalingKeys[i + 1].Value,t);
 		}
 
-		// Will never get hit.
-		return glm::vec3(0);
+		return m_scalingKeys.back().Value;
 	}
 
 	glm::mat4 LBoneAnim::GetBoneMatrixForAnimTime(float time)
