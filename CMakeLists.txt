@@ -119,7 +119,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     assimp
     OpenGL::GL
     Vulkan::Vulkan
-    #dxcompiler
     shaderc
     CitrusCore
     nameof
