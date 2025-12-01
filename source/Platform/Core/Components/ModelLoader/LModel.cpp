@@ -33,7 +33,7 @@ namespace Lemonade
 
 		if (m_animationData.size() > 0)
 		{
-			UpdateAnimation(m_animationData[0].get(), std::fmod(time, 12.0f));
+			UpdateAnimation(m_animationData[0].get(), std::fmod(time, 3.0f));
 		}
 
         m_root->Update();
@@ -463,7 +463,7 @@ namespace Lemonade
 					uint32 index = (p * 3) + q;
 
 					aiVector3D vertex = aimesh->mVertices[face->mIndices[q]];
-					(*vertices)[index] = std::move(glm::vec3(vertex.x, vertex.y, vertex.z));// * (float)scale);
+					(*vertices)[index] = std::move(glm::vec3(vertex.x, vertex.y, vertex.z));//* (float)scale;
 
 					if (weightsToSort.size())
 					{

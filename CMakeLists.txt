@@ -85,6 +85,9 @@ CPMAddPackage(
 # GLM
 CPMAddPackage("gh:g-truc/glm#1.0.1")
 
+# Nameof for reflection
+CPMAddPackage("gh:neargye/nameof#v0.10.4")
+
 # JSON
 CPMAddPackage(
     NAME JSON    
@@ -142,4 +145,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     #Trying to stick to modern GL 3.x + glew/ glu should not be required
     #glew
     CitrusCore
+    nameof
 )
