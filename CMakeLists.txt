@@ -95,38 +95,18 @@ CPMAddPackage(
     GIT_TAG v3.11.3
 )
 
-# DX Shader Compiler - HLSL -> SPIR-V
-find_library(DXC_LIB dxcompiler)
-
-# GLEW
-##CPMAddPackage(
-##  NAME GLEW
-##  GIT_REPOSITORY https://github.com/iauns/cpm-glew.git
-##  GIT_TAG        1.0.1
-##)
-
 # Add the include directory as the root for the source directory
 include_directories("./source")
-
-# Add library includes
-#include_directories("./libraries/include")
 
 # Find all source files recursively in the source directory
 file(GLOB_RECURSE SOURCES "./source/*.cpp")
 
-# Add executable or library (depending on your project type)
-# add_executable(MyProject ${SOURCES})
-
-# If you're creating a library, use add_library instead of add_executable
 add_library(${PROJECT_NAME} ${SOURCES})
 
 # Include library headers 
 target_include_directories(${PROJECT_NAME} PUBLIC 
-    #${GLEW_SOURCE_DIR}/glew/include
     ${JSON_SOURCE_DIR}/include
 )
-
-#message("Json includes located at: '${JSON_SOURCE_DIR}/include'")
 
 # Include headers
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source)
@@ -141,9 +121,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Vulkan::Vulkan
     #dxcompiler
     shaderc
-    #${Vulkan_LIBRARIES}
-    #Trying to stick to modern GL 3.x + glew/ glu should not be required
-    #glew
     CitrusCore
     nameof
 )
