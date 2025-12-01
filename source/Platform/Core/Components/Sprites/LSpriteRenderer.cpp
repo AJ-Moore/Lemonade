@@ -1,6 +1,6 @@
 
-#include "Platform/Core/Renderer/Geometry/Mesh.h"
-#include "Resources/ResourceHandle.h"
+#include <Platform/Core/Renderer/Geometry/Mesh.h>
+#include <Resources/ResourceHandle.h>
 #include <Platform/Core/Components/Sprites/LSpriteRenderer.h>
 #include <memory>
 

@@ -1,5 +1,3 @@
-
-
 #include <Geometry/Rect.h>
 #include <Platform/Core/Renderer/RenderBlock/ARenderBlock.h>
 #include <Platform/Vulkan/Materials/Texture.h>
@@ -53,8 +51,6 @@ namespace Lemonade
 
 	void LRenderLayer::Render()
 	{
-		//m_material->getShader().setUniformfv("width", window.Width);
-		//m_material->getShader().setUniformfv("height", window.Height);
         // BIND SSBO with layer dimensions?
 		m_renderBlock->OnPipelineBound.AddListener([this](ARenderBlock* block){
 			if (m_sourceTarget != nullptr)

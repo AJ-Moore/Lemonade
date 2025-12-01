@@ -1,4 +1,4 @@
-#include "SDL3/SDL_init.h"
+#include <SDL3/SDL_init.h>
 #include <LCommon.h>
 #include <Platform/Core/Renderer/Materials/Material.h>
 #include <Platform/OGL/WindowManager/LWindow.h>
@@ -41,21 +41,6 @@ namespace Lemonade {
 	/** Initialises all the windows and the GL Context.*/
 	bool LWindowManager::Init()
 	{
-		// Create the GL Context, using the default window.
-		//this->glContext = SDL_GL_CreateContext(m_defaultWindow->m_sdlWindow);
-
-		// Initialise glew 
-		//glewInit();
-
-		#ifdef USING_SDL
-		{
-			//if (!SDL_Init(SDL_INIT_VIDEO)) {
-			//	Logger::Log(Logger::ERROR, "Failed to initialise SDL.");
-			//	return false;
-			//}
-		}
-		#endif
-
 		if (!Load())
 		{
 			Logger::Log(Logger::ERROR, "Loading default window failed.");

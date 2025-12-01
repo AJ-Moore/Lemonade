@@ -1,4 +1,3 @@
-
 #include <Spatial/Transform.h>
 #include <Platform/Core/Renderer/Pipeline/AViewport.h>
 #include <Platform/Core/Renderer/Pipeline/LCamera.h>

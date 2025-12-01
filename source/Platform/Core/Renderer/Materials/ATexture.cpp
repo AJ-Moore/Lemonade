@@ -1,7 +1,7 @@
-#include "ATexture.h"
-#include "Platform/Core/Renderer/Materials/TextureUtils.h"
-#include "SDL3/SDL_pixels.h"
-#include "SDL3/SDL_surface.h"
+#include <ATexture.h>
+#include <Platform/Core/Renderer/Materials/TextureUtils.h>
+#include <SDL3/SDL_pixels.h>
+#include <SDL3/SDL_surface.h>
 #include <Util/Logger.h>
 #include <filesystem>
 #include <Platform/Core/Renderer/Materials/TextureType.h>

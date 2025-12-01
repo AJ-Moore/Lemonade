@@ -1,4 +1,5 @@
-#include "Resources/ResourceHandle.h"
+#pragma once 
+#include <Resources/ResourceHandle.h>
 #include <Platform/Core/Components/LMeshRenderer.h>
 #include <LCommon.h>
 #include <memory>

@@ -1,7 +1,7 @@
-
 #include <Platform/Core/Renderer/Pipeline/ARenderTarget.h>
 #include <Platform/Core/Services/GraphicsServices.h>
 #include <Platform/Core/Renderer/Pipeline/RenderStages/Geometry/Passes/GeometryPass.h>
+
 namespace Lemonade
 {
     GeometryPass::GeometryPass() : 

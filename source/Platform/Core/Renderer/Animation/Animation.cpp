@@ -1,4 +1,4 @@
-#include "Animation.h"
+#include <Platform/Core/Renderer/Animation/Animation.h>
 
 Lemonade::LAnimation::LAnimation(std::string name, double duration, double ticksPerSecond)
 {

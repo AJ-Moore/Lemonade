@@ -83,18 +83,14 @@ namespace Lemonade
 			importFlags |
 			aiProcess_CalcTangentSpace |
 			aiProcess_Triangulate |
-			// Can break skinning? -> do if non skinned mesh?
+			//Can break skinning? -> do if non skinned mesh?
 			//aiProcess_JoinIdenticalVertices |
-
 			//aiProcess_LimitBoneWeights |
-
-			//// Should this be disabled for animations? Yes! -> do if not skinned?
+			//Should this be disabled for animations? Yes! -> do if not skinned?
 			//aiProcess_PreTransformVertices |
-			// 
 			//aiProcess_GenUVCoords |
-			////aiProcessPreset_TargetRealtime_Quality |
+			//aiProcessPreset_TargetRealtime_Quality |
 			aiProcess_PopulateArmatureData |
-			//aiProcess_MakeLeftHanded |
 			aiProcess_ValidateDataStructure |
 			aiProcess_GlobalScale |
 			aiProcess_SortByPType
@@ -149,8 +145,6 @@ namespace Lemonade
 				keyframeTransform = boneAnim->GetBoneMatrixForAnimTime(timeInSeconds);
 			}
 		}
-
-		//keyframeTransform = glm::mat4(1.0f);
 		
 		// compute global transform for this node
 		glm::mat4 globalTransform = parentTransform * nodeTransform * keyframeTransform;
@@ -167,12 +161,6 @@ namespace Lemonade
 		{
 			UpdateAnimation(animation, *child.get(), globalTransform, timeInSeconds);
 		}
-		//glm::mat4 globalTransform = parentTransform * bone.GetBoneMatrix();
-		//(*m_boneMatrices)[bone.GetBoneId()] = globalTransform * bone.GetOffsetMatrix();
-//
-		//for (auto& child : bone.GetChildren()) {
-		//	UpdateAnimation(*child.second, globalTransform);
-		//}
 	}
 
 	void LModel::UpdateAnimation(LAnimation* animation, float timeInSeconds)
@@ -472,7 +460,7 @@ namespace Lemonade
 
 						(*boneWeights)[index] = weight;
 					}
-//
+
 					if (boneids.size())
 					{
 						(*boneIds)[index] = boneids[face->mIndices[q]];

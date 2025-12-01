@@ -1,4 +1,3 @@
-
 #include <Platform/Core/Renderer/Materials/AShader.h>
 #include <Platform/Vulkan/Renderer/LGLSLShader.h>
 #include <fstream>

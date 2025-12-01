@@ -1,6 +1,6 @@
 #pragma once 
 
-#include "Platform/Core/Renderer/Materials/ASampler.h"
+#include <Platform/Core/Renderer/Materials/ASampler.h>
 #include <LCommon.h>
 #include <Platform/Core/Renderer/Materials/TextureType.h>
 #include <Resources/AResource.h>

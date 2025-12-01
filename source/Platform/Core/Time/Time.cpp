@@ -1,4 +1,3 @@
-
 #include <LCommon.h>
 
 #if defined(RENDERER_OPENGL) || defined(RENDERER_VULKAN)

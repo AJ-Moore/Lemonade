@@ -687,14 +687,10 @@ namespace Lemonade
 		pushConstantRange.offset = 0;
 		pushConstantRange.size = 128;
 
-		//std::vector<VkDescriptorSetLayout> layouts(LRenderTarget::MAX_FRAMES_IN_FLIGHT, m_vkDescriptorSetLayout); 
-
 		m_vkPipelineLayoutCreateInfo = {};
 		m_vkPipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		m_vkPipelineLayoutCreateInfo.setLayoutCount = 1; 
 		m_vkPipelineLayoutCreateInfo.pSetLayouts = &m_vkDescriptorSetLayout;
-		//m_vkPipelineLayoutCreateInfo.setLayoutCount = layouts.size();
-		//m_vkPipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 		m_vkPipelineLayoutCreateInfo.pushConstantRangeCount = 1;
 		m_vkPipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -717,7 +713,6 @@ namespace Lemonade
 
 		LShaderProgram* shaderProgram = static_cast<LShaderProgram*>(m_material->GetResource()->GetShader().get());
 
-		// Input Assembly 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly = {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -735,7 +730,6 @@ namespace Lemonade
 			.depthClampEnable = VK_FALSE,
 			.rasterizerDiscardEnable = VK_FALSE,
 			.polygonMode = VK_POLYGON_MODE_FILL,
-			//.cullMode = VK_CULL_MODE_BACK_BIT,
 			.cullMode = VK_CULL_MODE_NONE,
 			.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
 			.depthBiasEnable = VK_FALSE,

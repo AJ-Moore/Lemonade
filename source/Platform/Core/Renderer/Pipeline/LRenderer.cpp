@@ -1,4 +1,3 @@
-
 #include <Platform/Core/Renderer/Pipeline/LRenderer.h>
 #include <Platform/Core/Renderer/Pipeline/RenderStages/Geometry/GeometryStage.h>
 #include <Platform/Core/Renderer/Pipeline/RenderStages/PostProcessing/PostProcessingStage.h>
@@ -57,4 +56,3 @@ namespace Lemonade {
         OnRenderScene.Invoke(m_renderingData);
     }
 }
-

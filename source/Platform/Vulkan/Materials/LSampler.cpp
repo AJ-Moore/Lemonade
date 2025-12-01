@@ -1,4 +1,3 @@
-
 #include <Platform/Vulkan/Materials/LSampler.h>
 #include <Platform/Core/Services/GraphicsServices.h>
 #include <vulkan/vulkan_core.h>

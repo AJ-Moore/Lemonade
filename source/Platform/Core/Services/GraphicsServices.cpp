@@ -1,4 +1,3 @@
-
 #include <Platform/Core/Renderer/Pipeline/LRenderer.h>
 #include <Platform/Core/Resources/GraphicsResources.h>
 #include <Services/Services.h>
