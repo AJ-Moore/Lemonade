@@ -79,22 +79,45 @@ namespace Lemonade
     {
 		std::unique_ptr<Assimp::Importer> importer = std::make_unique<Assimp::Importer>();
 
-		const aiScene* scene = importer->ReadFile(filePath,
+		const aiScene* sceneValidator = importer->ReadFile(filePath, aiProcess_ValidateDataStructure);
+
+		if (!sceneValidator) {
+			Logger::Log(Logger::ERROR, "Unable to load scene.");
+			return nullptr;
+		}
+		
+		bool hasSkinnedMesh = false;
+
+		for (unsigned int i = 0; i < sceneValidator->mNumMeshes; ++i)
+		{
+			if (sceneValidator->mMeshes[i]->HasBones())
+			{
+				hasSkinnedMesh = true;
+				break;
+			}
+		}
+
+		unsigned int flags = 			
 			importFlags |
 			aiProcess_CalcTangentSpace |
 			aiProcess_Triangulate |
-			//Can break skinning? -> do if non skinned mesh?
-			//aiProcess_JoinIdenticalVertices |
 			//aiProcess_LimitBoneWeights |
-			//Should this be disabled for animations? Yes! -> do if not skinned?
-			//aiProcess_PreTransformVertices |
 			//aiProcess_GenUVCoords |
 			//aiProcessPreset_TargetRealtime_Quality |
 			aiProcess_PopulateArmatureData |
 			aiProcess_ValidateDataStructure |
 			aiProcess_GlobalScale |
-			aiProcess_SortByPType
-		);
+			aiProcess_SortByPType;
+
+
+		if (!hasSkinnedMesh)
+		{
+			// At present both these flags break skinning.
+			flags |= aiProcess_PreTransformVertices;
+			flags |= aiProcess_JoinIdenticalVertices;
+		}
+
+		const aiScene* scene = importer->ReadFile(filePath, flags);
 
 		if (!scene)
 		{
