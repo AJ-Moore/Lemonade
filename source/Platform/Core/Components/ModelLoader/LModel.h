@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Platform/Core/Renderer/Animation/Bone.h"
+#include <Platform/Core/Renderer/Animation/Bone.h>
 #include <assimp/Importer.hpp>
 #include <LCommon.h>
 #include <Platform/Core/Components/ModelLoader/LModelMesh.h>
