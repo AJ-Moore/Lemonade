@@ -48,9 +48,9 @@ namespace Lemonade
 
 		const TextureMap& GetTextures() const noexcept { return m_textures; }
 		const SamplerMap& GetSamplers() const noexcept { return m_samplers; }
-		glm::vec4 GetBaseColour() const { return m_baseColour; }
+		glm::vec4 GetBaseColour() const;
 		void SetBaseColour(glm::vec4 colour) { m_baseColour = colour;}
-		TextureStatus GetTextureStatus(TextureType textureType);
+		TextureStatus GetTextureStatus(TextureType textureType) const;
 		int GetBindLocation(TextureType);
 
 		/// Manually load a texture into this material. 

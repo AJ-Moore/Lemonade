@@ -10,6 +10,7 @@
 #include <Platform/Core/Renderer/Materials/TextureType.h>
 #include <LCommon.h>
 
+#include <glm/fwd.hpp>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <utility>
@@ -39,11 +40,24 @@ namespace Lemonade
         return m_texture;
     }
 
-	TextureStatus Material::GetTextureStatus(TextureType textureType)
+	glm::vec4 Material::GetBaseColour() const
 	{
-		if (m_textureStatus.contains(textureType))
+		// For debugging purposes, I don't want to actual mutate the colour as it was set on the material but we want to return white when the texture is missing so the the debug (missing texture) texture is visible.
+		if (GetTextureStatus(TextureType::Diffuse) == TextureStatus::Missing)
 		{
-			return m_textureStatus[textureType];
+			return glm::vec4(1,1,1,1);
+		}
+
+		return m_baseColour;
+	}
+
+	TextureStatus Material::GetTextureStatus(TextureType textureType) const
+	{
+		auto iterator = m_textureStatus.find(textureType);
+
+		if (iterator != m_textureStatus.end())
+		{
+			return iterator->second;
 		}
 
 		return TextureStatus::NotProvided;

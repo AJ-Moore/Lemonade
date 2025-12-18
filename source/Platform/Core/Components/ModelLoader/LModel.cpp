@@ -1,4 +1,5 @@
 #include "Platform/Core/Components/LMeshRenderer.h"
+#include "assimp/types.h"
 #include <Platform/Core/Components/ModelLoader/LModel.h>
 #include <Platform/Core/Components/ModelLoader/LModelMesh.h>
 #include <Platform/Core/Renderer/Animation/Animation.h>
@@ -607,9 +608,12 @@ namespace Lemonade
 					}
 				}
 
-				aiColor4D color;
-				material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-				baseColour = { color.r, color.g, color.b, color.a };
+				aiColor4D color(1.0f, 1.0f, 1.0f, 1.0f);
+				if (AI_SUCCESS == material->Get(AI_MATKEY_COLOR_DIFFUSE, color))
+				{
+					baseColour = { color.r, color.g, color.b, color.a };
+				}
+
 				mat->GetResource()->SetBaseColour(baseColour);
 
 				if (baseColour.a != 1)
