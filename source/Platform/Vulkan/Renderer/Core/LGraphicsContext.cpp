@@ -34,7 +34,7 @@ namespace Lemonade
 			"Game",            // pApplicationName
 			0,                                  // applicationVersion
 			"Lemonade",				            // pEngineName
-			VK_MAKE_VERSION(0, 9, 0),                                  // engineVersion
+			VK_MAKE_VERSION(0, 9, 0),     // engineVersion
 			VK_API_VERSION_1_4             // apiVersion
 		};
 
@@ -48,12 +48,6 @@ namespace Lemonade
 			CitrusCore::Logger::Log(CitrusCore::Logger::ERROR, "Failed to initialise SDL. [%s]", SDL_GetError());
 			return false;
 		}
-
-		//if (SDL_Vulkan_LoadLibrary(nullptr) != 0)
-		//{
-		//	CitrusCore::Logger::Log(CitrusCore::Logger::ERROR, "Failed to load Vulkan library: %s", SDL_GetError());
-		//	throw("Failed to load vulkan library.");
-		//}
 
 		Uint32 count_instance_extensions;
 		const char * const *instance_extensions = SDL_Vulkan_GetInstanceExtensions(&count_instance_extensions);

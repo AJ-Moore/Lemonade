@@ -45,13 +45,12 @@ namespace Lemonade
 		std::shared_ptr<LModelData> m_modelData;
 		uint m_customFlags = 0;
 		std::string m_filePath;
-		std::string m_metaPath;
 		bool m_bGenerateCollider = false;
 
 		LModelMeta m_meta;
 
-		void LoadMeta();
-		void SaveMeta();
+		void LoadMeta(){}
+		void SaveMeta(){}
         std::shared_ptr<LModelData> LoadAssimpModelData(std::string filePath, unsigned int importFlags);
 		void LoadModel();
 		void CreateMesh(LModelNode* parent, aiNode*);

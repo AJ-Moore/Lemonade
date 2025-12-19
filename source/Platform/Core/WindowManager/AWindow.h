@@ -32,7 +32,8 @@ namespace Lemonade {
 
 		std::shared_ptr<AViewport> GetViewportAtIndex(int index);
 
-		virtual void ToggleFullscreen(bool value);
+		virtual void ToggleFullscreen(bool value) = 0;
+		virtual void SetRelativeMouseMode(bool value) = 0;
 
 	protected:
 		virtual bool Init() override;

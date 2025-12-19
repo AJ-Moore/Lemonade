@@ -1,3 +1,4 @@
+#include "Util/Logger.h"
 #include <Platform/Core/Services/GraphicsServices.h>
 #include <Platform/Core/WindowManager/AWindow.h>
 #include <LCommon.h>
@@ -32,10 +33,17 @@ namespace Lemonade
         SDL_Event event;
         SDL_PollEvent(&event);
 
-        // Will probably cause issues down line 
-        //SDL_SetWindowRelativeMouseMode(m_window,true);
-
         return true;
+    }
+
+    void LSDLWindow::SetRelativeMouseMode(bool value)
+    {
+        // Window must have focus!
+        if (!SDL_SetWindowRelativeMouseMode(m_window,value))
+        {
+            CitrusCore::Logger::Log(CitrusCore::Logger::WARN, "Unable to set window relative mouse mode, does the window have focus?!");
+            // Recommend on engine side poll for SDL_EVENT_WINDOW_FOCUS_GAINED -> Future consider possibly reeval polling, currently the responcibility is on the engine.
+        }
     }
     
     void LSDLWindow::Render() 

@@ -1,3 +1,4 @@
+#include "Util/Logger.h"
 #include <Platform/Core/Renderer/Materials/ATexture.h>
 #include <Platform/Core/Renderer/Materials/TextureUtils.h>
 #include <Platform/Core/Services/GraphicsServices.h>
@@ -207,6 +208,7 @@ namespace Lemonade {
 			if ((memRequirements.memoryTypeBits & (1 << i)) &&
 				(memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
 				memoryTypeIndex = i;
+				break;
 			}
 		}
 
@@ -218,8 +220,13 @@ namespace Lemonade {
 		assert(allocInfo.memoryTypeIndex < memProps.memoryTypeCount);
 
 		if (vkAllocateMemory(device, &allocInfo, nullptr, &m_tempDeviceMemoryForCopy) != VK_SUCCESS) {
-			throw std::runtime_error("failed to allocate texture memory!");
+			VkPhysicalDeviceProperties props;
+			vkGetPhysicalDeviceProperties(physicalDevice, &props);
+			CitrusCore::Logger::Log(CitrusCore::Logger::VERBOSE, "Max memory allocations: [%u]", props.limits.maxMemoryAllocationCount);
+			throw std::runtime_error("failed to allocate texture memory!");			
 		}
+
+
 
 		vkBindBufferMemory(device, m_stagingBuffer, m_tempDeviceMemoryForCopy, 0);
 

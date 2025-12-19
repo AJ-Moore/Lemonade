@@ -10,6 +10,9 @@ namespace Lemonade
     {
     public:
         SDL_Window* GetSDLWindow() { return m_window; }
+
+        /// Sets mouse as hidden and constrained to the window.
+        virtual void SetRelativeMouseMode(bool value) override;
     protected:
         virtual bool Init() override;
         virtual void Unload() override;

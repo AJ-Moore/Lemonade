@@ -46,32 +46,8 @@ namespace Lemonade
 	bool LModel::LoadResource(std::string path)
 	{
         m_filePath = path;
-        m_metaPath = m_filePath + ".upmeta";
 		LoadModel();
 		return true;
-	}
-
-	void LModel::LoadMeta()
-	{
-		std::ifstream ifStream(m_metaPath);
-
-		if (!ifStream.good())
-		{
-			CitrusCore::Logger::Log(CitrusCore::Logger::LogLevel::WARN, "No meta data was found for model [%s] at [%s]", m_filePath.c_str(), m_metaPath.c_str());
-			return;
-		}
-
-		ifStream.seekg(0, ifStream.end);
-		std::streampos length = ifStream.tellg();
-		char* buffer = new char[length];
-		ifStream.read(buffer, length);
-
-		//TODO
-	}
-
-	void LModel::SaveMeta()
-	{
-        printf("Do something here allan for the love of  god.");
 	}
 
     std::shared_ptr<LModelData> LModel::LoadAssimpModelData(std::string filePath, unsigned int importFlags)
@@ -140,7 +116,6 @@ namespace Lemonade
 			LoadMeta();
 			CreateModelFromData(m_modelData.get());
 			CreateBoneHierarchy();
-			SaveMeta();
 		}
 	}
 
@@ -532,9 +507,6 @@ namespace Lemonade
 			if ((scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) == 0)
 			{
 				aiMaterial* material = scene->mMaterials[aimesh->mMaterialIndex];
-				// AI_MATKEY_NAME
-				// Causes build error on linux undefined
-				//aiString name = material->GetName();
 				aiString name;
 				aiString path;
 				material->Get(AI_MATKEY_NAME, name);
@@ -542,7 +514,8 @@ namespace Lemonade
 				matname = name.C_Str();
 
 		        std::string modelDirectory = fspath.parent_path().string();
-		        std::string materialPath = modelDirectory + "/materials/" + name.C_Str() + ".mat.json";
+		        std::string materialPath = modelDirectory + "/Materials/" + name.C_Str() + ".mat.json";
+				Logger::Log(Logger::VERBOSE, "Attempting to load material [%s]", materialPath.c_str());
 
 				// try and get material from meta, else try and load material from .'/Material/mat_name.material'
 				std::unordered_map<std::string, std::string>::iterator iter = m_meta.m_materials.find(name.C_Str());
@@ -582,16 +555,14 @@ namespace Lemonade
 					// Manually load textures
 					for (int i = 1; i < (int)TextureType::Unknown; ++i)
 					{
-						// temporarily only allow modern pbr workflow aasswss
+						// temporarily only allow modern pbr workflow.
 						if (!pbr.contains((TextureType)i))
 						{
 							continue;
 						}
 
-						//if (material->GetTexture((aiTextureType)i, 0, &path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS)
 						if (material->GetTexture((aiTextureType)i, 0, &path) == AI_SUCCESS)
 						{
-							//mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/default.mat.json"); 
 							int bindLocation = mat->GetResource()->GetBindLocation(static_cast<TextureType>(i));
 
 							if (bindLocation == Material::INVALID_BIND_LOCATION)

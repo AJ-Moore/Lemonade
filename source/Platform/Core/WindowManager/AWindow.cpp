@@ -34,16 +34,6 @@ namespace Lemonade {
 		return true;
 	}
 
-	void AWindow::ToggleFullscreen(bool value)
-	{
-		if (value == m_fullscreen)
-		{
-			return;
-		}
-
-		Logger::Log(Logger::ERROR, "Fullscreen not implemented on platform");
-	}
-
 	bool AWindow::Load() 
 	{
 		return true;
