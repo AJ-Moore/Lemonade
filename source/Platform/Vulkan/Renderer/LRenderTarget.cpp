@@ -415,8 +415,8 @@ namespace Lemonade
         VkViewport viewport = {};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = (float)1920;
-        viewport.height = (float)1080;
+        viewport.width = (float)activeWindow->GetWidth();
+        viewport.height = (float)activeWindow->GetHeight();
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         
@@ -424,7 +424,7 @@ namespace Lemonade
         
         VkRect2D scissor = {};
         scissor.offset = {0, 0};
-        scissor.extent = {1920, 1080};
+        scissor.extent = {(uint32_t)activeWindow->GetWidth(), (uint32_t)activeWindow->GetHeight()};
         
         vkCmdSetScissor(m_commandBuffer[currentFrame], 0, 1, &scissor);
     }
