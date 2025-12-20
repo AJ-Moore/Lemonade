@@ -97,7 +97,7 @@ namespace Lemonade
 		if (surface == nullptr)
 		{
 			bTextureLoadOK = false;
-			Logger::Log(Logger::ERROR, "Error whilst loading texture [%s].", SDL_GetError());
+			Logger::Log(Logger::ERROR, "Error whilst loading texture path:[%s] sdlerror:[%s].",path.c_str(), SDL_GetError());
 			// Use default texture, return 
 			// reminder that the texture needs assigning in platform native code
 			//m_textureID = CreatePinkBlackTexture();
