@@ -384,7 +384,7 @@ namespace Lemonade
 		writes.push_back(uniformBufferWrite);
 		int sampleBindLocation = 0;
 
-		// Write bones s
+		// Write bones
 		if (m_mesh->GetBoneCount())
 		{
 			VkWriteDescriptorSet boneDescriptor{};
@@ -539,7 +539,6 @@ namespace Lemonade
 					throw std::runtime_error("failed to create uniform buffer!");
 				}
 			}
-	
 
 			VkMemoryRequirements memRequirements;
 			vkGetBufferMemoryRequirements(device.GetVkDevice(), uniformBuffer.Buffer, &memRequirements);

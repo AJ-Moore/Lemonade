@@ -28,7 +28,7 @@ namespace Lemonade
         LRenderTarget* screenTarget = static_cast<LRenderTarget*>(LRenderTarget::GetDefault().GetScreenTarget(renderingData.ActiveWindow));
 
         ARenderTarget* previousTarget = GraphicsServices::GetRenderer()->GetActiveRenderTarget();
-        m_renderLayer.SetRenderTarget(GraphicsServices::GetRenderer()->GetActiveRenderTarget());
+        m_renderLayer.SetRenderTarget(previousTarget);
 
         screenTarget->BeginRenderPass();
         screenTarget->setClearColour(glm::vec4(0,0,0,1));

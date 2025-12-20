@@ -67,7 +67,7 @@ namespace Lemonade
 
         // Gets the screen target for a given window.
         virtual ARenderTarget* GetScreenTarget(LWindow* window) = 0;
-        void SetRenderBlock(ARenderBlock* block ){ m_renderBlock = block; }
+        virtual void SetRenderBlock(ARenderBlock* block ){ m_renderBlock = block; }
     protected:
         ARenderBlock* m_renderBlock = nullptr;
         bool m_bDoneInit = false;

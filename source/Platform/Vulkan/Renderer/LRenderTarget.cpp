@@ -906,8 +906,26 @@ namespace Lemonade
         return 0;
     }
 
+    void LRenderTarget::SetRenderBlock(ARenderBlock* block )
+    { 
+        if (block == m_renderBlock)
+        {
+            return;
+        }
+
+        m_renderBlock = block;
+        // :o descriptors will needs to made dirty with the current configuration could lead to descriptors being updated more than necessary, refactor candidate.
+        m_descriptorsDirty = true;
+    }
+
     void LRenderTarget::UpdateDescriptorSet(LColourAttachment colourAttachment)
     {
+        if (m_renderBlock == nullptr)
+        {
+            Logger::Log(Logger::WARN, "Unable to update descriptor set for null render block");
+            return;
+        }
+
         VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 
         VkDescriptorSet descriptorSet = m_colourAttachmentDescriptors[colourAttachment];
@@ -977,8 +995,8 @@ namespace Lemonade
         writeSampler.descriptorCount = 1;
         writeSampler.pImageInfo = &samplerDescriptor;
 
-        VkWriteDescriptorSet writes[] = { writeImage, writeSampler };
-        vkUpdateDescriptorSets(device, 2, writes, 0, nullptr);
+        std::vector<VkWriteDescriptorSet> writes = { uniformBufferWrite,writeImage, writeSampler };
+        vkUpdateDescriptorSets(device, writes.size(), writes.data(), 0, nullptr);
     }
 
     void LRenderTarget::Clear(uint clearFlags)

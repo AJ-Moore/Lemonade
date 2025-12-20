@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Platform/Core/Renderer/RenderBlock/ARenderBlock.h>
 #include <Util/UID.h>
 #include <Platform/Core/Renderer/Pipeline/ARenderTarget.h>
 #include <LCommon.h>
@@ -61,6 +62,7 @@ namespace Lemonade
         VkRenderPass GetRenderPass() const { return m_renderPass; }
         VkSampleCountFlagBits GetSampleCount() const { return m_hasMultisampledColourAttachment ? m_sampleCount : VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT; }
         uint32_t GetAttachmentCount() const { return m_colourAttachments.size(); }
+        virtual void SetRenderBlock(ARenderBlock* renderBlock) override; 
 
         static LRenderTarget& GetDefault();
     private:
