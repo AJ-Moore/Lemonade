@@ -11,6 +11,7 @@ namespace Lemonade
 	enum class LEMONADE_API TextureType
 	{
 		None = 0x0,
+		// Maps to Assimp
 		Diffuse,
 		Specular,
 		Ambient,
@@ -28,6 +29,13 @@ namespace Lemonade
 		Metalness,
 		Roughness,
 		AmbientOcclusion,
+		// Gbufer pass 
+		GColour, 
+		GNormal, 
+		GPosition, 
+		GPBR0,
+		GPBR1,
+		GPBR2,
 		Unknown
 	};
 

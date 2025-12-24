@@ -1,3 +1,4 @@
+#include "Util/Logger.h"
 #include <Platform/Core/Renderer/Materials/Material.h>
 #include <Platform/Core/Renderer/Materials/AShader.h>
 #include <Platform/Core/Renderer/Materials/ATexture.h>
@@ -198,6 +199,8 @@ namespace Lemonade
 
 				if (textureType == TextureType::None)
 				{
+					// Refactor candidate, textures limited by type...
+					Logger::Log(Logger::WARN, "Texture type not supported [%s]", textureTypeStr.c_str());
 					continue;
 				}
 

@@ -407,7 +407,7 @@ namespace Lemonade
 		// reserve to prevent segfault, we rely on pointers that may otherwise change when vector is resized behind the scenes
 		imageInfos.reserve(samplerCount + textureCount);
 
-		LSampler* dummy = static_cast<LSampler*>(m_material->GetResource()->GetSamplers().begin()->get());
+		LSampler* defaultSampler = static_cast<LSampler*>(m_material->GetResource()->GetSamplers().begin()->get());
 
 		for (auto& sampler : m_material->GetResource()->GetSamplers())
 		{
@@ -438,7 +438,7 @@ namespace Lemonade
 
 			// Imaage View
 			imageInfos.push_back({
-				.sampler = dummy->GetSampler(),
+				.sampler = defaultSampler->GetSampler(),
 				.imageView   = tex->GetImageView(),
 				.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 			});
@@ -590,8 +590,6 @@ namespace Lemonade
 		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		bindings.push_back(samplerLayoutBinding);
 
-		LSampler* dummy = static_cast<LSampler*>(m_material->GetResource()->GetSamplers().begin()->get());
-
 		for (const auto& texture : m_material->GetResource()->GetTextures())
 		{
 			Texture* tex = static_cast<Texture*>(texture.second->GetTexture()->GetResource());
@@ -602,7 +600,6 @@ namespace Lemonade
 			imageLayoutBinding.descriptorCount = 1;
 			imageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			imageLayoutBinding.pImmutableSamplers = nullptr;
-			//imageLayoutBinding.pImmutableSamplers = dummy->GetSampler();
 			imageLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
 			bindings.push_back(imageLayoutBinding);
@@ -743,23 +740,30 @@ namespace Lemonade
 			.sampleShadingEnable = VK_FALSE
 		};
 
-		VkPipelineColorBlendAttachmentState colorBlendAttachment = {
-			.blendEnable = m_bBlendEnabled ? VK_TRUE : VK_FALSE,
-			.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
-			.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-			.colorBlendOp = VK_BLEND_OP_ADD,
-			.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
-			.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
-			.alphaBlendOp = VK_BLEND_OP_ADD,
-			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-							  VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
-		};
+		std::vector<VkPipelineColorBlendAttachmentState> blendAttachments;
+
+		for (int i = 0; i < activeTarget->GetAttachmentCount(); ++i)
+		{
+			VkPipelineColorBlendAttachmentState colorBlendAttachment = {
+				.blendEnable = m_bBlendEnabled ? VK_TRUE : VK_FALSE,
+				.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+				.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+				.colorBlendOp = VK_BLEND_OP_ADD,
+				.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+				.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+				.alphaBlendOp = VK_BLEND_OP_ADD,
+				.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+								  VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
+			};
+
+			blendAttachments.push_back(colorBlendAttachment);
+		}
 		
 		VkPipelineColorBlendStateCreateInfo colorBlending = {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
 			.logicOpEnable = VK_FALSE,
 			.attachmentCount = activeTarget->GetAttachmentCount(),
-			.pAttachments = &colorBlendAttachment
+			.pAttachments = blendAttachments.data()
 		};
 
 		VkPipelineDepthStencilStateCreateInfo depthStencil = {

@@ -20,13 +20,22 @@ namespace Lemonade
         VkImageView ImageView;
         VkImage Image;
         VkDeviceMemory Memory;
-        VkSampler Sampler;
     };
 
     class LWindow;
 
     class LRenderTarget : public ARenderTarget
     {
+        struct ImageTransition
+        {
+            VkImageLayout oldLayout;
+            VkImageLayout newLayout;
+            VkPipelineStageFlags srcStage;
+            VkPipelineStageFlags dstStage;
+            VkAccessFlags srcAccess;
+            VkAccessFlags dstAccess;
+            VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        };
     public:
         LRenderTarget();
         LRenderTarget(glm::ivec2 dimensions);
@@ -70,8 +79,9 @@ namespace Lemonade
         VulkanRenderTarget GetColourAttachment(LColourAttachment colourAttachment);
         VkFramebuffer getFrameBuffer() { return m_frameBuffer; }
         void GenerateBuffers();
-        void UpdateDescriptorSet(LColourAttachment colourAttachment);
-        void TransitionColourAttachments(VkCommandBuffer buffer);
+        void UpdateDescriptorSets();
+        void TransitionAttachments(VkCommandBuffer cmdBuffer, ImageTransition transition);
+        void CreateDescriptorSetLayout();
 
         bool m_dirtyBuffer = false;
         bool m_descriptorsDirty = true;
@@ -80,8 +90,8 @@ namespace Lemonade
         uint m_depthTexture = 0;
         std::map<LColourAttachment, VulkanRenderTarget> m_colourAttachments;
 
-        //std::vector<VkDescriptorSet> m_colourAttachmentDescriptors;
-        std::unordered_map<LColourAttachment, VkDescriptorSet> m_colourAttachmentDescriptors;
+        VkDescriptorSet m_descriptorSet = nullptr;
+        VkDescriptorSetLayout m_descriptorSetLayout;
         std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts;
 
         bool m_bHasDepthAttachment = false;
@@ -104,6 +114,26 @@ namespace Lemonade
 
         // Target per swapchain image.
         static std::unordered_map<CitrusCore::UID, std::vector<std::shared_ptr<LRenderTarget>>> m_defaultTargets;
+
+        VkSampler m_linearSampler = VK_NULL_HANDLE;
+
+        const ImageTransition ToColourAttachment{
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_ACCESS_SHADER_READ_BIT,
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
+        };
+
+        const ImageTransition ToShaderRead{
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+            VK_ACCESS_SHADER_READ_BIT
+        };
     };
 }
 

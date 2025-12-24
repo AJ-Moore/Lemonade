@@ -44,8 +44,6 @@ namespace Lemonade
 
 		m_currentFrame = ++m_currentFrame % LRenderTarget::MAX_FRAMES_IN_FLIGHT;
 
-		//vkWaitForFences(device, 1, &m_fence[m_currentFrame], VK_TRUE, UINT64_MAX);
-		//vkResetFences(device, 1, &m_fence[m_currentFrame]);
 		m_passIndex = 0;
 		VkResult result = vkAcquireNextImageKHR(device, m_swapChain, UINT64_MAX, m_imageAvailableSemaphore[m_currentFrame], VK_NULL_HANDLE, &m_activeSwapChainImageIndex);
 		
