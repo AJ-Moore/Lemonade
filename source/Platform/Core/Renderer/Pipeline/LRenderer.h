@@ -4,6 +4,7 @@
 #include <Events/Event.h>
 #include <LCommon.h>
 #include <Platform/Core/Renderer/Pipeline/ARenderTarget.h>
+#include <Platform/Core/Renderer/Pipeline/LRenderInput.h>
 #include <Platform/Core/Renderer/Pipeline/AViewport.h>
 #include <Platform/Core/Services/LService.h>
 #include <Platform/Core/Renderer/Pipeline/LCamera.h>
@@ -37,6 +38,7 @@ namespace Lemonade
 
 		void SetActiveCamera(LCamera* camera) {m_activeCamera = camera;}
 		void SetActiveRenderTarget(ARenderTarget* target) { m_activeRenderTarget = target; }
+		void SetRenderInput(LRenderInput* input) { m_renderInput = input; }
 	protected:
 		virtual bool Init();
 		virtual void Unload();
@@ -45,6 +47,7 @@ namespace Lemonade
 		void RenderPass();
 
 	private:
+		LRenderInput* m_renderInput;
 		LRenderingData m_renderingData;
 		std::vector<std::shared_ptr<LRenderStage>> m_renderStages;
 

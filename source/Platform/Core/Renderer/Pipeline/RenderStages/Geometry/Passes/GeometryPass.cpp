@@ -16,7 +16,7 @@ namespace Lemonade
         m_geometryTarget.Init();
         m_gBuffer.Init();
         m_gBuffer.SetColourAttachments(1, false);
-		m_geometryTarget.SetColourAttachments(2, false);
+		m_geometryTarget.SetColourAttachments(4, false);
         m_geometryTarget.AddDepthAttachment();
         return true;
     }

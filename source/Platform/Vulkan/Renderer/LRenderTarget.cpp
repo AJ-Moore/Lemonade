@@ -1,3 +1,7 @@
+#include <LCommon.h>
+
+#ifdef RENDERER_VULKAN
+
 #include <Platform/Vulkan/Renderer/LRenderBlock.h>
 #include <Platform/Vulkan/Materials/Texture.h>
 #include <Platform/Core/Renderer/Pipeline/ARenderTarget.h>
@@ -5,15 +9,12 @@
 #include <Platform/Vulkan/WindowManager/LWindow.h>
 #include <Platform/Core/Renderer/Pipeline/LRenderer.h>
 #include <Util/Logger.h>
-#include <LCommon.h>
+#include <climits>
 #include <cstdint>
 #include <glm/fwd.hpp>
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan_core.h>
-
-#ifdef RENDERER_VULKAN
-
 #include <memory>
 #include <Platform/Vulkan/Renderer/LRenderTarget.h>
 
@@ -123,37 +124,17 @@ namespace Lemonade
     {
         VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 
-		VkPushConstantRange pushConstantRange{};
-		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-		pushConstantRange.offset = 0;
-		pushConstantRange.size = 128;
-
-		VkPipelineLayoutCreateInfo m_vkPipelineLayoutCreateInfo = {};
-		m_vkPipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		m_vkPipelineLayoutCreateInfo.setLayoutCount = m_descriptorSetLayouts.size();
-		m_vkPipelineLayoutCreateInfo.pSetLayouts = m_descriptorSetLayouts.data();
-		m_vkPipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-		m_vkPipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-
-        if (m_vkPipelineLayout == VK_NULL_HANDLE)
-        {
-            vkCreatePipelineLayout(device, &m_vkPipelineLayoutCreateInfo, nullptr, &m_vkPipelineLayout);
-        }
-
         LWindow* activeWindow = GraphicsServices::GetWindowManager()->GetActiveWindow();
         uint32_t currentFrame = activeWindow->GetCurrentFrame();
         LRenderTarget* activeTarget = static_cast<LRenderTarget*>(GraphicsServices::GetRenderer()->GetActiveRenderTarget());
+        LRenderBlock* renderBlock = static_cast<LRenderBlock*>(m_renderBlock);
+        VkDescriptorSet descriptorSet = renderBlock->GetDescriptorSet(currentFrame);
 
-        if (m_descriptorsDirty)
+        // see m_bTextureSamplersDirty in LRenderBlock.cpp, bug currently prevents this optimisation.
+        //if (m_descriptorsDirty)
         {
-            UpdateDescriptorSets();
+            UpdateDescriptorSets(descriptorSet);
         }
-
-        vkCmdBindDescriptorSets(activeTarget->GetCommandBuffer(),
-        VK_PIPELINE_BIND_POINT_GRAPHICS,
-        m_vkPipelineLayout,
-        0, 1, &m_descriptorSet,
-        0, nullptr);
 
         m_descriptorsDirty = false;
     }
@@ -191,7 +172,8 @@ namespace Lemonade
         for (int i = 0; i < m_colourAttachments.size(); ++i)
         {
             VkAttachmentDescription colorAttachment = {};
-            colorAttachment.format = VK_FORMAT_R8G8B8A8_UNORM;
+            colorAttachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+            //colorAttachment.format = VK_FORMAT_R8G8B8A8_UNORM;
             colorAttachment.samples = m_hasMultisampledColourAttachment ? m_sampleCount : VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
             colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
             colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -314,11 +296,6 @@ namespace Lemonade
 
     void LRenderTarget::BeginRenderPass()
     {
-        if (m_descriptorSet == nullptr)
-        {
-            CreateDescriptorSetLayout();
-        }
-
         // If buffer dirty or not generated, generate it. Step was to reduce uneccessary buffer re-generation when adding colour targets & such.
         if (m_dirtyBuffer)
         {
@@ -776,7 +753,7 @@ namespace Lemonade
         imageInfo.extent.depth = 1;
         imageInfo.mipLevels = 1;
         imageInfo.arrayLayers = 1;
-        imageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+        imageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
         imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -811,7 +788,7 @@ namespace Lemonade
 
         VkImageViewCreateInfo viewInfo = {};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.format = VK_FORMAT_R8G8B8A8_UNORM; 
+        viewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT; 
         viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; 
         viewInfo.image = m_colourAttachments.at(colourAttachment).Image;
         viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -854,64 +831,6 @@ namespace Lemonade
         return 0;
     }
 
-    void LRenderTarget::CreateDescriptorSetLayout()
-    {
-        VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
-
-        uint32_t binding = 0;
-        std::vector<VkDescriptorSetLayoutBinding> bindings;
-
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-		uboLayoutBinding.binding = binding++;
-		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		uboLayoutBinding.descriptorCount = 1; 
-		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-		uboLayoutBinding.pImmutableSamplers = nullptr;   
-        bindings.push_back(uboLayoutBinding);
-        
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = binding++;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        bindings.push_back(samplerLayoutBinding);
-
-        for (int i = 0; i < m_colourAttachments.size(); ++i)
-        {
-            VkDescriptorSetLayoutBinding imageLayoutBinding{};
-            imageLayoutBinding.binding = binding++; 
-            imageLayoutBinding.descriptorCount = 1;
-            imageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-            imageLayoutBinding.pImmutableSamplers = nullptr;
-            imageLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            bindings.push_back(imageLayoutBinding);
-        }
-
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = bindings.size();
-        layoutInfo.pBindings = bindings.data();
-
-        if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create descriptor set layout!");
-        }
-
-        m_descriptorSetLayouts.clear();
-        m_descriptorSetLayouts.push_back(m_descriptorSetLayout);
-
-        //std::vector<VkDescriptorSetLayout> layouts(LRenderTarget::MAX_FRAMES_IN_FLIGHT, m_descriptorSetLayout); 
-
-        VkDescriptorSetAllocateInfo desallocInfo{};
-		desallocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		desallocInfo.pNext = nullptr; 
-		desallocInfo.descriptorPool = m_descriptorPool;
-		desallocInfo.descriptorSetCount = 1;
-		desallocInfo.pSetLayouts = &m_descriptorSetLayout;
-
-		vkAllocateDescriptorSets(device, &desallocInfo, &m_descriptorSet);
-    }
-
     void LRenderTarget::SetRenderBlock(ARenderBlock* block )
     { 
         if (block == m_renderBlock)
@@ -924,7 +843,7 @@ namespace Lemonade
         m_descriptorsDirty = true;
     }
 
-    void LRenderTarget::UpdateDescriptorSets()
+    void LRenderTarget::UpdateDescriptorSets(VkDescriptorSet dstSet)
     {
         if (m_renderBlock == nullptr)
         {
@@ -933,49 +852,33 @@ namespace Lemonade
         }
 
         VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
-
-        VkDescriptorSet descriptorSet = m_descriptorSet;
+        CitrusCore::ResourcePtr<Material> material = m_renderBlock->GetMaterial();
         LRenderBlock* renderBlock = static_cast<LRenderBlock*>(m_renderBlock);
+
+        std::vector<VkWriteDescriptorSet> writes;
+        std::vector<VkDescriptorImageInfo> imageDescriptors;
+        imageDescriptors.reserve(m_colourAttachments.size());
         uint32_t currentFrame = GraphicsServices::GetWindowManager()->GetActiveWindow()->GetCurrentFrame();
         LVKBuffer buffer = renderBlock->GetLVKBuffer(currentFrame);
 
-		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = buffer.Buffer;
-		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(VertexData);
+        int attachmentCount = 0;
+        int minIndex = INT_MAX; 
 
-        uint32_t binding = 0;
-        std::vector<VkWriteDescriptorSet> writes;
-
-        VkWriteDescriptorSet uniformBufferWrite{};
-		uniformBufferWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		uniformBufferWrite.dstSet = descriptorSet;
-		uniformBufferWrite.dstBinding = binding++;
-		uniformBufferWrite.dstArrayElement = 0;
-		uniformBufferWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		uniformBufferWrite.descriptorCount = 1;
-		uniformBufferWrite.pBufferInfo = &bufferInfo;
-        writes.push_back(uniformBufferWrite);
-
-        VkDescriptorImageInfo samplerDescriptor = {};
-        // We currently use a single sampler.
-        samplerDescriptor.sampler = m_linearSampler;
-
-        VkWriteDescriptorSet writeSampler = {};
-        writeSampler.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        writeSampler.dstSet = descriptorSet;
-        writeSampler.dstBinding = binding++;
-        writeSampler.dstArrayElement = 0;
-        writeSampler.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-        writeSampler.descriptorCount = 1;
-        writeSampler.pImageInfo = &samplerDescriptor;
-        writes.push_back(writeSampler);
-
-        std::vector<VkDescriptorImageInfo> imageDescriptors;;
-     
-        for (int i = 0; i < m_colourAttachments.size(); ++i)
+        for (const auto& texture : material->GetResource()->GetTextures())
         {
-            const auto& attachment = m_colourAttachments.at(static_cast<LColourAttachment>(((uint)LColourAttachment::LEMON_COLOR_ATTACHMENT0 + i)));
+            if (texture.second->GetBindLocation() < minIndex)
+            {
+                minIndex = texture.second->GetBindLocation();
+            }
+        }
+
+		for (const auto& texture : material->GetResource()->GetTextures())
+		{
+			Texture* tex = static_cast<Texture*>(texture.second->GetTexture()->GetResource());
+			uint32_t texturebindLocation = texture.second->GetBindLocation();
+            uint32_t attachmentIndex = texturebindLocation - minIndex;
+            const auto& attachment = m_colourAttachments.at(static_cast<LColourAttachment>(((uint)LColourAttachment::LEMON_COLOR_ATTACHMENT0 + attachmentIndex)));
+
             // Create image descriptor 
             VkDescriptorImageInfo imageDescriptor = {};
             imageDescriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -984,8 +887,8 @@ namespace Lemonade
 
             VkWriteDescriptorSet writeImage = {};
             writeImage.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            writeImage.dstSet = descriptorSet;
-            writeImage.dstBinding = binding++;
+            writeImage.dstSet = dstSet;
+            writeImage.dstBinding = texturebindLocation;
             writeImage.dstArrayElement = 0;
             writeImage.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
             writeImage.descriptorCount = 1;

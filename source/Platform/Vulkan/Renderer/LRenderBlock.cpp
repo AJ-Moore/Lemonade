@@ -32,7 +32,7 @@ namespace Lemonade
 
 	bool LRenderBlock::Init()
 	{
-		m_uniformBuffers.resize(LRenderTarget::MAX_FRAMES_IN_FLIGHT);
+		m_vertexDataUniformBuffers.resize(LRenderTarget::MAX_FRAMES_IN_FLIGHT);
 		m_boneMatBuffer.resize(LRenderTarget::MAX_FRAMES_IN_FLIGHT);
 		m_descriptorSets.resize(LRenderTarget::MAX_FRAMES_IN_FLIGHT);
 		
@@ -115,15 +115,15 @@ namespace Lemonade
 		}
 
 		SetUniforms();
-		
+	
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_vkPipeline);
+		OnPipelineBound.Invoke(this);
+
 		vkCmdBindDescriptorSets(commandBuffer,
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			m_vkPipelineLayout,
 			0, 1, &m_descriptorSets[currentFrame],
 			0, nullptr);
-
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_vkPipeline);
-		OnPipelineBound.Invoke(this);
 
 		vkCmdBindVertexBuffers(commandBuffer, /*firstBinding=*/0, 
 			static_cast<uint32_t>(m_vkBuffers.size()), 
@@ -350,7 +350,7 @@ namespace Lemonade
 
 		// Vertex data - uniform buffer
 		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = m_uniformBuffers[currentFrame].Buffer;
+		bufferInfo.buffer = m_vertexDataUniformBuffers[currentFrame].Buffer;
 		bufferInfo.offset = 0;
 		bufferInfo.range = sizeof(VertexData);
 
@@ -408,63 +408,69 @@ namespace Lemonade
 		imageInfos.reserve(samplerCount + textureCount);
 
 		LSampler* defaultSampler = static_cast<LSampler*>(m_material->GetResource()->GetSamplers().begin()->get());
-
-		for (auto& sampler : m_material->GetResource()->GetSamplers())
+		
+		// Needs improvement -> prevents us unecessarily updating the textures every frame.
+		// Bug here currently that causes flashing -> needs investigation
+		//if (m_bTextureSamplersDirty)
 		{
-			LSampler* nativeSampler = static_cast<LSampler*>(sampler.get());
-
-			assert(nativeSampler->GetSampler() != VK_NULL_HANDLE);
-
-			VkDescriptorImageInfo info{};
-			info.sampler = nativeSampler->GetSampler();
-
-			imageInfos.push_back(info);
-
-			VkWriteDescriptorSet writeSampler = {};
-			writeSampler.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			writeSampler.dstSet = m_descriptorSets[currentFrame];
-			writeSampler.dstBinding = bindLocation++;
-			writeSampler.dstArrayElement = sampleBindLocation;
-			writeSampler.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-			writeSampler.descriptorCount = 1;
-			writeSampler.pImageInfo = &imageInfos.back();
-			writes.push_back( writeSampler);
-		}
-
-		for (const auto& texture : m_material->GetResource()->GetTextures())
-		{
-			Texture* tex = static_cast<Texture*>(texture.second->GetTexture()->GetResource());
-			uint32_t textureBindLocation = texture.second->GetBindLocation();
-
-			// Imaage View
-			imageInfos.push_back({
-				.sampler = defaultSampler->GetSampler(),
-				.imageView   = tex->GetImageView(),
-				.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			});
-
-			// Check material status of texture type, basically if pink black has been bound but we wern't expecting a texture we switch to a default "normal" texture.
-			TextureStatus status = m_material->GetResource()->GetTextureStatus(texture.first);
-
-			if (status == TextureStatus::NotProvided)
+			for (auto& sampler : m_material->GetResource()->GetSamplers())
 			{
-				if (m_defaultTextures.contains(texture.first))
-				{
-					imageInfos.back().imageView = m_defaultTextures[texture.first]->GetImageView();
-				}
+				LSampler* nativeSampler = static_cast<LSampler*>(sampler.get());
+
+				assert(nativeSampler->GetSampler() != VK_NULL_HANDLE);
+
+				VkDescriptorImageInfo info{};
+				info.sampler = nativeSampler->GetSampler();
+
+				imageInfos.push_back(info);
+
+				VkWriteDescriptorSet writeSampler = {};
+				writeSampler.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				writeSampler.dstSet = m_descriptorSets[currentFrame];
+				writeSampler.dstBinding = bindLocation++;
+				writeSampler.dstArrayElement = sampleBindLocation;
+				writeSampler.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+				writeSampler.descriptorCount = 1;
+				writeSampler.pImageInfo = &imageInfos.back();
+				writes.push_back( writeSampler);
 			}
 
-			VkWriteDescriptorSet writeImage = {};
-			writeImage.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			writeImage.dstSet = m_descriptorSets[currentFrame];
-			writeImage.dstBinding = textureBindLocation;
-			writeImage.dstArrayElement = 0;
-			writeImage.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-			writeImage.descriptorCount = 1;
-			writeImage.pImageInfo = &imageInfos.back();
+			m_bTextureSamplersDirty = false;
+			for (const auto& texture : m_material->GetResource()->GetTextures())
+			{
+				Texture* tex = static_cast<Texture*>(texture.second->GetTexture()->GetResource());
+				uint32_t textureBindLocation = texture.second->GetBindLocation();
 
-			writes.push_back(writeImage);
-		}                
+				// Imaage View
+				imageInfos.push_back({
+					.sampler = defaultSampler->GetSampler(),
+					.imageView   = tex->GetImageView(),
+					.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				});
+
+				// Check material status of texture type, basically if pink black has been bound but we wern't expecting a texture we switch to a default "normal" texture.
+				TextureStatus status = m_material->GetResource()->GetTextureStatus(texture.first);
+
+				if (status == TextureStatus::NotProvided)
+				{
+					if (m_defaultTextures.contains(texture.first))
+					{
+						imageInfos.back().imageView = m_defaultTextures[texture.first]->GetImageView();
+					}
+				}
+
+				VkWriteDescriptorSet writeImage = {};
+				writeImage.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				writeImage.dstSet = m_descriptorSets[currentFrame];
+				writeImage.dstBinding = textureBindLocation;
+				writeImage.dstArrayElement = 0;
+				writeImage.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				writeImage.descriptorCount = 1;
+				writeImage.pImageInfo = &imageInfos.back();
+
+				writes.push_back(writeImage);
+			}
+		}
 
 		// Copy anim mats 
 		if (m_mesh->GetBoneCount())
@@ -473,7 +479,7 @@ namespace Lemonade
 			std::memcpy(boneBuffer.DataGPUMapped, boneBuffer.DataCPUMapped, boneBuffer.DataSize);
 		}
 
-		std::memcpy(m_uniformBuffers[currentFrame].DataGPUMapped, m_uniformBuffers[currentFrame].DataCPUMapped, m_uniformBuffers[currentFrame].DataSize);
+		std::memcpy(m_vertexDataUniformBuffers[currentFrame].DataGPUMapped, m_vertexDataUniformBuffers[currentFrame].DataCPUMapped, m_vertexDataUniformBuffers[currentFrame].DataSize);
 		vkUpdateDescriptorSets(device.GetVkDevice(), writes.size(), writes.data(), 0, nullptr);
 	}
 
@@ -523,7 +529,7 @@ namespace Lemonade
 		}
 
 		// Allocate Unifrom buffer memory 
-		for (auto& uniformBuffer : m_uniformBuffers)
+		for (auto& uniformBuffer : m_vertexDataUniformBuffers)
 		{
 			uniformBuffer.DataSize = sizeof(VertexData);
 

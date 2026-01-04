@@ -1,35 +1,22 @@
 #pragma once
-#include "Platform/Core/Renderer/Materials/TextureType.h"
-#include "Platform/Vulkan/Materials/Texture.h"
+#include <LCommon.h>
+
+#ifdef RENDERER_VULKAN
+#include <Platform/Core/Renderer/Materials/TextureType.h>
+#include <Platform/Vulkan/Materials/Texture.h>
 #include <Platform/Core/Renderer/Geometry/Mesh.h>
 #include <Platform/Core/Renderer/Geometry/PrimitiveMode.h>
 #include <Platform/Core/Renderer/Materials/Material.h>
 #include <Spatial/Transform.h>
-#include <LCommon.h>
-#include <cstddef>
-#include <memory>
 #include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan_core.h>
 #include <Platform/Core/Renderer/Materials/VertexData.h>
-
-#ifdef RENDERER_VULKAN
 #include <Platform/Core/Renderer/RenderBlock/ARenderBlock.h>
+#include <Platform/Vulkan/Renderer/LVKBuffer.h>
 
 namespace Lemonade
 {
-	struct LEMONADE_API LVKBuffer
-	{
-		VkBuffer Buffer;
-		void* DataCPUMapped = nullptr;
-		void* DataGPUMapped = nullptr;
-		size_t DataSize = 0;
-		VkDeviceMemory VKDeviceMemory;
-		size_t Stride;
-		int Binding = 0;
-		VkFormat Format = VK_FORMAT_R32G32B32_SFLOAT;
-	};
-
 	/** URender Block Class - Used to store render state information */
 	class LEMONADE_API LRenderBlock : public ARenderBlock
 	{
@@ -57,9 +44,9 @@ namespace Lemonade
 		virtual void SetDrawMode(PrimitiveMode mode);
 
 		PrimitiveMode GetDrawMode() const { return (PrimitiveMode)m_primitiveMode; }
-
-		LVKBuffer GetLVKBuffer(uint32_t currentFrame) { return m_uniformBuffers.at(currentFrame); }
-
+		LVKBuffer GetLVKBuffer(uint32_t currentFrame) { return m_vertexDataUniformBuffers.at(currentFrame); }
+		VkDescriptorSet GetDescriptorSet(uint32_t frame) { return m_descriptorSets.at(frame); }
+		VkPipelineLayout GetPipelineLayout() { return m_vkPipelineLayout; }
 	protected:
 		/// Called to perform initialisation 
 		virtual bool Init();
@@ -79,7 +66,7 @@ namespace Lemonade
 		/// Dmps the animation buffer data 
 		virtual void DumpAnimationData();
 
-		// Set/ configure vertex attributes.
+		/// Set/ configure vertex attributes.
 		virtual void SetVertexAttributes();
 
 		std::vector<VkBuffer> m_vkBuffers;
@@ -116,7 +103,7 @@ namespace Lemonade
 		void SetUniforms();
 		void CreateVkPipeline();
 		void CreateVkDescriptors();
-		std::vector<LVKBuffer> m_uniformBuffers;
+		std::vector<LVKBuffer> m_vertexDataUniformBuffers;
 		std::vector<LVKBuffer> m_boneMatBuffer;
 		std::vector<VkDescriptorSet> m_descriptorSets;
 
@@ -148,6 +135,7 @@ namespace Lemonade
 		Texture m_defaultMetalness;
 
 		std::unordered_map<TextureType, Texture*> m_defaultTextures;
+		bool m_bTextureSamplersDirty = true;
 	};
 }
 #endif

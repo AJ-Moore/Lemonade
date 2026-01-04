@@ -79,10 +79,9 @@ namespace Lemonade
         VulkanRenderTarget GetColourAttachment(LColourAttachment colourAttachment);
         VkFramebuffer getFrameBuffer() { return m_frameBuffer; }
         void GenerateBuffers();
-        void UpdateDescriptorSets();
+        void UpdateDescriptorSets(VkDescriptorSet dstSet);
         void TransitionAttachments(VkCommandBuffer cmdBuffer, ImageTransition transition);
-        void CreateDescriptorSetLayout();
-
+        
         bool m_dirtyBuffer = false;
         bool m_descriptorsDirty = true;
         bool m_hasMultisampledColourAttachment = false;
