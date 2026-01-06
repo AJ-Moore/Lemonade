@@ -266,7 +266,7 @@ namespace Lemonade {
 
 		VkBufferImageCopy region = {};
 		region.bufferOffset = 0;
-		region.bufferRowLength = 0;    // Tightly packed
+		region.bufferRowLength = 0;
 		region.bufferImageHeight = 0;
 		
 		region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
