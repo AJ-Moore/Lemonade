@@ -15,15 +15,15 @@ namespace Lemonade
 {
     // Custom allocation functions
     void* CustomAllocate(void* pUserData, size_t size, size_t alignment, VkSystemAllocationScope allocationScope) {
-		return malloc(size);  // Example: just use malloc for allocations
+		return malloc(size);
     }
 
     void* CustomReallocate(void* pUserData, void* pOriginal, size_t size, size_t alignment, VkSystemAllocationScope allocationScope) {
-		return realloc(pOriginal, size);  // Example: just use realloc for reallocations
+		return realloc(pOriginal, size);
     }
 
     void CustomFree(void* pUserData, void* pMemory) {
-		free(pMemory);  // Example: just use free for deallocations
+		free(pMemory);
     }
 
     void LWindow::Unload()
@@ -43,9 +43,6 @@ namespace Lemonade
 		VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 
 		m_currentFrame = ++m_currentFrame % LRenderTarget::MAX_FRAMES_IN_FLIGHT;
-
-		//vkWaitForFences(device, 1, &m_fence[m_currentFrame], VK_TRUE, UINT64_MAX);
-		//vkResetFences(device, 1, &m_fence[m_currentFrame]);
 		m_passIndex = 0;
 		VkResult result = vkAcquireNextImageKHR(device, m_swapChain, UINT64_MAX, m_imageAvailableSemaphore[m_currentFrame], VK_NULL_HANDLE, &m_activeSwapChainImageIndex);
 		
@@ -77,8 +74,6 @@ namespace Lemonade
 		VkFenceCreateInfo fenceInfo = {
 			.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
 			.pNext = nullptr,
-			//.flags = 0, // or VK_FENCE_CREATE_SIGNALED_BIT
-			//.flags = 0,
 			.flags = VK_FENCE_CREATE_SIGNALED_BIT,
 		};
 		
