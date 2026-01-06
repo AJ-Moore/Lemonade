@@ -1,4 +1,7 @@
+#include "Util/StringUtil.h"
 #include <Util/Logger.h>
+#include <cctype>
+#include <string>
 #include <unordered_map>
 #include <Platform/Core/Renderer/Materials/TextureType.h>
 #include <LCommon.h>
@@ -28,7 +31,14 @@ namespace Lemonade
 		{"emissioncolour", TextureType::EmissionColour},
 		{"metalness", TextureType::Metalness},
 		{"roughness", TextureType::Roughness},
-		{"ambientocclusion", TextureType::AmbientOcclusion}
+		{"ambientocclusion", TextureType::AmbientOcclusion},
+
+		{"gcolour", TextureType::GColour},
+		{"gnormal", TextureType::GNormal},
+		{"gposition", TextureType::GPosition},
+		{"gpbr0", TextureType::GPBR0},
+		{"gpbr1", TextureType::GPBR1},
+		{"gpbr2", TextureType::GPBR2},
 	};
 
 	const std::unordered_map<std::string, TextureBindType> TextureData::m_textureBindLookup =
@@ -61,7 +71,7 @@ namespace Lemonade
 
 	TextureType TextureData::GetTextureType(std::string type)
 	{
-		auto result = m_textureLookup.find(type);
+		auto result = m_textureLookup.find(CitrusCore::StringUtil::ToLower(type));
 
 		if (result != m_textureLookup.end())
 		{

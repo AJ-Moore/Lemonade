@@ -14,7 +14,9 @@ namespace Lemonade
     {
         m_renderLayer.Init();
         m_geometryTarget.Init();
-		m_geometryTarget.SetColourAttachments(1, false);
+        m_gBuffer.Init();
+        m_gBuffer.SetColourAttachments(1, false);
+		m_geometryTarget.SetColourAttachments(4, false);
         m_geometryTarget.AddDepthAttachment();
         return true;
     }
@@ -25,8 +27,14 @@ namespace Lemonade
         m_geometryTarget.setClearColour(glm::vec4(0,0,0, 0));
         m_geometryTarget.Clear((uint)LBufferBit::COLOUR);// | (uint)LBufferBit::DEPTH);
         GraphicsServices::GetRenderer()->RenderScene();
-        //m_renderLayer.Render();
         m_geometryTarget.EndRenderPass();
+        
+        m_gBuffer.BeginRenderPass();
+        m_gBuffer.setClearColour(glm::vec4(0,0,0, 0));
+        m_gBuffer.Clear((uint)LBufferBit::COLOUR);
+        m_renderLayer.SetRenderTarget(&m_geometryTarget);
+        m_renderLayer.Render();
+        m_gBuffer.EndRenderPass();
     }
 
     void GeometryPass::Update() 

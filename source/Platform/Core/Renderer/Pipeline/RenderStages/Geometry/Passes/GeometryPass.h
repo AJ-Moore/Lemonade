@@ -16,6 +16,7 @@ namespace Lemonade {
         virtual void Render( const LRenderingData& renderingData) override;
     private:
         LRenderTarget m_geometryTarget;
+        LRenderTarget m_gBuffer;
         LRenderLayer m_renderLayer;
     };
 }
