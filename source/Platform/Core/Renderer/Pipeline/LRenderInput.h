@@ -1,4 +1,5 @@
-
+#pragma once
+#include <Platform/Vulkan/Renderer/LUniformBuffer.h>
 #include <Platform/Core/Renderer/Lighting/Light.h>
 #include <LCommon.h>
 
@@ -11,6 +12,6 @@ namespace Lemonade
     };
 
     struct LEMONADE_API LRenderInput{
-        LightPtr LightData;
+        std::shared_ptr<LUniformBuffer> LightData = nullptr;
     };
 }

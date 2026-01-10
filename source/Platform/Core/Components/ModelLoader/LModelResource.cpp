@@ -13,7 +13,6 @@
 #include <glm/fwd.hpp>
 #include <memory>
 #include <filesystem>
-#include <fstream>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -23,16 +22,47 @@ namespace Lemonade
 
     void LModelResource::Init()
     {
+		if (m_bInitialised) return;
         m_root->Init();
+		m_bInitialised = true;
     }
+
+	void LModelResource::PlayAnimation(uint32 animationIndex)
+	{
+		if (animationIndex < m_animationData.size())
+		{
+			m_bAnimationPlaying = true; 
+			m_currentAnimation = m_animationData[0].get();
+		}
+	}
+
+	LAnimation* LModelResource::GetAnimation(uint32 index)
+	{
+		if (index < m_animationData.size())
+		{
+			return m_animationData[index].get();
+		}
+
+		return nullptr;
+	}
+
+	void LModelResource::PlayAnimation(LAnimation* animation)
+	{
+		if (animation != nullptr)
+		{
+			m_bAnimationPlaying = true;
+			m_currentAnimation = animation; 
+		}
+	}
 
     void LModelResource::Update()
     {
 		float time = Lemonade::GraphicsServices::GetTime()->GetTimeSinceApplicationStarted();
 
-		if (m_animationData.size() > 0)
+		if (m_bAnimationPlaying && m_currentAnimation != nullptr)
 		{
-			UpdateAnimation(m_animationData[0].get(), std::fmod(time, 3.0f));
+			float timeInSeconds = m_currentAnimation->GetDuration()/ m_currentAnimation->GetTicksPerSecond();
+			UpdateAnimation(m_currentAnimation, std::fmod(time, timeInSeconds));
 		}
 
         m_root->Update();
@@ -109,28 +139,24 @@ namespace Lemonade
 	void LModelResource::LoadModel()
 	{
 		m_boneMatrices = std::make_shared<std::vector<glm::mat4>>();
-		m_modelData =LoadAssimpModelData(m_filePath, m_customFlags);
+		m_modelData = LoadAssimpModelData(m_filePath, m_customFlags);
 
 		if (m_modelData != nullptr)
 		{
 			LoadMeta();
 			CreateModelFromData(m_modelData.get());
 			CreateBoneHierarchy();
+
+			if (!m_animationData.empty())
+			{
+				UpdateAnimation(m_animationData[0].get(), 0);				
+			}
 		}
 	}
 
 	void LModelResource::UpdateAnimation(LAnimation* animation, const LModelNode& node, glm::mat4 parentTransform, float timeInSeconds)
 	{
-		glm::mat4 nodeTransform = node.GetNodeTransform(); // static bind-pose
-		glm::mat4 keyframeTransform = glm::mat4(1.0f);
-		
-		//auto it = m_boneIdMap.find(node.GetName());
-		//if (it != m_boneIdMap.end())
-		//{
-		//	LBone* bone = m_skeleton[it->second].get();
-		//	keyframeTransform = bone->GetBoneMatrix(); // local keyframe
-		//	keyframeTransform = glm::mat4(1.0f);
-		//}
+		glm::mat4 bindPose = node.GetNodeTransform();
 
 		auto it = m_boneIdMap.find(node.GetName());
 
@@ -139,19 +165,18 @@ namespace Lemonade
 		{
 			if (boneAnim->GetName() == node.GetName())
 			{
-				keyframeTransform = boneAnim->GetBoneMatrixForAnimTime(timeInSeconds);
+				bindPose = boneAnim->GetBoneMatrixForAnimTime(timeInSeconds, bindPose);
 			}
 		}
 		
 		// compute global transform for this node
-		glm::mat4 globalTransform = parentTransform * nodeTransform * keyframeTransform;
+		glm::mat4 globalTransform = parentTransform * bindPose;
 		
 		// if this node is a bone, write final matrix
 		if (it != m_boneIdMap.end())
 		{
 			LBone* bone = m_skeleton[it->second].get();
 			(*m_boneMatrices)[bone->GetBoneId()] = m_globalInverseRoot * globalTransform * bone->GetOffsetMatrix();
-			//(*m_boneMatrices)[bone->GetBoneId()] = keyframeTransform;
 		}
 		
 		for (const std::shared_ptr<LModelNode>& child : node.GetChildren())
@@ -176,7 +201,8 @@ namespace Lemonade
 		{
 			if (boneAnim->GetId() == -1) continue;
 
-			m_skeleton[boneAnim->GetId()]->SetBoneMatrix(boneAnim->GetBoneMatrixForAnimTime(timeInSeconds));
+			glm::mat4 nodeTransform = m_root->GetNodeTransform();
+			m_skeleton[boneAnim->GetId()]->SetBoneMatrix(boneAnim->GetBoneMatrixForAnimTime(timeInSeconds, nodeTransform));
 		}
 
 		UpdateAnimation(animation, *m_root.get(), glm::mat4(1), timeInSeconds);
@@ -218,18 +244,6 @@ namespace Lemonade
 
 		glm::mat4 local = ConvertMatrixToGLMFormat(node->mTransformation);
 
-		if (node == scene->mRootNode) {
-			//local = glm::mat4(1.0f);
-		}
-
-		glm::mat4 zUpToYUp(
-			1,  0,  0, 0,
-			0,  0,  1, 0,
-			0, -1,  0, 0,
-			0,  0,  0, 1
-		);
-		//local = zUpToYUp * local;
-
 		bool hasBones = false;
 
 		for (uint32 i = 0; i < node->mNumMeshes; ++i)
@@ -260,7 +274,6 @@ namespace Lemonade
 		}
 
 		parent->AddChild(entity);
-		//SharedPtr<UMaterial> mat = std::make_shared<UMaterial>();
 
 		for (uint32 i = 0; i < node->mNumMeshes; ++i)
 		{
@@ -279,18 +292,9 @@ namespace Lemonade
 			std::shared_ptr<std::vector<glm::vec4>> boneIds = std::make_shared<std::vector<glm::vec4>>();
 			std::shared_ptr<std::vector<std::shared_ptr<LAnimation>>> animationData = std::make_shared<std::vector<std::shared_ptr<LAnimation>>>();
 
-			// Check for animations that reference this mesh...
-			std::string name = aimesh->mName.C_Str();
-
 			for (std::shared_ptr<LAnimation> anim : m_animationData)
 			{
-				//for (SharedPtr<UBoneAnim> boneanim : anim->getBoneAnimations())
-				{
-					//if (boneanim->getName() == name)
-					{
-						animationData->push_back(anim);
-					}
-				}
+				animationData->push_back(anim);
 			}
 
 			mesh->SetBones(bones);
@@ -339,7 +343,6 @@ namespace Lemonade
 						}
 					}
 
-
 					auto ubone = std::make_shared<LBone>(bone->mName.C_Str(), 
 														GetBoneId(bone->mNode->mName.C_Str()), 
 														parentBoneId);
@@ -352,7 +355,6 @@ namespace Lemonade
 					);
 
 					ubone->SetOffsetMatrix(ConvertMatrixToGLMFormat(bone->mOffsetMatrix));
-					//ubone->SetOffsetMatrix(offsetMatrix);
 
 					auto weights = std::make_shared<std::vector<LBone::UVertexWeight>>();
 					weights->resize(bone->mNumWeights);
@@ -448,7 +450,7 @@ namespace Lemonade
 					uint32 index = (p * 3) + q;
 
 					aiVector3D vertex = aimesh->mVertices[face->mIndices[q]];
-					(*vertices)[index] = std::move(glm::vec3(vertex.x, vertex.y, vertex.z));//* (float)scale;
+					(*vertices)[index] = std::move(glm::vec3(vertex.x, vertex.y, vertex.z));
 
 					if (weightsToSort.size())
 					{
@@ -597,8 +599,8 @@ namespace Lemonade
 			mesh->SetVertices(vertices);
             mesh->SetShouldGenerateTangents(false);
 			//mesh->SetColours(colours);
-			//mesh->SetTangents(tangents);
-			//mesh->SetBiTangents(biTangents);
+			mesh->SetTangents(tangents);
+			mesh->SetBiTangents(biTangents);
 
 			//for (const std::string& component : mat->getUserComponents())
 			//{
@@ -663,8 +665,6 @@ namespace Lemonade
 
 		std::filesystem::path path(m_filePath);
 		m_root = std::make_shared<LModelNode>(path.filename().string(), std::make_shared<CitrusCore::Transform>(ConvertMatrixToGLMFormat(scene->mRootNode->mTransformation)));
-
-		//getParent()->addChild(root);
 
 		// Populate bone ids 
 		PopulateBones(scene->mRootNode, scene);

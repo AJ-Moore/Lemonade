@@ -1,6 +1,11 @@
+#include <Platform/Core/Renderer/Pipeline/LRenderer.h>
+#include <Platform/Core/Renderer/Pipeline/AUniformBuffer.h>
+#include <Platform/Vulkan/Renderer/LUniformBuffer.h>
 #include <Platform/Core/Renderer/Pipeline/ARenderTarget.h>
 #include <Platform/Core/Services/GraphicsServices.h>
 #include <Platform/Core/Renderer/Pipeline/RenderStages/Geometry/Passes/GeometryPass.h>
+#include <memory>
+#include <vulkan/vulkan_core.h>
 
 namespace Lemonade
 {
@@ -25,9 +30,16 @@ namespace Lemonade
     {
         m_geometryTarget.BeginRenderPass();
         m_geometryTarget.setClearColour(glm::vec4(0,0,0, 0));
-        m_geometryTarget.Clear((uint)LBufferBit::COLOUR);// | (uint)LBufferBit::DEPTH);
+        m_geometryTarget.Clear((uint)LBufferBit::COLOUR);
         GraphicsServices::GetRenderer()->RenderScene();
         m_geometryTarget.EndRenderPass();
+
+        // Lighting data per scene, not updated until after scene is rendered... 
+        if (m_lightignData == nullptr)
+        {
+            m_lightignData = renderingData.RenderInput->LightData;
+            m_renderLayer.GetRenderBlock()->AddUniformBuffer(m_lightignData);
+        }
         
         m_gBuffer.BeginRenderPass();
         m_gBuffer.setClearColour(glm::vec4(0,0,0, 0));

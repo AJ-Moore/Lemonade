@@ -18,6 +18,7 @@ namespace Lemonade
 	{
 		LCamera* ActiveCamera;
 		LWindow* ActiveWindow;
+		LRenderInput* RenderInput;
 	};
 
 	class LRenderStage;
@@ -32,6 +33,7 @@ namespace Lemonade
 		Light* GetActiveLight() const { return m_activeLight; }
 		ARenderTarget* GetActiveRenderTarget() { return m_activeRenderTarget; }
 		float GetShadowMapSize() const { return m_shadowMapSize; }
+		const LRenderInput& GetRenderInput () const { return *m_renderInput;}
 
 		virtual void RenderScene(); 
 		CitrusCore::Event<const LRenderingData&> OnRenderScene;

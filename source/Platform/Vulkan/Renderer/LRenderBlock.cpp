@@ -30,6 +30,11 @@ namespace Lemonade
 		SetName("LRenderBlock");
 	}
 
+	bool LRenderBlock::AddUniformBuffer(std::shared_ptr<LUniformBuffer> buffer)
+	{
+		return m_uniformBuffers.Add(buffer->GetUID(), buffer); 
+	}
+
 	bool LRenderBlock::Init()
 	{
 		m_vertexDataUniformBuffers.resize(LRenderTarget::MAX_FRAMES_IN_FLIGHT);
@@ -469,7 +474,15 @@ namespace Lemonade
 				writeImage.pImageInfo = &imageInfos.back();
 
 				writes.push_back(writeImage);
+				bindLocation++;
 			}
+		}
+
+		for (auto& buffer : m_uniformBuffers)
+		{
+			buffer->UpdateDescriptors(m_descriptorSets[currentFrame], bindLocation++);
+			buffer->DumpBuffer();
+			writes.push_back(buffer->GetWrite());
 		}
 
 		// Copy anim mats 
@@ -487,7 +500,8 @@ namespace Lemonade
 	{
 		const LVulkanDevice& device = GraphicsServices::GetContext()->GetVulkanDevice();
 
-		int numBones = m_mesh->GetBoneCount();
+		std::shared_ptr<std::vector<glm::mat4>> bones = m_mesh->GetBoneMatrix();
+		int numBones = bones != nullptr ? bones->size(): 0;
 
 		// Bone matrices storage buffer
 		if (numBones > 0)
@@ -609,6 +623,18 @@ namespace Lemonade
 			imageLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
 			bindings.push_back(imageLayoutBinding);
+			bindLocation++;
+		}
+
+		for (const auto& buffer : m_uniformBuffers) 
+		{
+			VkDescriptorSetLayoutBinding storagebinding{};
+			storagebinding.binding = bindLocation++;
+			storagebinding.descriptorType = buffer->GetDescriptorType();
+			storagebinding.descriptorCount = 1;
+			storagebinding.stageFlags = buffer->GetShaderStage();
+			storagebinding.pImmutableSamplers = nullptr;
+			bindings.push_back(storagebinding);
 		}
 
 		VkDescriptorSetLayoutCreateInfo descriptorCreateInfo{};

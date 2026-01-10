@@ -44,6 +44,7 @@ namespace Lemonade {
     {
         m_renderingData.ActiveCamera = m_activeCamera;
         m_renderingData.ActiveWindow = GraphicsServices::GetWindowManager()->GetActiveWindow();
+        m_renderingData.RenderInput = m_renderInput;
 
         for (auto& renderStage : m_renderStages)
         {
@@ -54,5 +55,6 @@ namespace Lemonade {
     void LRenderer::RenderScene()
     {
         OnRenderScene.Invoke(m_renderingData);
+        m_renderingData.RenderInput = m_renderInput;
     }
 }

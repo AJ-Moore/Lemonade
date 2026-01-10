@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Platform/Core/Renderer/Animation/Animation.h"
 #include <Platform/Core/Renderer/Animation/Bone.h>
 #include <assimp/Importer.hpp>
 #include <LCommon.h>
@@ -29,6 +30,7 @@ namespace Lemonade
 	// Represents a model in the game - wraps Assimp aiScene 
 	class LEMONADE_API LModelResource : public CitrusCore::AResource<LModelResource>
 	{
+		friend class LModel;
 	public:
         std::shared_ptr<LModelNode> GetRoot() { return m_root; }
 
@@ -39,6 +41,11 @@ namespace Lemonade
 		virtual bool LoadResource(std::string path) override;
 		virtual void UnloadResource() override{};
 
+		void PlayAnimation(uint32 animationIndex);
+		void PlayAnimation(LAnimation* animation);
+
+		LAnimation* GetAnimation(uint32 index);
+
 	private:
 	    std::unordered_map<int, std::shared_ptr<LBone>> m_skeleton;
         std::shared_ptr<LModelNode> m_root;
@@ -46,6 +53,7 @@ namespace Lemonade
 		uint m_customFlags = 0;
 		std::string m_filePath;
 		bool m_bGenerateCollider = false;
+		bool m_bAnimationPlaying = false;
 
 		LModelMeta m_meta;
 
@@ -68,6 +76,8 @@ namespace Lemonade
 		std::unordered_map<std::string, int> m_boneIdMap;
 		int m_boneCount = 0;
 		glm::mat4 m_globalInverseRoot;
+		LAnimation* m_currentAnimation = nullptr;
+		bool m_bInitialised = false;
 
 		static inline glm::mat4 ConvertMatrixToGLMFormat(const aiMatrix4x4& from)
 		{

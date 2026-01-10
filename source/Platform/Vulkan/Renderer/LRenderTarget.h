@@ -1,15 +1,15 @@
 #pragma once
 
+#include <LCommon.h>
+#if defined(RENDERER_VULKAN)
 #include <Platform/Core/Renderer/RenderBlock/ARenderBlock.h>
 #include <Util/UID.h>
 #include <Platform/Core/Renderer/Pipeline/ARenderTarget.h>
-#include <LCommon.h>
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan_core.h>
-#if defined(RENDERER_VULKAN)
 #include <Platform/Core/Renderer/Materials/Material.h>
 #include <map>
 

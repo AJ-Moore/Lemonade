@@ -1,7 +1,11 @@
 #pragma once
+
 #include <LCommon.h>
 
 #ifdef RENDERER_VULKAN
+#include <Containers/IndexedVector.h>
+#include <Platform/Vulkan/Renderer/LUniformBuffer.h>
+#include <Util/UID.h>
 #include <Platform/Core/Renderer/Materials/TextureType.h>
 #include <Platform/Vulkan/Materials/Texture.h>
 #include <Platform/Core/Renderer/Geometry/Mesh.h>
@@ -14,6 +18,7 @@
 #include <Platform/Core/Renderer/Materials/VertexData.h>
 #include <Platform/Core/Renderer/RenderBlock/ARenderBlock.h>
 #include <Platform/Vulkan/Renderer/LVKBuffer.h>
+#include <memory>
 
 namespace Lemonade
 {
@@ -47,6 +52,8 @@ namespace Lemonade
 		LVKBuffer GetLVKBuffer(uint32_t currentFrame) { return m_vertexDataUniformBuffers.at(currentFrame); }
 		VkDescriptorSet GetDescriptorSet(uint32_t frame) { return m_descriptorSets.at(frame); }
 		VkPipelineLayout GetPipelineLayout() { return m_vkPipelineLayout; }
+
+		bool AddUniformBuffer(std::shared_ptr<LUniformBuffer> buffer);
 	protected:
 		/// Called to perform initialisation 
 		virtual bool Init();
@@ -99,7 +106,6 @@ namespace Lemonade
 		};
 
 	private: 
-
 		void SetUniforms();
 		void CreateVkPipeline();
 		void CreateVkDescriptors();
@@ -135,6 +141,7 @@ namespace Lemonade
 		Texture m_defaultMetalness;
 
 		std::unordered_map<TextureType, Texture*> m_defaultTextures;
+		CitrusCore::IndexedVector<CitrusCore::UID, std::shared_ptr<LUniformBuffer>> m_uniformBuffers;
 		bool m_bTextureSamplersDirty = true;
 	};
 }
