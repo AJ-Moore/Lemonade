@@ -38,6 +38,9 @@ namespace Lemonade
 	
 		LVulkanDevice(LVulkanDevice&&) = default;
 		LVulkanDevice& operator=(LVulkanDevice&&) = default;
+
+		// thrown this here for now...
+		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
 	private:
 		bool CreateVulkanDevice();
 		void CreatePipelineCache();

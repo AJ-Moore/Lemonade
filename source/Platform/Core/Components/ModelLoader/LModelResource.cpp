@@ -109,6 +109,7 @@ namespace Lemonade
 			//aiProcess_LimitBoneWeights |
 			//aiProcess_GenUVCoords |
 			//aiProcessPreset_TargetRealtime_Quality |
+			aiProcess_MakeLeftHanded |
 			aiProcess_PopulateArmatureData |
 			aiProcess_ValidateDataStructure |
 			aiProcess_GlobalScale |
@@ -589,7 +590,6 @@ namespace Lemonade
 
 				if (baseColour.a != 1)
 				{
-					// TODO
 					//entity->setRenderPriority((uint)URenderPriority::Transparent);
 				}
 			}
@@ -597,7 +597,7 @@ namespace Lemonade
 			mesh->SetNormals(normals);
 			mesh->SetUVS(uvs);
 			mesh->SetVertices(vertices);
-            mesh->SetShouldGenerateTangents(false);
+            mesh->SetShouldGenerateTangents(true);
 			//mesh->SetColours(colours);
 			mesh->SetTangents(tangents);
 			mesh->SetBiTangents(biTangents);
@@ -658,9 +658,6 @@ namespace Lemonade
 
 	void LModelResource::CreateModelFromData(LModelData* Model)
 	{
-		// TODO Cameras ?
-
-		// Meshes/ Materials
 		const aiScene* scene = m_modelData->Importer->GetScene();
 
 		std::filesystem::path path(m_filePath);
@@ -682,8 +679,6 @@ namespace Lemonade
 				if (!m_boneIdMap.contains(node->mNodeName.C_Str()))
 				{
 					printf("invalid bone - non bone skinned based animation not currently supported sorry");
-					//continue;
-					// Hack we let it add a "bone anim" we can tell theres no bone because the bone id will be -1
 				}
 
 				std::shared_ptr<LBoneAnim> boneAnim = std::make_shared<LBoneAnim>(node->mNodeName.C_Str(), GetBoneId(node->mNodeName.C_Str()));

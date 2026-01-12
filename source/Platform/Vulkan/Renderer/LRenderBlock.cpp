@@ -161,22 +161,6 @@ namespace Lemonade
 		std::memcpy(boneBuffer.DataGPUMapped, boneBuffer.DataCPUMapped, boneBuffer.DataSize);
 	}
 
-	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
-		VkPhysicalDeviceMemoryProperties memProperties;
-
-		const LVulkanDevice& device = GraphicsServices::GetContext()->GetVulkanDevice();
-		vkGetPhysicalDeviceMemoryProperties(device.GetPhysicalDevice(), &memProperties);
-	
-		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-			if ((typeFilter & (1 << i)) &&
-				(memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
-				return i;
-			}
-		}
-	
-		throw std::runtime_error("Failed to find suitable memory type!");
-	}
-
 	void LRenderBlock::DumpBufferData()
 	{
 		if (m_mesh == nullptr)
@@ -329,7 +313,7 @@ namespace Lemonade
 			VkMemoryAllocateInfo allocInfo{};
 			allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 			allocInfo.allocationSize = memRequirements.size;
-			allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+			allocInfo.memoryTypeIndex = device.FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 			assert(allocInfo.memoryTypeIndex < memProps.memoryTypeCount);
 
@@ -378,7 +362,7 @@ namespace Lemonade
 		uniformBufferWrite.descriptorCount = 1;
 		uniformBufferWrite.pBufferInfo = &bufferInfo;
 
-		m_vertexData.cameraPosition = activeCamera->GetTransform()->GetPosition();
+		m_vertexData.cameraPosition = activeCamera->GetTransform()->GetWorldPosition();
 		m_vertexData.model = m_transform->GetWorldMatrix();         
         m_vertexData.view = activeCamera->GetViewMatrix();          
         m_vertexData.projection = activeCamera->GetProjMatrix();         
@@ -480,9 +464,9 @@ namespace Lemonade
 
 		for (auto& buffer : m_uniformBuffers)
 		{
-			buffer->UpdateDescriptors(m_descriptorSets[currentFrame], bindLocation++);
+			buffer->UpdateDescriptors(m_descriptorSets[currentFrame], bindLocation++, true);
 			buffer->DumpBuffer();
-			writes.push_back(buffer->GetWrite());
+			//writes.push_back(buffer->GetWrite());
 		}
 
 		// Copy anim mats 
@@ -528,7 +512,7 @@ namespace Lemonade
 				VkMemoryAllocateInfo allocInfo{};
 				allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 				allocInfo.allocationSize = memRequirements.size;
-				allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+				allocInfo.memoryTypeIndex = device.FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 	
 				if (vkAllocateMemory(device.GetVkDevice(), &allocInfo, nullptr, &boneBuffer.VKDeviceMemory) != VK_SUCCESS) {
 					throw std::runtime_error("failed to allocate bone buffer memory!");
@@ -566,7 +550,7 @@ namespace Lemonade
 			VkMemoryAllocateInfo allocInfo{};
 			allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 			allocInfo.allocationSize = memRequirements.size;
-			allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+			allocInfo.memoryTypeIndex = device.FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 			if (vkAllocateMemory(device.GetVkDevice(), &allocInfo, nullptr, &uniformBuffer.VKDeviceMemory) != VK_SUCCESS) {
 				throw std::runtime_error("failed to allocate vertex buffer memory!");

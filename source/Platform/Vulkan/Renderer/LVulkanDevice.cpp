@@ -278,6 +278,22 @@ namespace Lemonade
 
 		return score;
 	}
+
+	uint32_t LVulkanDevice::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const {
+		VkPhysicalDeviceMemoryProperties memProperties;
+
+		const LVulkanDevice& device = GraphicsServices::GetContext()->GetVulkanDevice();
+		vkGetPhysicalDeviceMemoryProperties(device.GetPhysicalDevice(), &memProperties);
+	
+		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+			if ((typeFilter & (1 << i)) &&
+				(memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+				return i;
+			}
+		}
+	
+		throw std::runtime_error("Failed to find suitable memory type!");
+	}
 }
 
 #endif

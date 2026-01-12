@@ -141,7 +141,6 @@ namespace Lemonade
 		Texture m_defaultMetalness;
 
 		std::unordered_map<TextureType, Texture*> m_defaultTextures;
-		CitrusCore::IndexedVector<CitrusCore::UID, std::shared_ptr<LUniformBuffer>> m_uniformBuffers;
 		bool m_bTextureSamplersDirty = true;
 	};
 }

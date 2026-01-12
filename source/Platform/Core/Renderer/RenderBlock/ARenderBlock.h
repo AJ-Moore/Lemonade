@@ -27,6 +27,7 @@ namespace Lemonade
 	};
 
 	class Renderer;
+	class LUniformBuffer;
 
 	/** Render Block */
 	class LEMONADE_API ARenderBlock : public LObject
@@ -51,7 +52,7 @@ namespace Lemonade
 		CitrusCore::Event<ARenderBlock*> OnPipelineBound;
 
 		void SetBlendEnabled(bool value){m_bBlendEnabled = value;}
-		bool AddUniformBuffer(std::shared_ptr<AUniformBuffer>);
+		bool AddUniformBuffer(std::shared_ptr<LUniformBuffer>);
 		bool RemoveUniformBuffer(CitrusCore::UID uniformBufferuid);
 
 		CitrusCore::ResourcePtr<Material> GetMaterial() const { return m_material; }
@@ -96,6 +97,6 @@ namespace Lemonade
 		bool m_bBlendEnabled = true;
 
 		/// Uniform buffers to be passed to shader
-		CitrusCore::IndexedVector<CitrusCore::UID, std::shared_ptr<AUniformBuffer>> m_uniformBuffers;
+		CitrusCore::IndexedVector<CitrusCore::UID, std::shared_ptr<LUniformBuffer>> m_uniformBuffers;
 	};
 }

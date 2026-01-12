@@ -1,4 +1,5 @@
 #pragma once
+#include "Platform/Core/Renderer/RenderBlock/ARenderBlock.h"
 #include <Platform/Core/Services/GraphicsServices.h>
 #include <Platform/Vulkan/Renderer/LRenderTarget.h>
 #include <Platform/Vulkan/Renderer/LVKBuffer.h>
@@ -11,6 +12,7 @@ namespace Lemonade
 {
     class LEMONADE_API LUniformBuffer : public AUniformBuffer
     {
+        friend class ARenderBlock;
     public:
         LUniformBuffer() = delete; 
         LUniformBuffer(LBufferType type, void* dataPtr, uint32_t size) : Lemonade::AUniformBuffer(type, dataPtr, size){}
@@ -36,6 +38,7 @@ namespace Lemonade
         std::vector<LVKBuffer> m_buffers;
         VkDescriptorType m_descriptorType;
         VkWriteDescriptorSet m_writeDescriptorSet;
+        VkDescriptorBufferInfo m_bufferInfo;
         VkShaderStageFlags m_shaderStageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     };
 }

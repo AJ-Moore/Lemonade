@@ -25,11 +25,28 @@ namespace Lemonade
 
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        for (int i = 0; i < m_buffers.size(); ++i)
+        for (auto& buffer : m_buffers)
         {
-            if (vkCreateBuffer(device.GetVkDevice(), &bufferInfo, nullptr, &m_buffers[i].Buffer) != VK_SUCCESS) {
+            if (vkCreateBuffer(device.GetVkDevice(), &bufferInfo, nullptr, &buffer.Buffer) != VK_SUCCESS) {
                 throw std::runtime_error("failed to create uniform buffer!");
             }
+
+            VkMemoryRequirements memRequirements;
+            vkGetBufferMemoryRequirements(device.GetVkDevice(), buffer.Buffer, &memRequirements);
+
+            VkMemoryAllocateInfo allocInfo{};
+            allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+            allocInfo.allocationSize = memRequirements.size;
+            allocInfo.memoryTypeIndex = device.FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+            if (vkAllocateMemory(device.GetVkDevice(), &allocInfo, nullptr, &buffer.VKDeviceMemory) != VK_SUCCESS) {
+                throw std::runtime_error("failed to allocate bone buffer memory!");
+            }
+
+            vkBindBufferMemory(device.GetVkDevice(), buffer.Buffer, buffer.VKDeviceMemory, 0);
+            buffer.DataSize = GetSize();
+            vkMapMemory(device.GetVkDevice(), buffer.VKDeviceMemory, 0, buffer.DataSize, 0, &buffer.DataGPUMapped);
+            buffer.DataCPUMapped = static_cast<void*>(GetData());
         }
 
         return true;
@@ -39,19 +56,21 @@ namespace Lemonade
     {
         uint32_t currentFrame = GraphicsServices::GetWindowManager()->GetActiveWindow()->GetCurrentFrame();
         LVKBuffer& buffer = GetLVKBuffer(currentFrame);
+        buffer.DataSize = GetSize();
 
-        VkDescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = buffer.Buffer;
-        bufferInfo.offset = 0;
-        bufferInfo.range = buffer.DataSize;
+        m_bufferInfo = {};
+        m_bufferInfo.buffer = buffer.Buffer;
+        m_bufferInfo.offset = 0;
+        m_bufferInfo.range = buffer.DataSize;
 
+        m_writeDescriptorSet = {};
         m_writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         m_writeDescriptorSet.dstSet = dstSet;
         m_writeDescriptorSet.dstBinding = bindLocation;
         m_writeDescriptorSet.dstArrayElement = 0;
         m_writeDescriptorSet.descriptorType = GetBufferType() == LBufferType::Uniform ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         m_writeDescriptorSet.descriptorCount = 1;
-        m_writeDescriptorSet.pBufferInfo = &bufferInfo;
+        m_writeDescriptorSet.pBufferInfo = &m_bufferInfo;
 
         if (write)
         {

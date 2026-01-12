@@ -4,6 +4,7 @@
 #include <Types.h>
 #include <Platform/Core/LObject.h>
 #include <Platform/Core/Renderer/Lighting/LightingData.h>
+#include <glm/fwd.hpp>
 
 namespace Lemonade
 {
@@ -30,6 +31,12 @@ namespace Lemonade
 
 		/// Get Max distance
 		float GetMaxDistance() const { return m_lightingData.MaxDistance; }
+
+		void SetPosition(glm::vec3 position) { m_lightingData.LightPosition = position; }
+		void SetDirection(glm::vec3 direction) { m_lightingData.LightDirection = direction; }
+
+		void Dump();
+		const LightingData& GetLightData() const { return m_lightingData; }
 	protected: 
 		virtual bool Init() override { return true; }
 		virtual void Unload() override {}
