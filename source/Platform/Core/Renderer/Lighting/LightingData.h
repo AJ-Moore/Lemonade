@@ -13,17 +13,23 @@ namespace Lemonade{
         // Padding to 16 byte alignment.
         float Padding0;
 
+        /// Light up in world space 
+        glm::vec3 LightUp = {1,2,3};
+
+        // Padding to 16 byte alignment.
+        float Padding1;        
+
         /// Light Direction 
         glm::vec3 LightDirection;
 
         // Padding to 16 byte alignment.
-        float Padding1;
+        float Padding2;
 
         /// Light colour
         glm::vec3 Colour; 
 
         // Padding to 16 byte alignment.
-        float Padding2;
+        float Padding3;
 
         /// See LightType emuration point/ spot/ directional etc...
         int LightType = 0;

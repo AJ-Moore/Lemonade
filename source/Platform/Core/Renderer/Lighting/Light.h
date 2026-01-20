@@ -33,6 +33,7 @@ namespace Lemonade
 		float GetMaxDistance() const { return m_lightingData.MaxDistance; }
 
 		void SetPosition(glm::vec3 position) { m_lightingData.LightPosition = position; }
+		void SetUp(glm::vec3 up) { m_lightingData.LightUp = up; }
 		void SetDirection(glm::vec3 direction) { m_lightingData.LightDirection = direction; }
 
 		void Dump();

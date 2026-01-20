@@ -9,6 +9,7 @@
 #include <Platform/Core/Services/LService.h>
 #include <Platform/Core/Renderer/Pipeline/LCamera.h>
 #include <Platform/Core/Renderer/Lighting/Light.h>
+#include <glm/fwd.hpp>
 #include <memory>
 #include <vector>
 
@@ -19,6 +20,12 @@ namespace Lemonade
 		LCamera* ActiveCamera;
 		LWindow* ActiveWindow;
 		LRenderInput* RenderInput;
+	};
+
+	struct LEMONADE_API LShadowData
+	{
+		glm::mat4 View; 
+		glm::mat4 Projection;
 	};
 
 	class LRenderStage;
@@ -41,6 +48,9 @@ namespace Lemonade
 		void SetActiveCamera(LCamera* camera) {m_activeCamera = camera;}
 		void SetActiveRenderTarget(ARenderTarget* target) { m_activeRenderTarget = target; }
 		void SetRenderInput(LRenderInput* input) { m_renderInput = input; }
+		void SetShadowPass(bool value) { m_bIsShadowPass = value; }
+		void SetShadowData(const LShadowData& data) { m_shadowPassData = data; }
+		const LShadowData& GetShadowdata() { return m_shadowPassData; }
 	protected:
 		virtual bool Init();
 		virtual void Unload();
@@ -49,6 +59,7 @@ namespace Lemonade
 		void RenderPass();
 
 	private:
+		LShadowData m_shadowPassData;
 		LRenderInput* m_renderInput;
 		LRenderingData m_renderingData;
 		std::vector<std::shared_ptr<LRenderStage>> m_renderStages;

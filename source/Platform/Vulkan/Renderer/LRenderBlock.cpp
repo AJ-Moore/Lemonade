@@ -366,7 +366,14 @@ namespace Lemonade
 		m_vertexData.model = m_transform->GetWorldMatrix();         
         m_vertexData.view = activeCamera->GetViewMatrix();          
         m_vertexData.projection = activeCamera->GetProjMatrix();         
-        m_vertexData.shadowPass = false;          
+        m_vertexData.shadowPass = GraphicsServices::GetRenderer()->IsShadowPass();      
+		
+		if (m_vertexData.shadowPass)
+		{
+			m_vertexData.view = GraphicsServices::GetRenderer()->GetShadowdata().View;
+			m_vertexData.projection = GraphicsServices::GetRenderer()->GetShadowdata().Projection;
+		}
+		
         m_vertexData.unlit = false;               
         m_vertexData.emission = 0;     
 		m_vertexData.baseColour = m_material->GetResource()->GetBaseColour();

@@ -17,7 +17,8 @@ namespace Lemonade
 {
     struct VulkanRenderTarget
     {
-        VkImageView ImageView;
+        // 1 image view per layer -> m_layerCount
+        std::vector<VkImageView> ImageViews;
         VkImage Image;
         VkDeviceMemory Memory;
     };
@@ -38,32 +39,29 @@ namespace Lemonade
         };
     public:
         LRenderTarget();
-        LRenderTarget(glm::ivec2 dimensions);
+        LRenderTarget(glm::ivec2 dimensions, uint32 layerCount = 1, bool arrayTexture = true);
+        LRenderTarget(glm::ivec2 colourDimensions, glm::ivec2 depthDimensions, uint32 layerCount, bool arrayTexture = true);
         virtual ~LRenderTarget();
         virtual bool Init() override;
         virtual void InitAsDefault() override;
         virtual void BindColourAttachments() override;
         virtual void BindColourAttachment(LColourAttachment colourAttachment, uint activeTarget = 0) override;
-        virtual void bindDepthAttachment(uint activeTarget = 0) override;
-        virtual void BeginRenderPass() override;
+        virtual void BindDepthAttachment(uint activeTarget = 0) override;
+        virtual void BeginRenderPass(uint32 layerIndex = 0) override;
         virtual void EndRenderPass() override;
 
         virtual void blit(ARenderTarget& target) override;
         virtual void blit(unsigned int target) override;
         virtual void blitToScreen() override;
-        virtual void setDimensions(glm::ivec2 dimensions) override;
         virtual void SetColourAttachments(const std::vector<LColourAttachment> attachments, bool multiSampled) override;
         virtual void SetColourAttachments(int count, bool multisampled) override;
-        virtual void addMultiSampledDepthAttachment() override;
-        virtual void AddDepthAttachment(bool useRenderBufferObject = true, int layers = 1) override;
+        virtual void AddMultiSampledDepthAttachment() override;
+        virtual void AddDepthAttachment(bool useRenderBufferObject = true) override;
         virtual uint CreateColourAttachment(LColourAttachment colourAttachment, bool multiSampled = true, int internalFormat = U_RGBA32F) override;
 
         virtual void Clear(uint clearFlags) override;
 
-        uint getDepthTexture() { return m_depthTexture; }
-
-        // TODO -> Add max frames in flight currently hardcoded to 1, move somewhere else? -> Use m_imageCount = capabilities.minImageCount + 1; 
-		static const int MAX_FRAMES_IN_FLIGHT = 4;
+        uint GetDepthTexture() { return m_depthTexture; }
 
         // Gets the screen target.
         virtual ARenderTarget* GetScreenTarget(LWindow* window) override;
@@ -74,10 +72,14 @@ namespace Lemonade
         virtual void SetRenderBlock(ARenderBlock* renderBlock) override; 
 
         static LRenderTarget& GetDefault();
+
+        // TODO -> Add max frames in flight currently hardcoded to 1, move somewhere else? -> Use m_imageCount = capabilities.minImageCount + 1; 
+		static const int MAX_FRAMES_IN_FLIGHT = 4;
+
     private:
         uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
         VulkanRenderTarget GetColourAttachment(LColourAttachment colourAttachment);
-        VkFramebuffer getFrameBuffer() { return m_frameBuffer; }
+        VkFramebuffer GetFrameBuffer(uint32 layerIndex = 0) { return m_frameBuffer[layerIndex]; }
         void GenerateBuffers();
         void UpdateDescriptorSets(VkDescriptorSet dstSet);
         void TransitionAttachments(VkCommandBuffer cmdBuffer, ImageTransition transition);
@@ -98,7 +100,7 @@ namespace Lemonade
         VkDeviceMemory m_depthMemory;
 
         VkSampleCountFlagBits m_sampleCount = VK_SAMPLE_COUNT_1_BIT;
-        VkFramebuffer m_frameBuffer = 0;
+        std::vector<VkFramebuffer> m_frameBuffer;
         VkRenderPass m_renderPass = 0;
         VkCommandBuffer m_commandBuffer[MAX_FRAMES_IN_FLIGHT];
         VkCommandBuffer m_activeBuffer;

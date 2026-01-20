@@ -12,6 +12,7 @@
 #include <climits>
 #include <cstdint>
 #include <glm/fwd.hpp>
+#include <glm/glm.hpp>
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan_core.h>
@@ -24,7 +25,7 @@ namespace Lemonade
 
     std::unordered_map<CitrusCore::UID, std::vector<std::shared_ptr<LRenderTarget>>> LRenderTarget::m_defaultTargets;
 
-    // TODO remove this hack, thanks
+    // TODO remove this hack, thanks, No
     LRenderTarget& LRenderTarget::GetDefault()
     {
         static LRenderTarget target; 
@@ -37,22 +38,28 @@ namespace Lemonade
 
         if (window != nullptr)
         {
-            // Default to window dimensions?
-            m_dimensions = glm::ivec2(window->GetWidth(), window->GetHeight());
+            // Default to window dimensions? SURE
+            m_colourDimensions = glm::ivec2(window->GetWidth(), window->GetHeight());
+            m_depthDimensions = m_colourDimensions;
         }
     }
 
-    LRenderTarget::LRenderTarget(glm::ivec2 dimensions)
-    {
-        m_dimensions = dimensions;
+    LRenderTarget::LRenderTarget(glm::ivec2 dimensions, uint32 layerCount, bool arrayTexture) : LRenderTarget(dimensions,dimensions, layerCount, arrayTexture){
     }
+
+    LRenderTarget::LRenderTarget(glm::ivec2 colourDimensions, glm::ivec2 depthDimensions, uint32 layerCount, bool arrayTexture) : ARenderTarget(colourDimensions, depthDimensions, layerCount, arrayTexture){
+    }
+
 
     LRenderTarget::~LRenderTarget()
     {
-        if (m_frameBuffer)
+        if (m_frameBuffer.size())
         {
             VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
-            vkDestroyFramebuffer(device, m_frameBuffer, nullptr);
+            for (auto& framebuffer : m_frameBuffer)
+            {
+                vkDestroyFramebuffer(device, framebuffer, nullptr);
+            }
         }
     }
 
@@ -96,7 +103,7 @@ namespace Lemonade
 		VkDescriptorPoolSize poolSize[] = {
             {
                 .type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-                .descriptorCount = 100
+                .descriptorCount = 200
             },
             {
                 .type = VK_DESCRIPTOR_TYPE_SAMPLER,
@@ -143,21 +150,23 @@ namespace Lemonade
     {
     }
 
-    void LRenderTarget::bindDepthAttachment(uint activeTarget)
+    void LRenderTarget::BindDepthAttachment(uint activeTarget)
     {
     }
 
     void LRenderTarget::GenerateBuffers()
     {
         // Generate Vulkan Framebuffer
-
         VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 
         // Destroy framebuffer if it exists
-        if (m_frameBuffer)
+        if (m_frameBuffer.size())
         {
-			vkDestroyFramebuffer(device, m_frameBuffer, nullptr);
-		}
+            for (auto& framebuffer : m_frameBuffer)
+            {
+                vkDestroyFramebuffer(device, framebuffer, nullptr);
+            }
+        }
 
         // Destroy render pass if it exists
         if (m_renderPass)
@@ -244,35 +253,41 @@ namespace Lemonade
             throw std::runtime_error("failed to create render pass!");
         }
 
-        VkFramebufferCreateInfo framebufferInfo = {};
-		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass = m_renderPass;
-		framebufferInfo.attachmentCount = attachmentDescription.size();
-		framebufferInfo.width = m_dimensions.x;
-		framebufferInfo.height = m_dimensions.y;
-		framebufferInfo.layers = 1;
+        uint32 imageViewCount = m_bArrayTexture ? 1 : m_layerCount;
+        m_frameBuffer.resize(imageViewCount);
 
-		int i = 0;
-        std::vector<VkImageView> images;
-
-        for (int i = 0; i < m_colourAttachments.size(); ++i)
+        for (int i = 0; i < imageViewCount; ++i)
         {
-            const auto& attachment = m_colourAttachments.at(static_cast<LColourAttachment>(((uint)LColourAttachment::LEMON_COLOR_ATTACHMENT0 + i)));
-            images.push_back(attachment.ImageView);
-		}
-
-        if (m_bHasDepthAttachment)
-        {
-            images.push_back(m_depthAttachment.ImageView);
-        }
-
-        framebufferInfo.pAttachments = images.data();
-
-        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &m_frameBuffer) != VK_SUCCESS)
-        {
-			Logger::Log(Logger::ERROR,"Failed to create framebuffer!");
-			throw std::runtime_error("Failed to create framebuffer!");
-		}
+            VkFramebufferCreateInfo framebufferInfo = {};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = m_renderPass;
+            framebufferInfo.attachmentCount = attachmentDescription.size();
+            framebufferInfo.width = std::max(m_colourDimensions.x, m_depthDimensions.x);
+            framebufferInfo.height = std::max(m_colourDimensions.y, m_depthDimensions.y);
+            framebufferInfo.layers = 1;
+    
+            std::vector<VkImageView> images;
+    
+            for (int p = 0; p < m_colourAttachments.size(); ++p)
+            {
+                const auto& attachment = m_colourAttachments.at(static_cast<LColourAttachment>(((uint)LColourAttachment::LEMON_COLOR_ATTACHMENT0 + p)));
+                images.push_back(attachment.ImageViews[i]);
+            }
+    
+            if (m_bHasDepthAttachment)
+            {
+                images.push_back(m_depthAttachment.ImageViews[i]);
+            }
+    
+            framebufferInfo.pAttachments = images.data();
+            m_frameBuffer[i] = {};
+    
+            if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &m_frameBuffer[i]) != VK_SUCCESS)
+            {
+                Logger::Log(Logger::ERROR,"Failed to create framebuffer!");
+                throw std::runtime_error("Failed to create framebuffer!");
+            }
+        } 
 
         // Create command buffer
         VkCommandBufferAllocateInfo allocInfo = {};
@@ -293,7 +308,7 @@ namespace Lemonade
 		m_dirtyBuffer = false;
     }
 
-    void LRenderTarget::BeginRenderPass()
+    void LRenderTarget::BeginRenderPass(uint32 layerIndex)
     {
         // If buffer dirty or not generated, generate it. Step was to reduce uneccessary buffer re-generation when adding colour targets & such.
         if (m_dirtyBuffer)
@@ -326,10 +341,10 @@ namespace Lemonade
         VkRenderPassBeginInfo renderPassInfo = {};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassInfo.renderPass = m_renderPass;
-        renderPassInfo.framebuffer = m_frameBuffer;
+        renderPassInfo.framebuffer = m_frameBuffer[layerIndex];
         renderPassInfo.renderArea.offset = { 0, 0 };
-        renderPassInfo.renderArea.extent.width = m_dimensions.x;
-        renderPassInfo.renderArea.extent.height = m_dimensions.y;
+        renderPassInfo.renderArea.extent.width = std::max(m_colourDimensions.x, m_depthDimensions.x);
+        renderPassInfo.renderArea.extent.height = std::max(m_colourDimensions.y, m_depthDimensions.y);
         renderPassInfo.pClearValues = clearValues.data();
         renderPassInfo.clearValueCount = clearValues.size();
 
@@ -588,17 +603,6 @@ namespace Lemonade
         //glBlitFramebuffer(0, 0, m_dimensions.x, m_dimensions.y, 0, 0, m_dimensions.x, m_dimensions.y, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     }
 
-    void LRenderTarget::setDimensions(glm::ivec2 dimensions)
-    {
-        if (dimensions == m_dimensions)
-        {
-            return;
-        }
-
-        m_dimensions = dimensions;
-        m_dirtyBuffer = true;
-    }
-
     void LRenderTarget::SetColourAttachments(int count, bool multisampled)
     {
         for (int i = 0; i < count; ++i)
@@ -615,10 +619,10 @@ namespace Lemonade
         }
     }
 
-    void LRenderTarget::addMultiSampledDepthAttachment()
+    void LRenderTarget::AddMultiSampledDepthAttachment()
     {
         m_hasMultisampledColourAttachment = true;
-        AddDepthAttachment(false, 1);
+        AddDepthAttachment(false);
     }
 
     uint32_t LRenderTarget::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
@@ -636,7 +640,7 @@ namespace Lemonade
     }
 
 
-    void LRenderTarget::AddDepthAttachment(bool useRenderBufferStorage, int layers)
+    void LRenderTarget::AddDepthAttachment(bool useRenderBufferStorage)
     {
         m_dirtyBuffer = true;
         VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
@@ -644,7 +648,11 @@ namespace Lemonade
         {
             // delete depth attachment
             vkDestroyImage(device, m_depthAttachment.Image, nullptr);
-            vkDestroyImageView(device, m_depthAttachment.ImageView, nullptr);
+
+            for (auto& imageview : m_depthAttachment.ImageViews)
+            {
+                vkDestroyImageView(device, imageview, nullptr);
+            }
         }
 
         m_bHasDepthAttachment = true;
@@ -655,12 +663,12 @@ namespace Lemonade
         VkImageCreateInfo imageInfo = {};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         imageInfo.imageType = VK_IMAGE_TYPE_2D;
-        imageInfo.extent.width = m_dimensions.x;
-        imageInfo.extent.height = m_dimensions.y;
+        imageInfo.extent.width = m_depthDimensions.x;
+        imageInfo.extent.height = m_depthDimensions.y;
         imageInfo.extent.depth = 1;
         imageInfo.mipLevels = 1;
-        imageInfo.arrayLayers = 1;
-        imageInfo.format = VK_FORMAT_D32_SFLOAT; // Depth format
+        imageInfo.arrayLayers = m_layerCount;
+        imageInfo.format = VK_FORMAT_D32_SFLOAT;
         imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
@@ -693,24 +701,31 @@ namespace Lemonade
 
         vkBindImageMemory(device, depthImage, depthMemory, 0);
 
-        VkImageViewCreateInfo viewInfo = {};
-        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.image = depthImage;
-        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        viewInfo.format = VK_FORMAT_D32_SFLOAT;
-        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-        viewInfo.subresourceRange.baseMipLevel = 0;
-        viewInfo.subresourceRange.levelCount = 1;
-        viewInfo.subresourceRange.baseArrayLayer = 0;
-        viewInfo.subresourceRange.layerCount = 1;
+        uint32 imageViewCount = m_bArrayTexture ? 1 : m_layerCount;
+        m_depthAttachment.ImageViews.resize(imageViewCount);
 
-        VkImageView depthImageView;
-        if (vkCreateImageView(device, &viewInfo, nullptr, &depthImageView) != VK_SUCCESS) {
-            throw std::runtime_error("Failed to create depth image view!");
+        for (int i = 0; i < imageViewCount; ++i)
+        {
+            VkImageViewCreateInfo viewInfo = {};
+            viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            viewInfo.image = depthImage;
+            viewInfo.viewType = m_layerCount > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
+            viewInfo.format = VK_FORMAT_D32_SFLOAT;
+            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+            viewInfo.subresourceRange.baseMipLevel = 0;
+            viewInfo.subresourceRange.levelCount = 1;
+            viewInfo.subresourceRange.baseArrayLayer = i;
+            viewInfo.subresourceRange.layerCount = m_bArrayTexture ? m_layerCount : 1;
+    
+            VkImageView depthImageView;
+            if (vkCreateImageView(device, &viewInfo, nullptr, &depthImageView) != VK_SUCCESS) {
+                throw std::runtime_error("Failed to create depth image view!");
+            }
+            
+            m_depthAttachment.ImageViews[i] = depthImageView;
         }
 
         m_depthAttachment.Image = depthImage;
-        m_depthAttachment.ImageView = depthImageView;
     }
 
     VulkanRenderTarget LRenderTarget::GetColourAttachment(LColourAttachment colourAttachment)
@@ -735,7 +750,11 @@ namespace Lemonade
 
         if (iter != m_colourAttachments.end())
         {
-            vkDestroyImageView(device, iter->second.ImageView, nullptr);
+            for (auto& imageView : iter->second.ImageViews)
+            {
+                vkDestroyImageView(device, imageView, nullptr);
+            }
+
             vkDestroyImage(device, iter->second.Image, nullptr);
         }
 
@@ -747,11 +766,11 @@ namespace Lemonade
         VkImageCreateInfo imageInfo = {};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         imageInfo.imageType = VK_IMAGE_TYPE_2D;
-        imageInfo.extent.width = m_dimensions.x;
-        imageInfo.extent.height = m_dimensions.y;
+        imageInfo.extent.width = m_colourDimensions.x;
+        imageInfo.extent.height = m_colourDimensions.y;
         imageInfo.extent.depth = 1;
         imageInfo.mipLevels = 1;
-        imageInfo.arrayLayers = 1;
+        imageInfo.arrayLayers = m_layerCount;
         imageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
         imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -785,21 +804,28 @@ namespace Lemonade
 
         vkBindImageMemory(device, target.Image, target.Memory, 0);
 
-        VkImageViewCreateInfo viewInfo = {};
-        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT; 
-        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; 
-        viewInfo.image = m_colourAttachments.at(colourAttachment).Image;
-        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        viewInfo.subresourceRange.baseMipLevel = 0;
-        viewInfo.subresourceRange.levelCount = 1;
-        viewInfo.subresourceRange.baseArrayLayer = 0;
-        viewInfo.subresourceRange.layerCount = 1;
+        // With an array texture we have a single image view otherwise we have 1 image view per layer.
+        uint32 imageViewCount = m_bArrayTexture ? 1 : m_layerCount;
+        m_colourAttachments.at(colourAttachment).ImageViews.resize(imageViewCount);
 
-        if (vkCreateImageView(device, &viewInfo, nullptr, &m_colourAttachments.at(colourAttachment).ImageView) != VK_SUCCESS) {
-            Logger::Log(Logger::ERROR,"Failed to create image view!");
-            throw std::runtime_error("Failed to create image view!");
-            return -1;
+        for (int i = 0; i < imageViewCount; ++i)
+        {
+            VkImageViewCreateInfo viewInfo = {};
+            viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            viewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT; 
+            viewInfo.viewType = m_bArrayTexture ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D; 
+            viewInfo.image = m_colourAttachments.at(colourAttachment).Image;
+            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            viewInfo.subresourceRange.baseMipLevel = 0;
+            viewInfo.subresourceRange.levelCount = 1;
+            viewInfo.subresourceRange.baseArrayLayer = i;
+            viewInfo.subresourceRange.layerCount = m_bArrayTexture ? m_layerCount  : 1;
+    
+            if (vkCreateImageView(device, &viewInfo, nullptr, &m_colourAttachments.at(colourAttachment).ImageViews[i]) != VK_SUCCESS) {
+                Logger::Log(Logger::ERROR,"Failed to create image view!");
+                throw std::runtime_error("Failed to create image view!");
+                return -1;
+            }
         }
 
         if (m_linearSampler == VK_NULL_HANDLE)
@@ -881,7 +907,7 @@ namespace Lemonade
             // Create image descriptor 
             VkDescriptorImageInfo imageDescriptor = {};
             imageDescriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageDescriptor.imageView = attachment.ImageView;
+            imageDescriptor.imageView = attachment.ImageViews[0]; /// This should be the index of the layer we want to bind when not using array texture?
             imageDescriptors.push_back(imageDescriptor);
 
             VkWriteDescriptorSet writeImage = {};
@@ -938,7 +964,7 @@ namespace Lemonade
                 VkImageViewCreateInfo viewInfo = {};
                 viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
                 viewInfo.image = image;
-                viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+                viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; 
                 viewInfo.format = window->GetSwapChainImageFormat();
                 viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
                 viewInfo.subresourceRange.baseMipLevel = 0;
@@ -946,7 +972,9 @@ namespace Lemonade
                 viewInfo.subresourceRange.baseArrayLayer = 0;
                 viewInfo.subresourceRange.layerCount = 1;
 
-                if (vkCreateImageView(device, &viewInfo, nullptr, &renderTarget->m_colourAttachments[LColourAttachment::LEMON_COLOR_ATTACHMENT0].ImageView) != VK_SUCCESS) {
+                renderTarget->m_colourAttachments[LColourAttachment::LEMON_COLOR_ATTACHMENT0].ImageViews.resize(1);
+
+                if (vkCreateImageView(device, &viewInfo, nullptr, &renderTarget->m_colourAttachments[LColourAttachment::LEMON_COLOR_ATTACHMENT0].ImageViews[0]) != VK_SUCCESS) {
                     throw std::runtime_error("Failed to create image views for swapchain");
                 }         
             }

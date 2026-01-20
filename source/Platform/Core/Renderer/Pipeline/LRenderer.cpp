@@ -1,3 +1,4 @@
+#include <Platform/Core/Renderer/Pipeline/RenderStages/Shadows/ShadowStage.h>
 #include <Platform/Core/Renderer/Pipeline/LRenderer.h>
 #include <Platform/Core/Renderer/Pipeline/RenderStages/Geometry/GeometryStage.h>
 #include <Platform/Core/Renderer/Pipeline/RenderStages/PostProcessing/PostProcessingStage.h>
@@ -10,6 +11,7 @@ namespace Lemonade {
     {
         SetName("Renderer");
         m_renderStages.push_back(std::make_shared<GeometryStage>());
+        m_renderStages.push_back(std::make_shared<ShadowStage>());
         m_renderStages.push_back(std::make_shared<PostProcessingStage>());
 
         for (auto& renderStage : m_renderStages)
