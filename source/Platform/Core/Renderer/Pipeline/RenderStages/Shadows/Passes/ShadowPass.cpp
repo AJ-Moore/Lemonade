@@ -27,7 +27,7 @@ namespace Lemonade
         ARenderTarget* previousTarget = GraphicsServices::GetRenderer()->GetActiveRenderTarget();
         GraphicsServices::GetRenderer()->SetShadowPass(true);
 
-        for (int i = 0; i < renderingData.RenderInput->LightData.Count || i < m_maxShadowMaps; ++i)
+        for (int i = 0; i < renderingData.RenderInput->LightData.Count && i < m_maxShadowMaps; ++i)
         {
             const Lemonade::LightingData* light = &renderingData.RenderInput->LightData.LightPtr[i];
             glm::vec3 position = light->LightPosition;
