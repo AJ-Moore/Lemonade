@@ -10,8 +10,8 @@ namespace Lemonade {
     bool LRenderer::Init()
     {
         SetName("Renderer");
-        m_renderStages.push_back(std::make_shared<GeometryStage>());
         m_renderStages.push_back(std::make_shared<ShadowStage>());
+        m_renderStages.push_back(std::make_shared<GeometryStage>());
         m_renderStages.push_back(std::make_shared<PostProcessingStage>());
 
         for (auto& renderStage : m_renderStages)
@@ -52,6 +52,12 @@ namespace Lemonade {
         {
             renderStage->Render(m_renderingData);
         }
+    }
+
+    void LRenderer::PrepareScene() 
+    {
+        OnPrepareScene.Invoke(m_renderingData);
+        m_renderingData.RenderInput = m_renderInput;
     }
 
     void LRenderer::RenderScene()

@@ -43,7 +43,12 @@ namespace Lemonade
 		const LRenderInput& GetRenderInput () const { return *m_renderInput;}
 
 		virtual void RenderScene(); 
+		virtual void PrepareScene(); 
+
 		CitrusCore::Event<const LRenderingData&> OnRenderScene;
+
+		/// Set render input during this callback.
+		CitrusCore::Event<const LRenderingData&> OnPrepareScene;
 
 		void SetActiveCamera(LCamera* camera) {m_activeCamera = camera;}
 		void SetActiveRenderTarget(ARenderTarget* target) { m_activeRenderTarget = target; }

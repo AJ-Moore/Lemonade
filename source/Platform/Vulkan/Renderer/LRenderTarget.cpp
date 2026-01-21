@@ -1,4 +1,5 @@
 #include <LCommon.h>
+#include <utility>
 
 #ifdef RENDERER_VULKAN
 
@@ -146,12 +147,39 @@ namespace Lemonade
         m_descriptorsDirty = false;
     }
 
-    void LRenderTarget::BindColourAttachment(LColourAttachment colourAttachment, uint activeTarget)
+    void LRenderTarget::BindDepthAttachment(uint32 bindIndex)
     {
-    }
+        VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
 
-    void LRenderTarget::BindDepthAttachment(uint activeTarget)
-    {
+        bool useCombinedImageSampler = m_bArrayTexture ? false : true;
+        std::vector<VkDescriptorImageInfo> imageDescriptors;
+        int layers = m_bArrayTexture ? 1 : m_layerCount;
+
+        for (int i = 0; i < layers; ++i)
+        {
+            VkDescriptorImageInfo imageDescriptor = {};
+            imageDescriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageDescriptor.imageView = m_depthAttachment.ImageViews[i]; /// This should be the index of the layer we want to bind when not using array texture?
+            imageDescriptors.push_back(std::move(imageDescriptor));
+        }
+
+        LRenderBlock* renderBlock = static_cast<LRenderBlock*>(m_renderBlock);
+        LWindow* activeWindow = GraphicsServices::GetWindowManager()->GetActiveWindow();
+        uint32_t currentFrame = activeWindow->GetCurrentFrame();
+        VkDescriptorSet descriptorSet = renderBlock->GetDescriptorSet(currentFrame);
+
+        std::vector<VkWriteDescriptorSet> writes;
+        VkWriteDescriptorSet writeImage = {};
+        writeImage.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeImage.dstSet = descriptorSet;
+        writeImage.dstBinding = bindIndex;
+        writeImage.dstArrayElement = 0;
+        writeImage.descriptorType = m_bArrayTexture ? VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        writeImage.descriptorCount = m_bArrayTexture ? 1 : m_layerCount;
+        writeImage.pImageInfo = imageDescriptors.data();
+        writes.push_back(writeImage);
+        
+        vkUpdateDescriptorSets(device, writes.size(), writes.data(), 0, nullptr);
     }
 
     void LRenderTarget::GenerateBuffers()
@@ -850,8 +878,6 @@ namespace Lemonade
                 return -1;
             }
         }
-
-        //CreateDescriptorSetLayout();
 
         return 0;
     }

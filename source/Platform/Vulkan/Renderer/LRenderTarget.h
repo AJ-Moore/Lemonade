@@ -45,8 +45,7 @@ namespace Lemonade
         virtual bool Init() override;
         virtual void InitAsDefault() override;
         virtual void BindColourAttachments() override;
-        virtual void BindColourAttachment(LColourAttachment colourAttachment, uint activeTarget = 0) override;
-        virtual void BindDepthAttachment(uint activeTarget = 0) override;
+        virtual void BindDepthAttachment(uint32 bindIndex) override;
         virtual void BeginRenderPass(uint32 layerIndex = 0) override;
         virtual void EndRenderPass() override;
 

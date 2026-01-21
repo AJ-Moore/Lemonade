@@ -29,4 +29,27 @@ namespace Lemonade
         m_uniformBuffers.Remove(uniformBufferuid);
         return true;
     }
+
+    bool ARenderBlock::AddBinding(std::shared_ptr<LBinding> binding)
+    {
+        if (m_uniformBuffers.Contains(binding->GetUID()))
+        {
+            return false;
+        }
+
+        m_additionalBindings.Add(binding->GetUID(), binding);
+        binding->Init();
+        return true;
+    }
+
+    bool ARenderBlock::RemoveBinding(CitrusCore::UID bindinguid)
+    {
+        if (!m_additionalBindings.Contains(bindinguid))
+        {
+            return false;
+        }
+
+        m_additionalBindings.Remove(bindinguid);
+        return true;
+    }
 }

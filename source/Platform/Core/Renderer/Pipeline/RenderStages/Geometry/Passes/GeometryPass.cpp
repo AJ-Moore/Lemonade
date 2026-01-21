@@ -50,6 +50,7 @@ namespace Lemonade
         m_geometryTarget.BeginRenderPass();
         m_geometryTarget.setClearColour(glm::vec4(0,0,0, 0));
         m_geometryTarget.Clear((uint)LBufferBit::COLOUR);
+        GraphicsServices::GetRenderer()->PrepareScene();
         GraphicsServices::GetRenderer()->RenderScene();
         m_geometryTarget.EndRenderPass();
 
