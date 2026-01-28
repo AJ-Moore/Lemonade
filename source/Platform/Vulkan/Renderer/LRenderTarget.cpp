@@ -1,8 +1,9 @@
 #include <LCommon.h>
-#include <utility>
 
 #ifdef RENDERER_VULKAN
 
+#include <Platform/Vulkan/Materials/LSampler.h>
+#include <utility>
 #include <Platform/Vulkan/Renderer/LRenderBlock.h>
 #include <Platform/Vulkan/Materials/Texture.h>
 #include <Platform/Core/Renderer/Pipeline/ARenderTarget.h>
@@ -150,20 +151,24 @@ namespace Lemonade
     void LRenderTarget::BindDepthAttachment(uint32 bindIndex)
     {
         VkDevice device = GraphicsServices::GetContext()->GetVulkanDevice().GetVkDevice();
+        LRenderBlock* renderBlock = static_cast<LRenderBlock*>(m_renderBlock);
 
         bool useCombinedImageSampler = m_bArrayTexture ? false : true;
         std::vector<VkDescriptorImageInfo> imageDescriptors;
         int layers = m_bArrayTexture ? 1 : m_layerCount;
+
+
+		LSampler* defaultSampler = static_cast<LSampler*>(renderBlock->GetMaterial()->GetResource()->GetSamplers().begin()->get());
 
         for (int i = 0; i < layers; ++i)
         {
             VkDescriptorImageInfo imageDescriptor = {};
             imageDescriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             imageDescriptor.imageView = m_depthAttachment.ImageViews[i]; /// This should be the index of the layer we want to bind when not using array texture?
+            imageDescriptor.sampler = defaultSampler->GetSampler();
             imageDescriptors.push_back(std::move(imageDescriptor));
         }
 
-        LRenderBlock* renderBlock = static_cast<LRenderBlock*>(m_renderBlock);
         LWindow* activeWindow = GraphicsServices::GetWindowManager()->GetActiveWindow();
         uint32_t currentFrame = activeWindow->GetCurrentFrame();
         VkDescriptorSet descriptorSet = renderBlock->GetDescriptorSet(currentFrame);

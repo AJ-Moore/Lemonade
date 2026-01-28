@@ -10,7 +10,7 @@ namespace Lemonade {
     bool LRenderer::Init()
     {
         SetName("Renderer");
-        m_renderStages.push_back(std::make_shared<ShadowStage>());
+        //m_renderStages.push_back(std::make_shared<ShadowStage>());
         m_renderStages.push_back(std::make_shared<GeometryStage>());
         m_renderStages.push_back(std::make_shared<PostProcessingStage>());
 

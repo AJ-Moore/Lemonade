@@ -630,13 +630,13 @@ namespace Lemonade
 
 		for (const auto& binding : m_additionalBindings) 
 		{
-			VkDescriptorSetLayoutBinding storagebinding{};
-			storagebinding.binding = binding->GetBindLocation();
-			storagebinding.descriptorType = binding->GetDescriptorType();
-			storagebinding.descriptorCount = 1;
-			storagebinding.stageFlags = binding->GetShaderStage();
-			storagebinding.pImmutableSamplers = nullptr;
-			bindings.push_back(storagebinding);
+			VkDescriptorSetLayoutBinding addBinding{};
+			addBinding.binding = binding->GetBindLocation();
+			addBinding.descriptorType = binding->GetDescriptorType();
+			addBinding.descriptorCount = binding->GetDescriptorCount();
+			addBinding.stageFlags = binding->GetShaderStage();
+			addBinding.pImmutableSamplers = nullptr;
+			bindings.push_back(addBinding);
 		}
 
 		VkDescriptorSetLayoutCreateInfo descriptorCreateInfo{};

@@ -12,6 +12,9 @@ namespace Lemonade {
     class LEMONADE_API ShadowPass : public ARenderPass{
     public:
         ShadowPass();
+        LRenderTarget& GetShadowRenderTarget() { return m_shadows; }
+
+        uint32_t GetMaxShadowMaps() const { return m_maxShadowMaps; }
     protected:
         virtual bool Init() override;
         virtual void Update() override;
@@ -19,7 +22,7 @@ namespace Lemonade {
     private:
         void RenderShadow(const glm::mat4& view, const glm::mat4& projection, int layer);
 
-        const int m_maxShadowMaps = 128;
+        const uint32_t m_maxShadowMaps = 128;
         LRenderTarget m_shadows;
     };
 }

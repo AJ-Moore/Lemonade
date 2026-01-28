@@ -1,3 +1,5 @@
+#include <Platform/Core/Renderer/RenderBlock/ARenderBlock.h>
+#include <Platform/Vulkan/Renderer/LBinding.h>
 #include <Platform/Core/Renderer/Pipeline/LRenderer.h>
 #include <Platform/Core/Renderer/Pipeline/AUniformBuffer.h>
 #include <Platform/Vulkan/Renderer/LUniformBuffer.h>
@@ -26,6 +28,16 @@ namespace Lemonade
         m_deferredBuffer = std::make_shared<LUniformBuffer>(LBufferType::Uniform, &m_deferredData, sizeof(DeferredData));
         m_deferredBuffer->SetShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT);
         m_deferredPass.GetRenderBlock()->AddUniformBuffer(m_deferredBuffer);
+        // Explicily specify Shadow map binding.
+        m_deferredPass.GetRenderBlock()->AddBinding(std::make_shared<LBinding>(m_shadowsImageSamplerLocation, 
+                                                                                VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 
+                                                                                VK_SHADER_STAGE_FRAGMENT_BIT, 
+                                                                                m_shadowPass->GetMaxShadowMaps()));
+
+        m_deferredPass.GetRenderBlock()->OnPipelineBound.AddListener([this](ARenderBlock* renderblock){
+            m_shadowPass->GetShadowRenderTarget().SetRenderBlock(renderblock);
+            m_shadowPass->GetShadowRenderTarget().BindDepthAttachment(m_shadowsImageSamplerLocation);
+        });
         return true;
     }
 

@@ -32,7 +32,7 @@ namespace Lemonade
 
     bool ARenderBlock::AddBinding(std::shared_ptr<LBinding> binding)
     {
-        if (m_uniformBuffers.Contains(binding->GetUID()))
+        if (m_additionalBindings.Contains(binding->GetUID()))
         {
             return false;
         }
