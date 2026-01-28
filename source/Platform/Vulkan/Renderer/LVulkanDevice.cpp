@@ -4,8 +4,6 @@
 
 #ifdef RENDERER_VULKAN
 
-//#include <vulkan/vk_enum_string_helper.h>
-//#include <vulkan/vulkan_to_string.hpp>
 #include <Platform/Core/Services/GraphicsServices.h>
 
 using Logger = CitrusCore::Logger;
@@ -44,11 +42,6 @@ namespace Lemonade
 		VkBool32 supportsPresent = false;
 		bool checkPresentation = false;
 		VkSurfaceKHR surface = GraphicsServices::GetWindowManager()->GetMainWindow()->GetVkSurface();
-
-		if (queue == VK_QUEUE_GRAPHICS_BIT)
-		{
-			//checkPresentation = true;
-		}
 
 		uint32_t graphicsQueueFamilyIndex = UINT32_MAX;
 		for (uint32_t i = 0; i < m_queueFamilyCount; ++i)
@@ -176,18 +169,10 @@ namespace Lemonade
 		
 		vkGetPhysicalDeviceFeatures2(m_physicalDevice, &supportedFeatures);
 		
-		//VkPhysicalDeviceFeatures deviceFeatures = {};
-		//deviceFeatures.multiDrawIndirect = supportedFeatures.multiDrawIndirect;
-		//deviceFeatures.geometryShader = VK_TRUE;
-		//deviceFeatures.tessellationShader = VK_TRUE;
-
-
 		VkDeviceCreateInfo deviceCreateInfo = {};
 		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		deviceCreateInfo.queueCreateInfoCount = 1;
 		deviceCreateInfo.pQueueCreateInfos = queueCreateInfo;
-		// old way.
-		//deviceCreateInfo.pEnabledFeatures = &supportedFeatures;
 		deviceCreateInfo.enabledExtensionCount = 3;
 		deviceCreateInfo.ppEnabledExtensionNames = enabledExtensions;
 		deviceCreateInfo.enabledLayerCount = 1;
@@ -220,21 +205,7 @@ namespace Lemonade
 			throw std::runtime_error("failed to create graphics command pool!");
 			return false;
 		}
-
-		//VkBool32 supportsPresent = false;
-		//int graphicsQueueFamilyIndex = -1;
-		//
-		//// Get presentation queue
-		//for (uint32_t i = 0; i < m_queueFamilyCount; i++)
-		//{
-		//	VkBool32 supportsPresent;
-		//	vkGetPhysicalDeviceSurfaceSupportKHR(m_physicalDevice, i, surface, &supportsPresent);
-		//
-		//	if ((m_queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) && supportsPresent) {
-		//		graphicsQueueFamilyIndex = i;
-		//	}
-		//}
-
+		
 		return true;
 	}
 
