@@ -28,13 +28,14 @@ namespace Lemonade
 
     class LEMONADE_API LModelNode : LObject
     {
-        friend class LModel;
+        friend class LModelResource;
     public:
         LModelNode() = delete;
         LModelNode(std::string meshName, std::shared_ptr<CitrusCore::Transform>);
     public:
         const std::unordered_set<std::shared_ptr<LModelNode>>& GetChildren() const { return m_children; }
-        glm::mat4 GetTransform()const{ return m_nodeTransform; }
+        glm::mat4 GetNodeTransform()const{ return m_nodeTransform; }
+        std::shared_ptr<CitrusCore::Transform>  GetTransform() const { return m_transform; }
         void SetNodeTransform(glm::mat4 trans) { m_nodeTransform = trans; }
     private:
 

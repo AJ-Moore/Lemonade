@@ -29,6 +29,8 @@ namespace Lemonade
         void SetDimensions(glm::uvec2 dimensions) { m_ssboData.Dimensions = dimensions; }
 		void SetRenderTarget(ARenderTarget* renderTarget) { m_sourceTarget = renderTarget; }
 		void SetBlendEnabled(bool value){m_renderBlock->SetBlendEnabled(value);}
+
+		std::shared_ptr<ARenderBlock> GetRenderBlock() const { return m_renderBlock; }
 	private:
         SSBOData m_ssboData;
 		std::shared_ptr<ARenderBlock> m_renderBlock = nullptr;

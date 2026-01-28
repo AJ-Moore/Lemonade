@@ -1,5 +1,9 @@
 #pragma once
 
+#include <Platform/Vulkan/Renderer/LBinding.h>
+#include <Containers/IndexedVector.h>
+#include <Util/UID.h>
+#include <Platform/Core/Renderer/Pipeline/AUniformBuffer.h>
 #include <Events/Event.h>
 #include <Resources/ResourceHandle.h>
 #include <Spatial/Transform.h>
@@ -24,6 +28,7 @@ namespace Lemonade
 	};
 
 	class Renderer;
+	class LUniformBuffer;
 
 	/** Render Block */
 	class LEMONADE_API ARenderBlock : public LObject
@@ -48,6 +53,13 @@ namespace Lemonade
 		CitrusCore::Event<ARenderBlock*> OnPipelineBound;
 
 		void SetBlendEnabled(bool value){m_bBlendEnabled = value;}
+		bool AddUniformBuffer(std::shared_ptr<LUniformBuffer>);
+		bool RemoveUniformBuffer(CitrusCore::UID uniformBufferuid);
+
+		bool AddBinding(std::shared_ptr<LBinding>);
+		bool RemoveBinding(CitrusCore::UID);
+
+		CitrusCore::ResourcePtr<Material> GetMaterial() const { return m_material; }
 	protected:
 		/// Dumps the vertex data to the buffer
 		virtual void DumpBufferData() = 0;
@@ -87,5 +99,11 @@ namespace Lemonade
 		Renderer* m_renderer = nullptr;
 
 		bool m_bBlendEnabled = true;
+
+		/// Uniform buffers to be passed to shader
+		CitrusCore::IndexedVector<CitrusCore::UID, std::shared_ptr<LUniformBuffer>> m_uniformBuffers;
+
+		/// Additional descriptors
+		CitrusCore::IndexedVector<CitrusCore::UID, std::shared_ptr<LBinding>> m_additionalBindings;
 	};
 }

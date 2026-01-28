@@ -55,10 +55,10 @@ namespace Lemonade
 		int GetParentId() { return m_parentBoneId; }
 		glm::vec3 GetBoneOrigin() { return m_boneOrigin; }
 
-		glm::vec3 GetBonePositionForAnimTime(float time);
-		glm::quat GetBoneRotationForAnimTime(float time);
-		glm::vec3 GetBoneScaleForAnimTime(float time);
-		glm::mat4 GetBoneMatrixForAnimTime(float time);
+		glm::vec3 GetBonePositionForAnimTime(float time, const glm::vec3& bindPose);
+		glm::quat GetBoneRotationForAnimTime(float time, const glm::quat& bindPose);
+		glm::vec3 GetBoneScaleForAnimTime(float time, const glm::vec3& bindPose);
+		glm::mat4 GetBoneMatrixForAnimTime(float time, const glm::mat4& bindPose);
 	private:
 		// Name of bone animation applies to.
 		std::string m_boneName;

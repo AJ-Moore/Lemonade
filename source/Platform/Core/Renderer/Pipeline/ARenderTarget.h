@@ -3,6 +3,7 @@
 #include <Platform/Core/Renderer/RenderBlock/ARenderBlock.h>
 #include <Platform/Vulkan/WindowManager/LWindow.h>
 #include <LCommon.h>
+#include <glm/fwd.hpp>
 
 namespace Lemonade
 {
@@ -42,24 +43,24 @@ namespace Lemonade
     {
     public:
         ARenderTarget(){}
-        ARenderTarget(glm::ivec2 dimensions){m_dimensions = dimensions;}
+        ARenderTarget(glm::ivec2 dimensions, uint32 layerCount);
+        ARenderTarget(glm::ivec2 colourDimensions, glm::ivec2 depthDimensions, uint32 layerCount, bool arrayTexture = true);
         virtual ~ARenderTarget();
         virtual bool Init() = 0;
         virtual void InitAsDefault() { m_bDoneInit = true; }
         virtual void BindColourAttachments() = 0;
-        virtual void BindColourAttachment(LColourAttachment colourAttachment, uint activeTarget = 0) = 0;
-        virtual void bindDepthAttachment(uint activeTarget = 0) = 0;
-        virtual void BeginRenderPass() = 0;
+        virtual void BindDepthAttachment(uint32 bindIndex) = 0;
+        virtual void BeginRenderPass(uint32 layerIndex = 0) = 0;
         virtual void EndRenderPass() = 0;
 
         virtual void blit(ARenderTarget& target) = 0;
         virtual void blit(unsigned int target) = 0;
         virtual void blitToScreen() = 0;
-        virtual void setDimensions(glm::ivec2 dimensions) = 0;
+        virtual void SetDimensions(glm::ivec2 dimensions);
         virtual void SetColourAttachments(const std::vector<LColourAttachment> attachments, bool multisampled = false) = 0;
         virtual void SetColourAttachments(int count, bool multisampled) = 0;
-        virtual void AddDepthAttachment(bool useRenderBufferStorage = true, int layers = 1) = 0;
-        virtual void addMultiSampledDepthAttachment() = 0;
+        virtual void AddDepthAttachment(bool useRenderBufferStorage = true) = 0;
+        virtual void AddMultiSampledDepthAttachment() = 0;
         virtual uint CreateColourAttachment(LColourAttachment colourAttachment, bool multisampled = false, int internalFormat = U_RGBA32F) = 0;
 
         void setClearColour(glm::vec4 clearColour) { m_clearColour = clearColour; }
@@ -70,8 +71,12 @@ namespace Lemonade
         virtual void SetRenderBlock(ARenderBlock* block ){ m_renderBlock = block; }
     protected:
         ARenderBlock* m_renderBlock = nullptr;
+        bool m_dirtyBuffer = true;
         bool m_bDoneInit = false;
-        glm::ivec2 m_dimensions;
+        glm::ivec2 m_colourDimensions;
+        glm::ivec2 m_depthDimensions;
+        uint32 m_layerCount = 1;
         glm::vec4 m_clearColour = glm::vec4(1,0,0,1);
+        bool m_bArrayTexture = false;
     };
 }

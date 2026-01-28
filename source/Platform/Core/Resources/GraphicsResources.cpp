@@ -20,8 +20,8 @@ namespace Lemonade {
         return m_shaders.Get<LShader>(path);
     }
 
-    CitrusCore::ResourcePtr<LModel> LGraphicsResources::GetModelHandle(std::string path)
+    CitrusCore::ResourcePtr<LModelResource> LGraphicsResources::GetModelHandle(std::string path)
     {
-        return m_models.Get<LModel>(path);
+        return m_models.Get<LModelResource>(path);
     }
 }

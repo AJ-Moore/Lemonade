@@ -1,3 +1,4 @@
+#include <Platform/Core/Renderer/Pipeline/RenderStages/Shadows/ShadowStage.h>
 #include <Platform/Core/Renderer/Pipeline/LRenderer.h>
 #include <Platform/Core/Renderer/Pipeline/RenderStages/Geometry/GeometryStage.h>
 #include <Platform/Core/Renderer/Pipeline/RenderStages/PostProcessing/PostProcessingStage.h>
@@ -9,6 +10,7 @@ namespace Lemonade {
     bool LRenderer::Init()
     {
         SetName("Renderer");
+        //m_renderStages.push_back(std::make_shared<ShadowStage>());
         m_renderStages.push_back(std::make_shared<GeometryStage>());
         m_renderStages.push_back(std::make_shared<PostProcessingStage>());
 
@@ -44,6 +46,7 @@ namespace Lemonade {
     {
         m_renderingData.ActiveCamera = m_activeCamera;
         m_renderingData.ActiveWindow = GraphicsServices::GetWindowManager()->GetActiveWindow();
+        m_renderingData.RenderInput = m_renderInput;
 
         for (auto& renderStage : m_renderStages)
         {
@@ -51,8 +54,15 @@ namespace Lemonade {
         }
     }
 
+    void LRenderer::PrepareScene() 
+    {
+        OnPrepareScene.Invoke(m_renderingData);
+        m_renderingData.RenderInput = m_renderInput;
+    }
+
     void LRenderer::RenderScene()
     {
         OnRenderScene.Invoke(m_renderingData);
+        m_renderingData.RenderInput = m_renderInput;
     }
 }

@@ -46,12 +46,7 @@ namespace Lemonade
 		mesh->SetUVS(uvs);
 		m_renderBlock->SetMesh(mesh);
 		m_renderBlock->Init();
-        return true;
-	}
 
-	void LRenderLayer::Render()
-	{
-        // BIND SSBO with layer dimensions?
 		m_renderBlock->OnPipelineBound.AddListener([this](ARenderBlock* block){
 			if (m_sourceTarget != nullptr)
 			{
@@ -60,6 +55,12 @@ namespace Lemonade
 				m_sourceTarget->BindColourAttachments();
 			}
 		});
+
+        return true;
+	}
+
+	void LRenderLayer::Render()
+	{
 		m_renderBlock->Render();
 	}
 

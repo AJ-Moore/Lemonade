@@ -77,9 +77,19 @@ namespace Lemonade
 		debugCreateInfo.pfnUserCallback = DebugCallback;
 		debugCreateInfo.pUserData = nullptr;
 
+		VkValidationFeatureDisableEXT disables[] = {
+			VK_VALIDATION_FEATURE_DISABLE_UNIQUE_HANDLES_EXT
+		};
+		
+		VkValidationFeaturesEXT validationFeatures = {
+			.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT,
+			.disabledValidationFeatureCount = 1,
+			.pDisabledValidationFeatures = disables
+		};
+
         VkInstanceCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-		createInfo.pNext = &debugCreateInfo;
+		createInfo.pNext = &validationFeatures;
 		createInfo.flags = 0;
 		createInfo.pApplicationInfo = &app;
 		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
