@@ -15,6 +15,8 @@ Commercial use, redistribution, and sublicensing are not permitted without a sep
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+![render engine screenshot](docs/screenshot.png)
+
 ## Motivation
 
 For quite a few years now I've beeen wanting to pick up Vulkan after spending many years working with OpenGL and after being made redundant at my last role as a programmer I decided now was the time. Although I had planned to build a set of libraries and release them to the general public my aspirations have changed a bit with my focus turning to devloping my own game whilst I continue to work on the rendering engine. I am separate to this project developing a new game engine "Strawberry" the game and the engine are currently very closesly coupled with no immediately release in mind for either. 
