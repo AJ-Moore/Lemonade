@@ -140,7 +140,7 @@ The LVulkanDevice is a lemonade class that wraps much of the initial setup of of
 ```
 
 
-// Before rendering things you'll want to populate the environment data i.e. Lighting data in the begin render
+Before rendering things you'll want to populate the environment data i.e. Lighting data in the begin render
 ```
     void Scene::BeginRender() 
     {
