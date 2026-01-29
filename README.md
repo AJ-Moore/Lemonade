@@ -4,7 +4,7 @@
 
 This project is currently in early development and rapidly changing. It is not recommended for use in prodution environments.
 - API Changes are expected
-- Uncertainty is guarenteed
+- Uncertainty is guaranteed
 
 ## License
 
