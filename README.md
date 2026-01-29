@@ -4,11 +4,11 @@
 
 This project is currently in early development and rapidly changing. It is not recommended for use in prodution environments.
 - API Changes are expected
-- Uncertainty is guarenteed
+- Uncertainty is guaranteed
 
 ## License
 
-This software is © 2026 Allan Moore. All rights reserved.
+Copyright © Allan Moore 2026. All rights reserved.
 
 You are granted permission to use this software for personal, educational, and non-commercial purposes only.
 Commercial use, redistribution, and sublicensing are not permitted without a separate commercial license.
@@ -142,7 +142,7 @@ The LVulkanDevice is a lemonade class that wraps much of the initial setup of of
 ```
 
 
-// Before rendering things you'll want to populate the environment data i.e. Lighting data in the begin render
+Before rendering things you'll want to populate the environment data i.e. Lighting data in the begin render
 ```
     void Scene::BeginRender() 
     {
