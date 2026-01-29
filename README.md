@@ -8,7 +8,7 @@ This project is currently in early development and rapidly changing. It is not r
 
 ## License
 
-This software is © 2026 Allan Moore. All rights reserved.
+Copyright © Allan Moore 2026. All rights reserved.
 
 You are granted permission to use this software for personal, educational, and non-commercial purposes only.
 Commercial use, redistribution, and sublicensing are not permitted without a separate commercial license.
