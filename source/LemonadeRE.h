@@ -9,7 +9,5 @@ namespace Lemonade
 		void Init();
 		void Update();
 		void Unload(); 
-
-		bool m_bRunning = false;
 	};
 }
