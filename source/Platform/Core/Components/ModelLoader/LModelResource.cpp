@@ -261,8 +261,8 @@ namespace Lemonade
 		glm::mat4 localTransform = hasBones ? glm::mat4(1.0f) : local;
 
 		std::shared_ptr<CitrusCore::Transform> transform = std::make_shared<CitrusCore::Transform>(localTransform);
-		std::shared_ptr<LModelNode> entity = std::make_shared<LModelNode>(node->mName.C_Str(), transform);
-		entity->SetNodeTransform(local);
+		std::shared_ptr<LModelNode> modelNode = std::make_shared<LModelNode>(node->mName.C_Str(), transform);
+		modelNode->SetNodeTransform(local);
 
         CitrusCore::ResourcePtr<Material> mat;
 		
@@ -274,7 +274,7 @@ namespace Lemonade
 			mat = GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/defaultpbr.mat.json");
 		}
 
-		parent->AddChild(entity);
+		parent->AddChild(modelNode);
 
 		for (uint32 i = 0; i < node->mNumMeshes; ++i)
 		{
@@ -610,7 +610,7 @@ namespace Lemonade
 
 			lmesh->SetMesh(mesh);
 			lmesh->SetMaterial(mat);
-            entity->AddMeshRenderer(lmesh);
+            modelNode->AddMeshRenderer(lmesh);
 		}
 
 		//if (node->mMetaData)
@@ -630,7 +630,7 @@ namespace Lemonade
 
 		for (uint32 i = 0; i < node->mNumChildren; ++i)
 		{
-			CreateMesh(entity.get(), node->mChildren[i]);
+			CreateMesh(modelNode.get(), node->mChildren[i]);
 		}
 	}
 

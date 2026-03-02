@@ -44,11 +44,15 @@ namespace Lemonade
 
 		virtual void RenderScene(); 
 		virtual void PrepareScene(); 
+		virtual void RenderSwapChain();
 
 		CitrusCore::Event<const LRenderingData&> OnRenderScene;
 
 		/// Set render input during this callback.
 		CitrusCore::Event<const LRenderingData&> OnPrepareScene;
+
+		/// Best place to hook in things like ImGUI
+		CitrusCore::Event<const LRenderingData&> OnRenderSwapChain;
 
 		void SetActiveCamera(LCamera* camera) {m_activeCamera = camera;}
 		void SetActiveRenderTarget(ARenderTarget* target) { m_activeRenderTarget = target; }
@@ -56,6 +60,9 @@ namespace Lemonade
 		void SetShadowPass(bool value) { m_bIsShadowPass = value; }
 		void SetShadowData(const LShadowData& data) { m_shadowPassData = data; }
 		const LShadowData& GetShadowdata() { return m_shadowPassData; }
+		void SetViewport(AViewport* viewport) { m_viewport = viewport; }
+
+		AViewport* GetViewport(){ return m_viewport; }
 	protected:
 		virtual bool Init();
 		virtual void Unload();
@@ -74,5 +81,6 @@ namespace Lemonade
 		bool m_bIsShadowPass = false;
 		Light* m_activeLight = nullptr;
 		ARenderTarget* m_activeRenderTarget = nullptr;
+		AViewport* m_viewport;
 	};
 }

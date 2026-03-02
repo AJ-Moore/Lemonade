@@ -24,6 +24,7 @@ namespace Lemonade{
     bool RenderComponent::Init()
     {
         m_renderBlock->Init();
+        m_bDoneInit = true;
         return true;
     }
 

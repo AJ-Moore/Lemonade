@@ -51,7 +51,7 @@ namespace Lemonade {
 		}
 	}
 
-    void LMeshRenderer::setDirty()
+    void LMeshRenderer::SetDirty()
 	{
 		m_renderBlock->SetDirty();
 	}

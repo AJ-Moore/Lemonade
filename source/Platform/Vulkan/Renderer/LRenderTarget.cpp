@@ -1,3 +1,4 @@
+#include "Platform/Vulkan/Renderer/Pipeline/LViewport.h"
 #include <LCommon.h>
 
 #ifdef RENDERER_VULKAN
@@ -433,23 +434,7 @@ namespace Lemonade
 
         
         vkCmdBeginRenderPass(m_commandBuffer[currentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-        // TODO replace with viewport apply method
-        VkViewport viewport = {};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = (float)activeWindow->GetWidth();
-        viewport.height = (float)activeWindow->GetHeight();
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        
-        vkCmdSetViewport(m_commandBuffer[currentFrame], 0, 1, &viewport);
-        
-        VkRect2D scissor = {};
-        scissor.offset = {0, 0};
-        scissor.extent = {(uint32_t)activeWindow->GetWidth(), (uint32_t)activeWindow->GetHeight()};
-        
-        vkCmdSetScissor(m_commandBuffer[currentFrame], 0, 1, &scissor);
+        static_cast<LViewport*>(GraphicsServices::GetRenderer()->GetViewport())->VulkanApply(m_commandBuffer[currentFrame]);
     }
 
     void LRenderTarget::TransitionAttachments(VkCommandBuffer cmdBuffer, ImageTransition transition)

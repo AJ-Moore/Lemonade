@@ -7,9 +7,9 @@
 
 namespace Lemonade {
 
-    LModel::LModel(std::string path)
+    LModel::LModel(CitrusCore::ResourcePtr<Lemonade::LModelResource> model)
     {
-        m_path = path;
+        m_model = model;
     }
 
     void LModel::PlayAnimation(std::string animationName)
@@ -45,10 +45,21 @@ namespace Lemonade {
 
     bool LModel::Init()
     {
-        m_model = Lemonade::GraphicsServices::GetGraphicsResources()->GetModelHandle(m_path);
         m_model->GetResource()->Init();
         CitrusCore::Transform::MakeParent(m_model->GetResource()->GetRoot()->GetTransform(),m_transform);
+        m_bDoneInit = true;
         return true;
+    }
+
+    void LModel::SetModelResource(CitrusCore::ResourcePtr<Lemonade::LModelResource> modelResource)
+    {
+        m_model = modelResource; 
+
+        if (m_bDoneInit)
+        {
+            m_model->GetResource()->Init();
+            CitrusCore::Transform::MakeParent(m_model->GetResource()->GetRoot()->GetTransform(),m_transform);
+        }
     }
 
     void LModel::Update()

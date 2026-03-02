@@ -34,6 +34,7 @@ namespace Lemonade
         screenTarget->setClearColour(glm::vec4(0,0,0,1));
         m_sky.Render();
         m_renderLayer.Render();
+        GraphicsServices::GetRenderer()->RenderSwapChain();
         screenTarget->EndRenderPass();
     }
 

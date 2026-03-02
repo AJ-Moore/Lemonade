@@ -21,5 +21,6 @@ namespace Lemonade
     protected:
         std::unique_ptr<ARenderBlock> m_renderBlock;
         std::shared_ptr<CitrusCore::Transform> m_transform;
+        bool m_bDoneInit = false;
     };
 }

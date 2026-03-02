@@ -68,16 +68,29 @@ namespace Lemonade
 	void LRenderBlock::Unload()
 	{
 		const LVulkanDevice& device = GraphicsServices::GetContext()->GetVulkanDevice();
-		int currentFrame = GraphicsServices::GetWindowManager()->GetActiveWindow()->GetCurrentFrame();
 
 		for (auto& vertexBuffer : m_vertexBuffers)
 		{
+			if (vertexBuffer.second.Buffer == nullptr)
+			{
+				continue;
+			}
+
 			vkUnmapMemory(device.GetVkDevice(), vertexBuffer.second.VKDeviceMemory);
 			vkDestroyBuffer(device.GetVkDevice(), vertexBuffer.second.Buffer, nullptr);
 		}
 
-		vkUnmapMemory(device.GetVkDevice(), m_boneMatBuffer[currentFrame].VKDeviceMemory);
-		vkDestroyBuffer(device.GetVkDevice(), m_boneMatBuffer[currentFrame].Buffer, nullptr);
+		for (auto& boneBuffer : m_boneMatBuffer)
+		{
+			if (boneBuffer.Buffer == nullptr)
+			{
+				Logger::Log(Logger::VERBOSE, "Bone buffer not allocated cannot unload skipping.");
+				continue;
+			}
+
+			vkUnmapMemory(device.GetVkDevice(), boneBuffer.VKDeviceMemory);
+			vkDestroyBuffer(device.GetVkDevice(), boneBuffer.Buffer, nullptr);
+		}
 	}
 
 	void LRenderBlock::Update()

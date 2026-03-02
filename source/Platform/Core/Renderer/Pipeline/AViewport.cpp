@@ -56,9 +56,7 @@ namespace Lemonade
 			camera->CalculateProjMatrix((float)m_viewRect.Width, (float)m_viewRect.Height);
 			camera->CalculateViewMatrix();
 			camera->CalculateViewProjMatrix();
-
-			// Render pass goes here!!! 
-			//m_viewCamera->getParent()->m_parentScene->render();
+			renderer->SetViewport(this);
 			renderer->RenderPass();
 		}
 	}

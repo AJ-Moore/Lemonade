@@ -2,6 +2,7 @@
 #include <SDL3/SDL_vulkan.h>
 #include <Platform/Vulkan/Renderer/Core/LGraphicsContext.h>
 
+
 namespace Lemonade
 {
 	using CitrusCore::Logger;
@@ -24,6 +25,11 @@ namespace Lemonade
 		}
 	
 		return VK_FALSE; // don't abort
+	}
+
+	void LGraphicsContext::InitIMGui()
+	{
+
 	}
 
     bool LGraphicsContext::Init() 

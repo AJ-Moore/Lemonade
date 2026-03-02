@@ -21,7 +21,7 @@ namespace Lemonade
 		virtual void SetMaterial(CitrusCore::ResourcePtr<Material>);
 		virtual void SetMesh(std::shared_ptr<Mesh>);
 		std::shared_ptr<Mesh> GetMesh() const { return m_mesh; }
-		virtual void setDirty();
+		virtual void SetDirty();
 
 	protected:
 		std::shared_ptr<Mesh> m_mesh = nullptr;

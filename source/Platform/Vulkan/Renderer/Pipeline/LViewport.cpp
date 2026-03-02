@@ -32,10 +32,7 @@ namespace Lemonade
 
     void LViewport::SetDepthRange(float near, float far)
     {
-        // Get active command buffer.
-
-
-        
+        // TODO Get active command buffer.
     }
 }
 #endif 

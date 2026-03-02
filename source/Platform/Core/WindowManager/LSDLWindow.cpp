@@ -23,7 +23,7 @@ namespace Lemonade
         }
 
         SDL_SetWindowBordered(m_window, m_windowBorder);
-		SDL_SetWindowResizable(m_window, true);
+		SDL_SetWindowResizable(m_window, false);
 
 		if (m_fullscreen)
 		{

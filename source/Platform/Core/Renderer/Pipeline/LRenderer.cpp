@@ -60,6 +60,11 @@ namespace Lemonade {
         m_renderingData.RenderInput = m_renderInput;
     }
 
+    void LRenderer::RenderSwapChain() 
+    {
+        OnRenderSwapChain.Invoke(m_renderingData);
+    }
+
     void LRenderer::RenderScene()
     {
         OnRenderScene.Invoke(m_renderingData);

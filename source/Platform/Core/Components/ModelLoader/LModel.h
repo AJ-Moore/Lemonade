@@ -20,10 +20,13 @@ namespace Lemonade
 			uint32 AnimationIndex = 0;	
 		};
 	public:
-        LModel(std::string modelPath);
+		LModel() = default;
+        LModel(CitrusCore::ResourcePtr<Lemonade::LModelResource> modelResource);
 		virtual bool Init() override;
 		virtual void Update() override;
 		virtual void Render() override;
+
+		void SetModelResource(CitrusCore::ResourcePtr<Lemonade::LModelResource> modelResource);
 
 		CitrusCore::UID LoadAnimation(const std::string& modelPath, const std::string& animationName, uint32 animationIndex = 0);
 		void PlayAnimation(std::string animationName);
@@ -35,7 +38,5 @@ namespace Lemonade
 
 		/// Associate a string identifier with our animation reosurce and animation index to be played.
 		std::unordered_map<std::string, LModelAnim> m_animationData;
-
-        std::string m_path;
 	};
 }
