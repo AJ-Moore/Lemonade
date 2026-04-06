@@ -37,6 +37,8 @@ namespace Lemonade
         glm::mat4 GetNodeTransform()const{ return m_nodeTransform; }
         std::shared_ptr<CitrusCore::Transform>  GetTransform() const { return m_transform; }
         void SetNodeTransform(glm::mat4 trans) { m_nodeTransform = trans; }
+
+        const std::unordered_set<std::shared_ptr<Lemonade::LMeshRenderer>>& GetMeshes() const { return m_meshes; }
     private:
 
         virtual bool Init() override; 

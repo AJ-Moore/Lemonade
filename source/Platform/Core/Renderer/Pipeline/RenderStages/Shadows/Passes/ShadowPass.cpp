@@ -57,7 +57,8 @@ namespace Lemonade
                     continue;
                 }
 
-                glm::vec3 right = glm::cross(light->LightDirection, light->LightDirection);
+                // Jank - Duplicates code in ALight.cpp, needs refactor
+                glm::vec3 right = glm::cross(light->LightDirection, light->LightUp);
 
                 std::vector<glm::mat4> views = {
                     // Forward
@@ -71,7 +72,7 @@ namespace Lemonade
                     // Up 
                     glm::lookAtLH(position, position + light->LightUp, light->LightDirection),
                     // Down 
-                    glm::lookAtLH(position, position - light->LightUp, -light->LightDirection),     
+                    glm::lookAtLH(position, position - light->LightUp, -light->LightDirection), 
                 };
 
                 for (const auto& view : views)

@@ -22,7 +22,7 @@ namespace Lemonade {
     private:
         void RenderShadow(const glm::mat4& view, const glm::mat4& projection, int layer);
 
-        const uint32_t m_maxShadowMaps = 128;
+        const uint32_t m_maxShadowMaps = 12;
         LRenderTarget m_shadows;
     };
 }

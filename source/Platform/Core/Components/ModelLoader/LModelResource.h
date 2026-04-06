@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Platform/Core/Renderer/Animation/Animation.h"
+#include <Platform/Core/Renderer/Animation/Animation.h>
 #include <Platform/Core/Renderer/Animation/Bone.h>
 #include <assimp/Importer.hpp>
 #include <LCommon.h>

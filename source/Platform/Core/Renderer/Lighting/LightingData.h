@@ -4,8 +4,8 @@
 namespace Lemonade{
     struct alignas(16) LightingData
     {
-        /// Light world space matrix
-        glm::mat4 WorldMatrix = glm::mat4(1);
+        /// Light world space matrix/s
+        glm::mat4 WorldMatrix[6];
 
         /// Light position in world space 
         glm::vec3 LightPosition = {1,2,3};
@@ -17,7 +17,7 @@ namespace Lemonade{
         glm::vec3 LightUp = {1,2,3};
 
         // Padding to 16 byte alignment.
-        float Padding1;        
+        float Padding1;
 
         /// Light Direction 
         glm::vec3 LightDirection;
@@ -26,7 +26,7 @@ namespace Lemonade{
         float Padding2;
 
         /// Light colour
-        glm::vec3 Colour; 
+        glm::vec3 Colour = glm::vec3(1,1,1);
 
         // Padding to 16 byte alignment.
         float Padding3;

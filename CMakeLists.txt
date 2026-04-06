@@ -80,7 +80,14 @@ CPMAddPackage(
   NAME assimp
   GITHUB_REPOSITORY assimp/assimp
   GIT_TAG v6.0.2
+  OPTIONS
+    "ASSIMP_BUILD_WITH_MINIZIP ON"   # Use internal minizip
+    "ASSIMP_USE_HUNTER ON"
+    "ASSIMP_BUILD_TESTS:BOOL=OFF"         # optional
+    "ASSIMP_BUILD_ASSIMP_TOOLS:BOOL=OFF"  # optional
 )
+
+target_include_directories(assimp PRIVATE /usr/include/minizip)
 
 # GLM
 CPMAddPackage("gh:g-truc/glm#1.0.1")

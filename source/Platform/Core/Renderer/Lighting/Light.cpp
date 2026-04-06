@@ -4,5 +4,6 @@ namespace Lemonade{
     void Light::Dump()
     {
         m_lightingData.LightType = (uint32)m_lightType;
+        m_lightingData.LightIntensityLumens = m_lightIntensityLumens;
     }
 }

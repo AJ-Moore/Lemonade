@@ -18,8 +18,6 @@ namespace Lemonade
 		virtual bool Init();
 		virtual void Update(){}
 		virtual void Render(){}
-
-		virtual void InitIMGui();
 	private: 
 		LVulkanDevice m_vulkanDevice;
 		VkInstance m_vkInstance = nullptr;

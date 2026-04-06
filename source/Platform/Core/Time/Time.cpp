@@ -46,7 +46,11 @@ namespace Lemonade
 	bool Time::Init()
 	{
 		Update();
-		m_timeApplicationStarted = m_time;
+		//m_timeApplicationStarted = m_time;
+		m_timeApplicationStarted = 0;
+		m_deltaTime = 0.016f;
+		m_deltaTimeMS = 0.000016f;
+		m_timeElapsed = 0;
 		return true;
 	}
 }

@@ -76,7 +76,7 @@ namespace Lemonade
 		LRenderingData m_renderingData;
 		std::vector<std::shared_ptr<LRenderStage>> m_renderStages;
 
-		float m_shadowMapSize = 128.0f;
+		float m_shadowMapSize = 1024.0f;
 		LCamera* m_activeCamera;
 		bool m_bIsShadowPass = false;
 		Light* m_activeLight = nullptr;

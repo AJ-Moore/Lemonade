@@ -1,8 +1,8 @@
-#include "Platform/Vulkan/Renderer/Pipeline/LViewport.h"
 #include <LCommon.h>
 
 #ifdef RENDERER_VULKAN
 
+#include <Platform/Vulkan/Renderer/Pipeline/LViewport.h>
 #include <Platform/Vulkan/Materials/LSampler.h>
 #include <utility>
 #include <Platform/Vulkan/Renderer/LRenderBlock.h>
@@ -166,7 +166,7 @@ namespace Lemonade
             VkDescriptorImageInfo imageDescriptor = {};
             imageDescriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             imageDescriptor.imageView = m_depthAttachment.ImageViews[i]; /// This should be the index of the layer we want to bind when not using array texture?
-            imageDescriptor.sampler = defaultSampler->GetSampler();
+            //imageDescriptor.sampler = defaultSampler->GetSampler();
             imageDescriptors.push_back(std::move(imageDescriptor));
         }
 
@@ -180,7 +180,9 @@ namespace Lemonade
         writeImage.dstSet = descriptorSet;
         writeImage.dstBinding = bindIndex;
         writeImage.dstArrayElement = 0;
-        writeImage.descriptorType = m_bArrayTexture ? VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        // I think this was probably a mistake, I'm not sure what I was thinking here?
+        //writeImage.descriptorType = m_bArrayTexture ? VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        writeImage.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
         writeImage.descriptorCount = m_bArrayTexture ? 1 : m_layerCount;
         writeImage.pImageInfo = imageDescriptors.data();
         writes.push_back(writeImage);
@@ -601,24 +603,17 @@ namespace Lemonade
 
     void LRenderTarget::blit(ARenderTarget& target)
     {
-        //LRenderTarget* rtarget = (LRenderTarget*)&target;
-        //glBindFramebuffer(GL_READ_FRAMEBUFFER, m_frameBuffer);
-        //glBindFramebuffer(GL_DRAW_FRAMEBUFFER, rtarget->m_frameBuffer);
-        //glBlitFramebuffer(0, 0, m_dimensions.x, m_dimensions.y, 0, 0, m_dimensions.x, m_dimensions.y, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        //todo
     }
 
     void LRenderTarget::blit(unsigned int framebuffer)
     {
-        //glBindFramebuffer(GL_READ_FRAMEBUFFER, m_frameBuffer);
-        //glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
-        //glBlitFramebuffer(0, 0, m_dimensions.x, m_dimensions.y, 0, 0, m_dimensions.x, m_dimensions.y, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        //todo
     }
 
     void LRenderTarget::blitToScreen()
     {
-        //glBindFramebuffer(GL_READ_FRAMEBUFFER, m_frameBuffer);
-        //glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        //glBlitFramebuffer(0, 0, m_dimensions.x, m_dimensions.y, 0, 0, m_dimensions.x, m_dimensions.y, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        //todo
     }
 
     void LRenderTarget::SetColourAttachments(int count, bool multisampled)
@@ -727,6 +722,7 @@ namespace Lemonade
             VkImageViewCreateInfo viewInfo = {};
             viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
             viewInfo.image = depthImage;
+            //viewInfo.viewType = m_bArrayTexture ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
             viewInfo.viewType = m_layerCount > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
             viewInfo.format = VK_FORMAT_D32_SFLOAT;
             viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;

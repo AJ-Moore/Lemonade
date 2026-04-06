@@ -154,8 +154,7 @@ namespace Lemonade
 
 	void LRenderBlock::SetDrawMode(PrimitiveMode mode)
 	{
-		// TODO
-		m_primitiveMode = (uint32)mode;
+		m_primitiveMode = mode;
 	}
 
 	void LRenderBlock::SetVertexAttributes()
@@ -166,10 +165,8 @@ namespace Lemonade
 	{
 		const LVulkanDevice& device = GraphicsServices::GetContext()->GetVulkanDevice();
 		int currentFrame = GraphicsServices::GetWindowManager()->GetActiveWindow()->GetCurrentFrame();
-
+		
 		LVKBuffer boneBuffer = m_boneMatBuffer[currentFrame];
-
-		// cpy mem here
 		boneBuffer.DataCPUMapped = static_cast<void*>(m_mesh->GetBoneMatrix().get()->data());
 		std::memcpy(boneBuffer.DataGPUMapped, boneBuffer.DataCPUMapped, boneBuffer.DataSize);
 	}
@@ -718,6 +715,17 @@ namespace Lemonade
 		}
 	}
 
+	VkPrimitiveTopology LRenderBlock::GetVKPrimitiveMode()
+	{
+		if (m_primitiveTopologyLookup.contains(m_primitiveMode))
+		{
+			return m_primitiveTopologyLookup.at(m_primitiveMode);
+		}
+
+		Logger::Log(Logger::ERROR, "Unable to get primitive mode defaulting to triangle list.");
+		return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	}
+
 	void LRenderBlock::CreateVkPipeline() 
 	{
 		CreateVkDescriptors();
@@ -758,7 +766,7 @@ namespace Lemonade
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly = {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+			.topology = GetVKPrimitiveMode(),
 			.primitiveRestartEnable = VK_FALSE
 		};
 
@@ -773,7 +781,7 @@ namespace Lemonade
 			.depthClampEnable = VK_FALSE,
 			.rasterizerDiscardEnable = VK_FALSE,
 			.polygonMode = VK_POLYGON_MODE_FILL,
-			.cullMode = VK_CULL_MODE_NONE,
+			.cullMode = VK_CULL_MODE_BACK_BIT,
 			.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
 			.depthBiasEnable = VK_FALSE,
 			.lineWidth = 1.0f

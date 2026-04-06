@@ -48,7 +48,7 @@ namespace Lemonade
 		void SetTransform(std::shared_ptr<CitrusCore::Transform> Transform) { m_transform = Transform; }
 		void SetMesh(std::shared_ptr<Mesh> Mesh) { m_mesh = Mesh; }
 		void SetDirty() { m_bufferDirty = true; }
-		PrimitiveMode GetDrawMode() const { return (PrimitiveMode)m_primitiveMode; }
+		PrimitiveMode GetDrawMode() const { return m_primitiveMode; }
 
 		CitrusCore::Event<ARenderBlock*> OnPipelineBound;
 
@@ -92,8 +92,8 @@ namespace Lemonade
 		/// Holds all the render state information
 		uint32 m_renderState = 0;
 
-		/// Holds the primitive mode, 0x4 triangles ogl, lazy
-		uint32 m_primitiveMode = 0x4;
+		/// Holds the primitive mode
+		PrimitiveMode m_primitiveMode = PrimitiveMode::TRIANGLES;
 
 		/// Reference to the renderer
 		Renderer* m_renderer = nullptr;

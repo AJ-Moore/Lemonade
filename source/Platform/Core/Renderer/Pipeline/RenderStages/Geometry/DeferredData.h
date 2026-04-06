@@ -5,6 +5,7 @@ namespace Lemonade{
     struct alignas(16) DeferredData
     {
         int LightCount = 0;
-        float Padding0[3];
+        float Time = 0;
+        float Padding0[2];
     };
 }

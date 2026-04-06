@@ -30,7 +30,7 @@ namespace Lemonade
         m_deferredPass.GetRenderBlock()->AddUniformBuffer(m_deferredBuffer);
         // Explicily specify Shadow map binding.
         m_deferredPass.GetRenderBlock()->AddBinding(std::make_shared<LBinding>(m_shadowsImageSamplerLocation, 
-                                                                                VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 
+                                                                                VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 
                                                                                 VK_SHADER_STAGE_FRAGMENT_BIT, 
                                                                                 m_shadowPass->GetMaxShadowMaps()));
 
@@ -55,6 +55,8 @@ namespace Lemonade
             m_deferredData.LightCount = renderingData.RenderInput->LightData.Count;
             m_deferredBuffer->SetDirty();
         }
+
+        m_deferredData.Time = GraphicsServices::GetTime()->GetTimeElapsed();
     }
 
     void GeometryPass::Render(const LRenderingData& renderingData)

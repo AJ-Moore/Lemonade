@@ -27,11 +27,6 @@ namespace Lemonade
 		return VK_FALSE; // don't abort
 	}
 
-	void LGraphicsContext::InitIMGui()
-	{
-
-	}
-
     bool LGraphicsContext::Init() 
     {
 		VkApplicationInfo app = {

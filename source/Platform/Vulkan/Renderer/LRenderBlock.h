@@ -52,6 +52,7 @@ namespace Lemonade
 		LVKBuffer GetLVKBuffer(uint32_t currentFrame) { return m_vertexDataUniformBuffers.at(currentFrame); }
 		VkDescriptorSet GetDescriptorSet(uint32_t frame) { return m_descriptorSets.at(frame); }
 		VkPipelineLayout GetPipelineLayout() { return m_vkPipelineLayout; }
+		VkPrimitiveTopology GetVKPrimitiveMode();
 
 		bool AddUniformBuffer(std::shared_ptr<LUniformBuffer> buffer);
 	protected:
@@ -90,6 +91,15 @@ namespace Lemonade
 			{VKBufferType::BiTangents,  {} },
 			{VKBufferType::BoneWeights,  {} },
 			{VKBufferType::BoneIds,  {} }
+		};
+
+		const std::unordered_map<PrimitiveMode, VkPrimitiveTopology> m_primitiveTopologyLookup = {
+			{PrimitiveMode::LINES, VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_LINE_LIST},
+			{PrimitiveMode::LINE_STRIP, VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_LINE_STRIP},
+			{PrimitiveMode::POINTS, VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_POINT_LIST},
+			{PrimitiveMode::TRIANGLES, VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST},
+			{PrimitiveMode::TRIANGLE_FAN, VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN},
+			{PrimitiveMode::TRIANGLE_STRIP, VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP}
 		};
 
 		const std::vector<VKBufferType> m_bufferOrder = {
