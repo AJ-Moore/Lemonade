@@ -15,7 +15,7 @@ namespace Lemonade
 	{
 	public:
 		template<class T>
-		CitrusCore::ResourcePtr<T> GetResourceHandle(std::string path)
+		CitrusCore::ResourcePtr<T> GetResourceHandle(const std::string& path)
 		{
 			if constexpr (std::is_same_v<T, ATexture>)
 			{
@@ -37,10 +37,11 @@ namespace Lemonade
 			return nullptr;
 		}
 
-		CitrusCore::ResourcePtr<ATexture> GetTextureHandle(std::string path);
-		CitrusCore::ResourcePtr<Material> GetMaterialHandle(std::string path);
-		CitrusCore::ResourcePtr<AShader> GetShaderHandle(std::string path);
-		CitrusCore::ResourcePtr<LModelResource> GetModelHandle(std::string path);
+		CitrusCore::ResourcePtr<ATexture> GetTextureHandle(const std::string& path, std::function<void(ATexture*)> construct = nullptr);
+		CitrusCore::ResourcePtr<Material> GetMaterialHandle(const std::string& path, std::function<void(Material*)> construct = nullptr);
+		CitrusCore::ResourcePtr<Material> GetMaterialMasqueradeFromBase(const std::string& basePath,const std::string& path, std::function<void(Material*)> construct = nullptr);
+		CitrusCore::ResourcePtr<AShader> GetShaderHandle(const std::string& path, std::function<void(AShader*)> construct = nullptr);
+		CitrusCore::ResourcePtr<LModelResource> GetModelHandle(const std::string& path, std::function<void(LModelResource*)> construct = nullptr);
 	private:
 		CitrusCore::ResourceGroup<ATexture> m_textures;
 		CitrusCore::ResourceGroup<AShader> m_shaders;

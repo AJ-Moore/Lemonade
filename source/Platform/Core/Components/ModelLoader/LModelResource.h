@@ -66,6 +66,7 @@ namespace Lemonade
 		void PopulateBones(aiNode* node, const aiScene* scene);
 		void CreateBoneHierarchy();
 		int GetBoneId(std::string boneName, bool insert = false);
+		void Retarget(LModelResource* model);
 
 		void UpdateAnimation(LAnimation* animation, float timeInSeconds);
 		void UpdateAnimation(LAnimation* animation, const LModelNode& mesh, glm::mat4 parentTransform, float time);
@@ -77,6 +78,7 @@ namespace Lemonade
 		int m_boneCount = 0;
 		glm::mat4 m_globalInverseRoot;
 		LAnimation* m_currentAnimation = nullptr;
+		float m_animationTimeElapsed = 0;
 		bool m_bInitialised = false;
 
 		static inline glm::mat4 ConvertMatrixToGLMFormat(const aiMatrix4x4& from)

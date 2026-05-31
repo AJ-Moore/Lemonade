@@ -33,6 +33,29 @@ namespace Lemonade
 	{
 	}
 
+	void AViewport::BeginRender()
+	{
+		std::shared_ptr<LRenderer> renderer = GraphicsServices::GetRenderer();
+		LCamera* camera = renderer->GetActiveCamera();
+		
+		if (renderer->IsShadowPass())
+		{
+			// Override viewport size
+			SetViewport(0, 0, renderer->GetShadowMapSize(), renderer->GetShadowMapSize());
+			SetScissor(0, 0, renderer->GetShadowMapSize(), renderer->GetShadowMapSize());
+			camera->CalculateProjMatrix((float)renderer->GetShadowMapSize(), (float)renderer->GetShadowMapSize());
+		}
+		else
+		{
+			SetViewport(0, 0, m_viewRect.Width, m_viewRect.Height);
+			SetScissor(0, 0, m_viewRect.Width, m_viewRect.Height);
+			camera->CalculateProjMatrix((float)m_viewRect.Width, (float)m_viewRect.Height);
+		}
+
+		camera->CalculateViewMatrix();
+		camera->CalculateViewProjMatrix();
+	}
+
 	void AViewport::Render()
 	{
 		std::shared_ptr<LRenderer> renderer = GraphicsServices::GetRenderer();
@@ -41,21 +64,14 @@ namespace Lemonade
 		{
 			renderer->SetActiveCamera(camera.get());
 
-			if (renderer->IsShadowPass())
-			{
-				// Override viewport size
-				SetViewport(0, 0, renderer->GetShadowMapSize(), renderer->GetShadowMapSize());
-				SetScissor(0, 0, renderer->GetShadowMapSize(), renderer->GetShadowMapSize());
-			}
-			else
-			{
-				SetViewport(0, 0, m_viewRect.Width, m_viewRect.Height);
-				SetScissor(0, 0, m_viewRect.Width, m_viewRect.Height);
-			}
-
+			/// Possibly redundant -> Consider refactor
+			SetViewport(0, 0, m_viewRect.Width, m_viewRect.Height);
+			SetScissor(0, 0, m_viewRect.Width, m_viewRect.Height);
 			camera->CalculateProjMatrix((float)m_viewRect.Width, (float)m_viewRect.Height);
 			camera->CalculateViewMatrix();
 			camera->CalculateViewProjMatrix();
+			/// --- 
+
 			renderer->SetViewport(this);
 			renderer->RenderPass();
 		}

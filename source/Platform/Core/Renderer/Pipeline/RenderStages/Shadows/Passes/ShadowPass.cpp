@@ -7,6 +7,7 @@
 #include <glm/ext/quaternion_geometric.hpp>
 #include <glm/ext/scalar_constants.hpp>
 #include <glm/fwd.hpp>
+#include <glm/trigonometric.hpp>
 
 namespace Lemonade
 {
@@ -20,6 +21,7 @@ namespace Lemonade
         // Should match geometry target in geometry pass
         m_shadows.SetColourAttachments(4, false);
         m_shadows.AddDepthAttachment();
+
         return true;
     }
 
@@ -46,7 +48,7 @@ namespace Lemonade
         {
             const Lemonade::LightingData* light = &renderingData.RenderInput->LightData.LightPtr[i];
 
-            glm::mat4 projection = glm::perspectiveLH(glm::pi<float>() * 0.5f, 1.0f, 0.1f,1000.0f);
+            glm::mat4 projection = glm::perspectiveLH(glm::radians(90.f), 1.0f, 0.1f,100.0f);
             glm::vec3 position = light->LightPosition;
 
             if (light->LightType == (int)LightType::Point)
@@ -57,22 +59,26 @@ namespace Lemonade
                     continue;
                 }
 
+                glm::vec3 forward = glm::vec3(0,0,1);
+                glm::vec3 right = glm::vec3(1,0,0);
+                glm::vec3 Up = glm::vec3(0,1,0);
+
                 // Jank - Duplicates code in ALight.cpp, needs refactor
-                glm::vec3 right = glm::cross(light->LightDirection, light->LightUp);
+                //glm::vec3 right = glm::cross(light->LightDirection, light->LightUp);
 
                 std::vector<glm::mat4> views = {
                     // Forward
-                    glm::lookAtLH(position, position + light->LightDirection, light->LightUp),
+                    glm::lookAtLH(position, position + forward, -Up),
                     // Back
-                    glm::lookAtLH(position, position - light->LightDirection, light->LightUp),
-                    // Right
-                    glm::lookAtLH(position, position + right, light->LightUp),
+                    glm::lookAtLH(position, position - forward, -Up),
                     // Left 
-                    glm::lookAtLH(position, position - right, light->LightUp), 
+                    glm::lookAtLH(position, position - right, -Up), 
+                    // Right
+                    glm::lookAtLH(position, position + right, -Up),
                     // Up 
-                    glm::lookAtLH(position, position + light->LightUp, light->LightDirection),
+                    glm::lookAtLH(position, position + Up, forward),
                     // Down 
-                    glm::lookAtLH(position, position - light->LightUp, -light->LightDirection), 
+                    glm::lookAtLH(position, position - Up, forward), 
                 };
 
                 for (const auto& view : views)

@@ -26,6 +26,12 @@ namespace Lemonade
     {
     }
 
+	void Material::SetEmissiveColour(glm::vec3 colour)
+	{
+		m_hasEmissiveColour = true;
+		m_emissiveColour = colour;
+	}
+
 	void Material::UnloadResource()
 	{ 
 		throw "TODO implement unload of resources.";
@@ -40,6 +46,11 @@ namespace Lemonade
     {
         return m_texture;
     }
+
+	glm::vec3 Material::GetEmissionColour() const 
+	{
+		return m_emissiveColour;
+	}
 
 	glm::vec4 Material::GetBaseColour() const
 	{
@@ -75,6 +86,7 @@ namespace Lemonade
 			m_textureStatus[textureType] = TextureStatus::Loaded;
 		}
 		else {
+			CitrusCore::Logger::Log(CitrusCore::Logger::ERROR, "Texture missing [%s]", path.c_str());
 			m_textureStatus[textureType] = TextureStatus::Missing;
 		}
 

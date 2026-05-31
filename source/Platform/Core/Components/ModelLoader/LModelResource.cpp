@@ -51,18 +51,24 @@ namespace Lemonade
 		if (animation != nullptr)
 		{
 			m_bAnimationPlaying = true;
+
+			if (m_currentAnimation != animation)
+			{
+				m_animationTimeElapsed = 0;
+			}
+
 			m_currentAnimation = animation; 
 		}
 	}
 
     void LModelResource::Update()
     {
-		float time = Lemonade::GraphicsServices::GetTime()->GetTimeSinceApplicationStarted();
+		m_animationTimeElapsed += Lemonade::GraphicsServices::GetTime()->GetDeltaTime();
 
 		if (m_bAnimationPlaying && m_currentAnimation != nullptr)
 		{
 			float timeInSeconds = m_currentAnimation->GetDuration()/ m_currentAnimation->GetTicksPerSecond();
-			UpdateAnimation(m_currentAnimation, std::fmod(time, timeInSeconds));
+			UpdateAnimation(m_currentAnimation, std::fmod(m_animationTimeElapsed, timeInSeconds));
 		}
 
         m_root->Update();
@@ -177,7 +183,11 @@ namespace Lemonade
 		if (it != m_boneIdMap.end())
 		{
 			LBone* bone = m_skeleton[it->second].get();
-			(*m_boneMatrices)[bone->GetBoneId()] = m_globalInverseRoot * globalTransform * bone->GetOffsetMatrix();
+
+			if (bone != nullptr)
+			{
+				(*m_boneMatrices)[bone->GetBoneId()] = m_globalInverseRoot * globalTransform * bone->GetOffsetMatrix();
+			}
 		}
 		
 		for (const std::shared_ptr<LModelNode>& child : node.GetChildren())
@@ -203,7 +213,11 @@ namespace Lemonade
 			if (boneAnim->GetId() == -1) continue;
 
 			glm::mat4 nodeTransform = m_root->GetNodeTransform();
-			m_skeleton[boneAnim->GetId()]->SetBoneMatrix(boneAnim->GetBoneMatrixForAnimTime(timeInSeconds, nodeTransform));
+
+			if (m_skeleton.contains(boneAnim->GetId()))
+			{
+				m_skeleton[boneAnim->GetId()]->SetBoneMatrix(boneAnim->GetBoneMatrixForAnimTime(timeInSeconds, nodeTransform));
+			}
 		}
 
 		UpdateAnimation(animation, *m_root.get(), glm::mat4(1), timeInSeconds);
@@ -442,6 +456,8 @@ namespace Lemonade
 				aiFace* face = &aimesh->mFaces[p];
 				for (uint32 q = 0; q < 3; ++q)
 				{
+					int qIndex = 2 - q;
+
 					if (face->mNumIndices != 3)
 					{
 						Logger::Log(Logger::WARN, "Face has unsupported indices!, indices found [%i]", face->mNumIndices);
@@ -450,25 +466,25 @@ namespace Lemonade
 
 					uint32 index = (p * 3) + q;
 
-					aiVector3D vertex = aimesh->mVertices[face->mIndices[q]];
+					aiVector3D vertex = aimesh->mVertices[face->mIndices[qIndex]];
 					(*vertices)[index] = std::move(glm::vec3(vertex.x, vertex.y, vertex.z));
 
 					if (weightsToSort.size())
 					{
-						float sum = weightsToSort[face->mIndices[q]].x + weightsToSort[face->mIndices[q]].y + weightsToSort[face->mIndices[q]].z + weightsToSort[face->mIndices[q]].w;
-						glm::vec4 weight = weightsToSort[face->mIndices[q]]/ sum;
+						float sum = weightsToSort[face->mIndices[qIndex]].x + weightsToSort[face->mIndices[qIndex]].y + weightsToSort[face->mIndices[qIndex]].z + weightsToSort[face->mIndices[qIndex]].w;
+						glm::vec4 weight = weightsToSort[face->mIndices[qIndex]]/ sum;
 
 						(*boneWeights)[index] = weight;
 					}
 
 					if (boneids.size())
 					{
-						(*boneIds)[index] = boneids[face->mIndices[q]];
+						(*boneIds)[index] = boneids[face->mIndices[qIndex]];
 					}
 
 					if (bHasNormals)
 					{
-						aiVector3D normal = aimesh->mNormals[face->mIndices[q]];
+						aiVector3D normal = aimesh->mNormals[face->mIndices[qIndex]];
 						(*normals)[index] = std::move(glm::vec3(normal.x, normal.y, normal.z));
 					}
 					
@@ -488,16 +504,16 @@ namespace Lemonade
 
 					if (bHasUvs)
 					{
-						aiVector3D uv = aimesh->mTextureCoords[0][face->mIndices[q]];
+						aiVector3D uv = aimesh->mTextureCoords[0][face->mIndices[qIndex]];
 						(*uvs)[index] = std::move(glm::vec2(uv.x, uv.y));
 					}
 
 					if (bHasTangents)
 					{
-						aiVector3D tangent = aimesh->mTangents[face->mIndices[q]];
+						aiVector3D tangent = aimesh->mTangents[face->mIndices[qIndex]];
 						(*tangents)[index] = std::move(glm::vec3(tangent.x, tangent.y, tangent.z));
 
-						tangent = aimesh->mBitangents[face->mIndices[q]];
+						tangent = aimesh->mBitangents[face->mIndices[qIndex]];
 						(*biTangents)[index] = std::move(glm::vec3(tangent.x, tangent.y, tangent.z));
 					}
 				}
@@ -540,6 +556,19 @@ namespace Lemonade
 						baseColour = mat->GetResource()->GetBaseColour();
 						bMaterialFound = true;
 					}
+					else
+					{
+						// Load or no load we need a material asset created from this path, using default pbr materials.
+						if (hasBones)
+						{
+							mat = GraphicsServices::GetGraphicsResources()->GetMaterialMasqueradeFromBase("Assets/Materials/defaultskinnedpbr.mat.json", materialPath);
+						}
+						else {
+							mat = GraphicsServices::GetGraphicsResources()->GetMaterialMasqueradeFromBase("Assets/Materials/defaultpbr.mat.json", materialPath);
+						}
+
+						Logger::Log(Logger::WARN, "Material not found [%s]", materialPath.c_str());
+					}
 				}
 
 				// Material file doesn't yet exist? create it from scratch?
@@ -551,8 +580,10 @@ namespace Lemonade
 						TextureType::Diffuse,
 						TextureType::Roughness,
 						TextureType::AmbientOcclusion,
-						TextureType::Emissive, 
 						TextureType::Metalness,
+
+						// Blender exports bdsf roughness map as shininess annoyance 
+						TextureType::Shininess,
 					};
 
 					// Manually load textures
@@ -561,20 +592,62 @@ namespace Lemonade
 						// temporarily only allow modern pbr workflow.
 						if (!pbr.contains((TextureType)i))
 						{
+							if (material->GetTexture((aiTextureType)i, 0, &path) == AI_SUCCESS)
+							{
+								Logger::Log(Logger::ERROR, "Unsupported texture [%s]", path.C_Str());
+							}
+
 							continue;
 						}
 
+						bool aoFound = false;
+						std::string diffuse;
+
 						if (material->GetTexture((aiTextureType)i, 0, &path) == AI_SUCCESS)
 						{
-							int bindLocation = mat->GetResource()->GetBindLocation(static_cast<TextureType>(i));
+							TextureType texType = static_cast<TextureType>(i);
+
+							// Hack, blender exports roughness as shininess, map shininess to roughness.
+							if (texType == TextureType::Shininess)
+							{
+								texType = TextureType::Roughness;
+							}
+							else if (texType == TextureType::AmbientOcclusion)
+							{
+								aoFound = true;
+							}
+							else if (texType == TextureType::Diffuse)
+							{
+								diffuse = path.C_Str();
+							}
+
+							int bindLocation = mat->GetResource()->GetBindLocation(texType);
 
 							if (bindLocation == Material::INVALID_BIND_LOCATION)
 							{
 								Logger::Log(Logger::ERROR, "Material/ Shader does not support texture type [%i]", i);
 							}
 							else {
-								mat->GetResource()->LoadTexture((TextureType)i, path.C_Str(), bindLocation);
+
+								mat->GetResource()->LoadTexture(texType, path.C_Str(), bindLocation);
 								bMaterialFound = true;
+							}
+						}
+
+						if (!aoFound && !diffuse.empty())
+						{
+							// Try searching for one matching name.
+							std::string colourStr = "_Color"; 
+							size_t start_pos = diffuse.find("_Color");
+							if(start_pos != std::string::npos)
+							{
+								std::string aoPath = diffuse.replace(start_pos, colourStr.length(), "_AmbientOcclusion");
+
+								if (std::filesystem::exists(aoPath))
+								{	
+									int bindLocation = mat->GetResource()->GetBindLocation(TextureType::AmbientOcclusion);
+									mat->GetResource()->LoadTexture(TextureType::AmbientOcclusion, aoPath, bindLocation);			
+								}
 							}
 						}
 					}
@@ -586,12 +659,21 @@ namespace Lemonade
 					baseColour = { color.r, color.g, color.b, color.a };
 				}
 
+				aiColor3D emissive(0.f, 0.f, 0.f);
+				if (AI_SUCCESS == material->Get(AI_MATKEY_COLOR_EMISSIVE, emissive))
+				{
+					mat->GetResource()->SetEmissiveColour({emissive.r, emissive.g, emissive.b});
+				}
+
 				mat->GetResource()->SetBaseColour(baseColour);
 
 				if (baseColour.a != 1)
 				{
 					//entity->setRenderPriority((uint)URenderPriority::Transparent);
 				}
+			}
+			else {
+				Logger::Log(Logger::ERROR, "Scene incomplete [AI_SCENE_FLAGS_INCOMPLETE]?");
 			}
 
 			mesh->SetNormals(normals);
@@ -632,6 +714,12 @@ namespace Lemonade
 		{
 			CreateMesh(modelNode.get(), node->mChildren[i]);
 		}
+	}
+
+	void LModelResource::Retarget(LModelResource* model)
+	{
+		// Copy bone ids 
+		m_boneIdMap = model->m_boneIdMap;
 	}
 
 	void LModelResource::PopulateBones(aiNode* node, const aiScene* scene)

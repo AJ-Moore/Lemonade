@@ -49,7 +49,9 @@ namespace Lemonade
 		const TextureMap& GetTextures() const noexcept { return m_textures; }
 		const SamplerMap& GetSamplers() const noexcept { return m_samplers; }
 		glm::vec4 GetBaseColour() const;
+		glm::vec3 GetEmissionColour() const;
 		void SetBaseColour(glm::vec4 colour) { m_baseColour = colour;}
+		void SetEmissiveColour(glm::vec3 colour);
 		TextureStatus GetTextureStatus(TextureType textureType) const;
 		int GetBindLocation(TextureType);
 
@@ -67,7 +69,9 @@ namespace Lemonade
 		std::shared_ptr<AShaderProgram> m_shader;
 		ResourcePtr<ATexture> m_texture;
 		glm::vec4 m_baseColour = glm::vec4(1,1,1,1);
+		glm::vec3 m_emissiveColour = glm::vec3(0,0,0);
 		bool m_hasBaseColour = false; 
+		bool m_hasEmissiveColour = false;
 
 		TextureMap m_textures;
 		SamplerMap m_samplers;

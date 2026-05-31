@@ -32,7 +32,10 @@ namespace Lemonade {
 
     CitrusCore::UID LModel::LoadAnimation(const std::string& modelPath, const std::string& animationName, uint32 animationIndex)
     {
-        CitrusCore::ResourcePtr<LModelResource> model = Lemonade::GraphicsServices::GetGraphicsResources()->GetModelHandle(modelPath);
+        CitrusCore::ResourcePtr<LModelResource> model = Lemonade::GraphicsServices::GetGraphicsResources()->GetModelHandle(modelPath, [this](LModelResource* model){          
+            model->Retarget(m_model->GetResource());
+        });
+
         model->GetResource()->Init();
         CitrusCore::Transform::MakeParent(model->GetResource()->GetRoot()->GetTransform(),m_transform);
         m_animations.Add(model->GetResource()->GetUID(), model);
@@ -40,6 +43,7 @@ namespace Lemonade {
             .AnimationId = model->GetResource()->GetUID(),
             .AnimationIndex = animationIndex
         };
+
         return model->GetResource()->GetUID();
     }
 

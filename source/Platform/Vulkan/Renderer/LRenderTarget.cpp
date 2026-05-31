@@ -164,7 +164,8 @@ namespace Lemonade
         for (int i = 0; i < layers; ++i)
         {
             VkDescriptorImageInfo imageDescriptor = {};
-            imageDescriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            //imageDescriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageDescriptor.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
             imageDescriptor.imageView = m_depthAttachment.ImageViews[i]; /// This should be the index of the layer we want to bind when not using array texture?
             //imageDescriptor.sampler = defaultSampler->GetSampler();
             imageDescriptors.push_back(std::move(imageDescriptor));
@@ -253,13 +254,14 @@ namespace Lemonade
 
             VkAttachmentDescription depthAttachment{};
             depthAttachment.format = VK_FORMAT_D32_SFLOAT;
-            depthAttachment.samples = m_hasMultisampledColourAttachment ? m_sampleCount : VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;;
+            depthAttachment.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;;
             depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-            depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-            depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            depthAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            //depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
             attachmentDescription.push_back(depthAttachment);
         }
 
@@ -436,6 +438,7 @@ namespace Lemonade
 
         
         vkCmdBeginRenderPass(m_commandBuffer[currentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        GraphicsServices::GetRenderer()->GetViewport()->BeginRender();
         static_cast<LViewport*>(GraphicsServices::GetRenderer()->GetViewport())->VulkanApply(m_commandBuffer[currentFrame]);
     }
 
@@ -458,7 +461,7 @@ namespace Lemonade
             barrier.srcAccessMask = transition.srcAccess;
             barrier.dstAccessMask = transition.dstAccess;
             barrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS };
-            barrier.image = attachment.Image;;
+            barrier.image = attachment.Image;
             barriers.push_back(barrier);
         }
 
@@ -468,6 +471,31 @@ namespace Lemonade
             transition.dstStage,
             0, 0, nullptr, 0, nullptr, barriers.size(), barriers.data()
         );
+
+        if (m_bHasDepthAttachment)
+        {
+            std::vector<VkImageMemoryBarrier> depthBarriers;
+
+            for (uint32_t i = 0; i < m_layerCount; i++)
+            {
+                VkImageMemoryBarrier barrier{};
+                barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+                barrier.oldLayout = ToDepthRead.oldLayout;
+                barrier.newLayout = ToDepthRead.newLayout;
+                barrier.srcAccessMask = ToDepthRead.srcAccess;
+                barrier.dstAccessMask = ToDepthRead.dstAccess;
+                barrier.subresourceRange = { VK_IMAGE_ASPECT_DEPTH_BIT, 0, VK_REMAINING_MIP_LEVELS, i, m_layerCount };
+                barrier.image = m_depthAttachment.Image;
+                depthBarriers.push_back(barrier);
+            }
+
+            vkCmdPipelineBarrier(
+                cmdBuffer,
+                ToDepthRead.srcStage,
+                ToDepthRead.dstStage,
+                0, 0, nullptr, 0, nullptr, depthBarriers.size(), depthBarriers.data()
+            );
+        }
     }
 
     void LRenderTarget::EndRenderPass()
@@ -684,8 +712,9 @@ namespace Lemonade
         imageInfo.format = VK_FORMAT_D32_SFLOAT;
         imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-        imageInfo.samples = m_hasMultisampledColourAttachment ? m_sampleCount : VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+        // Note for improvement ideally we should only be appending the image_usage_sampled_bit flag if we're looking to sample the depth
+        imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        imageInfo.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         imageInfo.flags = 0;
         imageInfo.pNext = nullptr;
@@ -722,8 +751,8 @@ namespace Lemonade
             VkImageViewCreateInfo viewInfo = {};
             viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
             viewInfo.image = depthImage;
-            //viewInfo.viewType = m_bArrayTexture ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
-            viewInfo.viewType = m_layerCount > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
+            viewInfo.viewType = m_bArrayTexture ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
+            //viewInfo.viewType = m_layerCount > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
             viewInfo.format = VK_FORMAT_D32_SFLOAT;
             viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
             viewInfo.subresourceRange.baseMipLevel = 0;

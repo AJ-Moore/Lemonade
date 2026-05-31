@@ -49,11 +49,11 @@ namespace Lemonade
 
 		// Load defaults
 		m_defaultDiffuse.LoadNativeTextureFromPixels(&defaultWhite, 1, 1);
-		m_defaultRoughness.LoadNativeTextureFromPixels(&defaultORM, 1, 1); 
+		m_defaultRoughness.LoadNativeTextureFromPixels(&defaultWhite, 1, 1); 
 		m_defaultNormal.LoadNativeTextureFromPixels(&defaultFlatNormal, 1, 1);
-		m_defaultAo.LoadNativeTextureFromPixels(&defaultORM, 1, 1); 
+		m_defaultAo.LoadNativeTextureFromPixels(&defaultWhite, 1, 1); 
 		m_defaultEmission.LoadNativeTextureFromPixels(&defaultBlack, 1, 1);
-		m_defaultMetalness.LoadNativeTextureFromPixels(&defaultORM, 1, 1);
+		m_defaultMetalness.LoadNativeTextureFromPixels(&defaultWhite, 1, 1);
 
 		m_defaultTextures[TextureType::Diffuse] = &m_defaultDiffuse;
 		m_defaultTextures[TextureType::Normal]            = &m_defaultNormal;     
@@ -376,7 +376,8 @@ namespace Lemonade
 		m_vertexData.model = m_transform->GetWorldMatrix();         
         m_vertexData.view = activeCamera->GetViewMatrix();          
         m_vertexData.projection = activeCamera->GetProjMatrix();         
-        m_vertexData.shadowPass = GraphicsServices::GetRenderer()->IsShadowPass();      
+        m_vertexData.shadowPass = GraphicsServices::GetRenderer()->IsShadowPass();   
+		m_vertexData.emissionColour = m_material->GetResource()->GetEmissionColour();   
 		
 		if (m_vertexData.shadowPass)
 		{
@@ -781,7 +782,7 @@ namespace Lemonade
 			.depthClampEnable = VK_FALSE,
 			.rasterizerDiscardEnable = VK_FALSE,
 			.polygonMode = VK_POLYGON_MODE_FILL,
-			.cullMode = VK_CULL_MODE_BACK_BIT,
+			.cullMode = VK_CULL_MODE_NONE,
 			.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
 			.depthBiasEnable = VK_FALSE,
 			.lineWidth = 1.0f
@@ -800,7 +801,7 @@ namespace Lemonade
 		for (int i = 0; i < activeTarget->GetAttachmentCount(); ++i)
 		{
 			VkPipelineColorBlendAttachmentState colorBlendAttachment = {
-				.blendEnable = m_bBlendEnabled ? VK_TRUE : VK_FALSE,
+				.blendEnable = m_bBlendEnabled && i == 0 ? VK_TRUE : VK_FALSE,
 				.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
 				.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
 				.colorBlendOp = VK_BLEND_OP_ADD,

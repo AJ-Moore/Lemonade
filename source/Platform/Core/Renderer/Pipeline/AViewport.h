@@ -16,11 +16,13 @@ namespace Lemonade
 		friend class AWindow;
 	public:
 		std::shared_ptr<LCamera> GetCameraAtIndex(int index);
+		virtual void BeginRender();
 	protected:
 		virtual bool Init();
 		virtual void Unload();
 		virtual void Update();
 		virtual void Render();
+
 
 		virtual void SetViewport(int x, int y, int width, int height) = 0; 
 		virtual void SetScissor(int x, int y, int width, int height) = 0; 

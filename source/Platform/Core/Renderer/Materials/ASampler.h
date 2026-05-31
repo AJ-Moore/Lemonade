@@ -35,9 +35,10 @@ namespace Lemonade
         LSamplerAddressMode AddressModeV = LSamplerAddressMode::Repeat; 
         LSamplerAddressMode AddressModeW = LSamplerAddressMode::Repeat;
         bool AnisotrophyEnabled = true;
-        LTextureFilter MagFilter = LTextureFilter::Linear;
-        LTextureFilter MinFilter = LTextureFilter::Linear; 
+        LTextureFilter MagFilter = LTextureFilter::Nearest;
+        LTextureFilter MinFilter = LTextureFilter::Nearest; 
         float MaxAnisotropy = 1.0f;
+        SamplerMipmapMode MipMapMode = SamplerMipmapMode::Nearest;
     };
 
     class LEMONADE_API ASampler : public LObject
@@ -47,6 +48,8 @@ namespace Lemonade
         virtual void Update() override{}
         virtual void Render() override{}
         virtual void Unload() override{}
+
+        const LSamplerInfo& GetSamplerInfo() const { return m_samplerInfo; }
     private:
         LSamplerInfo m_samplerInfo;
     };

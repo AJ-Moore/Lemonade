@@ -48,9 +48,9 @@ namespace Lemonade
 		void SetMaxDistance(float distance) {m_lightingData.MaxDistance = distance; }
 		void SetLightIntensity(float lumens) {m_lightIntensityLumens = lumens;} 
 		void SetColour(glm::vec3 colour) {m_lightingData.Colour = colour;} 
-		void SetView(glm::mat4 view, LightDirection direction = LightDirection::Forward) { m_view[(uint8)direction] = view; }
-		const glm::mat4& GetView(LightDirection direction = LightDirection::Forward) const { return m_view[(uint8)direction]; }
-		void SetWorld(glm::mat4 world, LightDirection direction) { m_lightingData.WorldMatrix[(uint8)direction] = world; }
+		void SetView(glm::mat4 view, LightDirection direction = LightDirection::Forward) { m_view[(uint32)direction] = view; }
+		const glm::mat4& GetView(LightDirection direction = LightDirection::Forward) const { return m_view[(uint32)direction]; }
+		void SetWorld(glm::mat4 world, LightDirection direction) { m_lightingData.WorldMatrix[(uint32)direction] = world; }
 		void SetProjection(glm::mat4 projection) { m_projection = projection; }
 		const glm::mat4& GetProjection() const { return m_projection; }
 
