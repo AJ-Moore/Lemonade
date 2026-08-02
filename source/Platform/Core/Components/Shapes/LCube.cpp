@@ -1,3 +1,4 @@
+#include "Platform/Core/Services/GraphicsServices.h"
 #include <Platform/Core/Components/Shapes/LCube.h>
 #include <glm/fwd.hpp>
 #include <memory>
@@ -5,6 +6,11 @@
 
 namespace Lemonade
 {
+    LCube::LCube() 
+    {
+        SetMaterial(GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/TiledPlatform.mat.json"));
+    }
+
     LCube::LCube(CitrusCore::ResourcePtr<Material> material, glm::vec3 dimensions)
     {
         m_dimensions = dimensions;
@@ -15,53 +21,59 @@ namespace Lemonade
     {
         const std::shared_ptr<std::vector<glm::vec3>> CubeVertices = std::make_shared<std::vector<glm::vec3>>(std::vector<glm::vec3>
         {
-            // Top
+            // Top (+Y)
             {-0.5f, 0.5f, -0.5f},
-            { -0.5f, 0.5f, 0.5f },
-            { 0.5f, 0.5f, 0.5f },
-            { -0.5f, 0.5f, -0.5f },
-            { 0.5f, 0.5f, 0.5f },
-            { 0.5f, 0.5f, -0.5f },
-    
-            // Bottom
-            { 0.5f, -0.5f, -0.5f },
-            { 0.5f, -0.5f, 0.5f },
-            { -0.5f, -0.5f, 0.5f },
-            { 0.5f, -0.5f, -0.5f },
-            { -0.5f, -0.5f, 0.5f },
-            { -0.5f, -0.5f, -0.5f },
-    
-            // Front
-            { -0.5f, -0.5f, -0.5f },
-            { -0.5f, 0.5f, -0.5f },
-            { 0.5f, 0.5f, -0.5f },
-            { -0.5f, -0.5f, -0.5f },
-            { 0.5f, 0.5f, -0.5f },
-            { 0.5f, -0.5f, -0.5f },
-    
-            // Back
-            { 0.5f, -0.5f, 0.5f },
-            { 0.5f, 0.5f, 0.5f },
-            { -0.5f, 0.5f, 0.5f },
-            { 0.5f, -0.5f, 0.5f },
-            { -0.5f, 0.5f, 0.5f },
-            { -0.5f, -0.5f, 0.5f },
-    
-            // Left
-            { -0.5f, -0.5f, 0.5f },
-            { -0.5f, 0.5f, 0.5f },
-            { -0.5f, 0.5f, -0.5f },
-            { -0.5f, -0.5f, 0.5f },
-            { -0.5f, 0.5f, -0.5f },
-            { -0.5f, -0.5f, -0.5f },
-    
-            // Right
-            { 0.5f, 0.5f, 0.5f },
-            { 0.5f, -0.5f, 0.5f },
-            { 0.5f, -0.5f, -0.5f },
-            { 0.5f, 0.5f, 0.5f },
-            { 0.5f, -0.5f, -0.5f },
-            { 0.5f, 0.5f, -0.5f },
+            {0.5f, 0.5f,  0.5f},
+            { -0.5f, 0.5f,  0.5f},
+
+            {-0.5f, 0.5f, -0.5f},
+            { 0.5f, 0.5f, -0.5f},
+            { 0.5f, 0.5f,  0.5f},
+
+            // Bottom (-Y)
+            {-0.5f, -0.5f, 0.5f},
+            {0.5f, -0.5f,  -0.5f},
+            { -0.5f, -0.5f,  -0.5f},
+
+            {-0.5f, -0.5f, 0.5f},
+            { 0.5f, -0.5f, 0.5f},
+            { 0.5f, -0.5f,  -0.5f},
+
+            // Front (+Z)
+            {-0.5f, 0.5f,  0.5f},
+            {0.5f, -0.5f,  0.5f},
+            {-0.5f, -0.5f,  0.5f},
+
+            {-0.5f, 0.5f,  0.5f},
+            { 0.5f,  0.5f,  0.5f},
+            { 0.5f, -0.5f,  0.5f},
+
+            // Back (-Z)
+            {-0.5f, -0.5f,  -0.5f},
+            {-0.5f,  0.5f,  -0.5f},
+            { 0.5f,  0.5f,  -0.5f},
+
+            {-0.5f, -0.5f,  -0.5f},
+            { 0.5f,  0.5f,  -0.5f},
+            { 0.5f, -0.5f,  -0.5f},
+
+            // Left (-X)
+            {-0.5f, -0.5f, -0.5f},
+            {-0.5f,  0.5f,  0.5f},
+            {-0.5f,  0.5f, -0.5f},
+
+            {-0.5f, -0.5f, -0.5f},
+            {-0.5f, -0.5f,  0.5f},
+            {-0.5f,  0.5f,  0.5f},
+
+            // Right (+X)
+            { 0.5f, -0.5f, -0.5f},
+            { 0.5f,  0.5f, -0.5f},
+            { 0.5f,  0.5f,  0.5f},
+
+            { 0.5f, -0.5f, -0.5f},
+            { 0.5f,  0.5f,  0.5f},
+            { 0.5f, -0.5f,  0.5f},
         });
     
         const std::shared_ptr<std::vector<glm::vec3>> CubeNormals = std::make_shared<std::vector<glm::vec3>>(std::vector<glm::vec3>
@@ -128,7 +140,7 @@ namespace Lemonade
         }
 
         mesh->SetVertices(vertices);
-        mesh->SetShouldGenerateTangents(false);
+        //mesh->SetShouldGenerateTangents(true);
         mesh->SetNormals(CubeNormals);
 
         SetMesh(mesh);
@@ -143,11 +155,11 @@ namespace Lemonade
         for (int i = 0; i < 6; i++)
         {
             coords->push_back(UVS->at(0));
+            coords->push_back(UVS->at(2));
             coords->push_back(UVS->at(1));
-            coords->push_back(UVS->at(2));
             coords->push_back(UVS->at(0));
-            coords->push_back(UVS->at(2));
             coords->push_back(UVS->at(3));
+            coords->push_back(UVS->at(2));
         }
         mesh->SetUVS(coords);
         return true;

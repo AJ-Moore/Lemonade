@@ -30,7 +30,13 @@ namespace Lemonade
 
 		CitrusCore::UID LoadAnimation(const std::string& modelPath, const std::string& animationName, uint32 animationIndex = 0);
 		void PlayAnimation(std::string animationName);
+
+		glm::vec3 GetRootMotionDelta() const { return m_model->GetResource()->GetRootMotionDelta(); }
+		glm::quat GetRootMotionRotation() const { return m_model->GetResource()->GetRootMotionRotation(); }
+
+		void SetApplyRootMotion(bool bApply) { m_bApplyRootMotion = bApply; }
 	private:
+		bool m_bApplyRootMotion = true;
 		CitrusCore::ResourcePtr<LModelResource> m_model;
 
 		// Animations 

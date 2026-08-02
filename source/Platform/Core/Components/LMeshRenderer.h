@@ -27,5 +27,4 @@ namespace Lemonade
 		std::shared_ptr<Mesh> m_mesh = nullptr;
 		CitrusCore::ResourcePtr<Material> m_material = nullptr;
 	};
-
 }

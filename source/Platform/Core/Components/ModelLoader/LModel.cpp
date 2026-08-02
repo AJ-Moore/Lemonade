@@ -69,6 +69,12 @@ namespace Lemonade {
     void LModel::Update()
     {
         m_model->GetResource()->Update();
+
+        if (m_bApplyRootMotion)
+        {
+            m_transform->Move(m_model->GetResource()->GetRootMotionDelta());
+            m_transform->SetRotation(m_model->GetResource()->GetRootMotionRotation());
+        }
     }
 
     void LModel::Render() 

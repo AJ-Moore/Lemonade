@@ -141,6 +141,7 @@ namespace Lemonade
 			glm::vec2 uv2 = m_uvs->at(i + 2) - m_uvs->at(i + 0);
 
 			float r = 1.0f / (uv1.x * uv2.y - uv1.y * uv2.x);
+			r=-r;// flip for ccw faces
 			glm::vec3 tangent = (vert1 * uv2.y - vert2 * uv1.y) * r;
 			glm::vec3 bitangent = (vert2 * uv1.x - vert1 * uv2.x) * r;
 

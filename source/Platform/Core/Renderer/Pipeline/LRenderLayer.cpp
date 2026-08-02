@@ -20,21 +20,21 @@ namespace Lemonade
 		const auto vertices = std::make_shared<std::vector<glm::vec3>>(std::vector<glm::vec3>
 		{
 			{-1, -1, 0},
-			{-1,  1, 0},
+			{1,  -1, 0},
 			{ 1,  1, 0},
-			{-1, -1, 0},
-			{ 1,  1, 0},
-			{ 1, -1, 0}
+			{1, 1, 0},
+			{ -1, 1, 0},
+			{ -1,  -1, 0},
 		});
 
 		const auto uvs = std::make_shared<std::vector<glm::vec2>>(std::vector<glm::vec2>
 		{
 			{0, 0},
-			{0, 1},
-			{1, 1},
-			{0, 0},
-			{1, 1},
 			{1, 0},
+			{1, 1},
+			{1, 1},
+			{0, 1},
+			{0, 0},
 		});
 
 		m_renderBlock = std::make_shared<LRenderBlock>();

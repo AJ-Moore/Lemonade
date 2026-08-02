@@ -14,6 +14,7 @@ namespace Lemonade
 		void AddBoneAnimation(std::shared_ptr<LBoneAnim> animation) { m_boneAnimations.push_back(animation); }
 		const std::vector<std::shared_ptr<LBoneAnim>>& GetBoneAnimations() { return m_boneAnimations; }
 		double GetDuration() { return m_duration; }
+		double GetDurationInSeconds() { return m_duration / m_ticksPerSecond; }
 		double GetTicksPerSecond() { return m_ticksPerSecond; }
 		double GetAnimationTime(float timeElapsedSeconds);
 	private:

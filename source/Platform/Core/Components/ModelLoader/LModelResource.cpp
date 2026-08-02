@@ -1,3 +1,4 @@
+#define GLM_ENABLE_EXPERIMENTAL
 #include <assimp/types.h>
 #include <Platform/Core/Components/ModelLoader/LModelResource.h>
 #include <Platform/Core/Components/ModelLoader/LModelMesh.h>
@@ -15,6 +16,7 @@
 #include <filesystem>
 #include <unordered_map>
 #include <unordered_set>
+#include <glm/gtx/matrix_decompose.hpp>
 
 namespace Lemonade
 {
@@ -164,6 +166,9 @@ namespace Lemonade
 	void LModelResource::UpdateAnimation(LAnimation* animation, const LModelNode& node, glm::mat4 parentTransform, float timeInSeconds)
 	{
 		glm::mat4 bindPose = node.GetNodeTransform();
+		glm::mat4 currentPose;
+		glm::mat4 startPose;
+		glm::mat4 endPose;
 
 		auto it = m_boneIdMap.find(node.GetName());
 
@@ -173,6 +178,20 @@ namespace Lemonade
 			if (boneAnim->GetName() == node.GetName())
 			{
 				bindPose = boneAnim->GetBoneMatrixForAnimTime(timeInSeconds, bindPose);
+
+				if (boneAnim->GetId() == m_rootBoneId)
+				{
+					if (m_bIgnoreRootMotion && m_currentAnimation != nullptr)
+					{
+						startPose = boneAnim->GetBoneMatrixForAnimTime(0, bindPose);
+						endPose = boneAnim->GetBoneMatrixForAnimTime(m_currentAnimation->GetDurationInSeconds(), bindPose);
+						m_skeleton[boneAnim->GetId()]->SetBoneMatrix(glm::mat4(1.0f));
+						currentPose = bindPose;
+						bindPose = glm::mat4(1.0f);
+					}
+				}
+
+				break;
 			}
 		}
 		
@@ -186,7 +205,45 @@ namespace Lemonade
 
 			if (bone != nullptr)
 			{
-				(*m_boneMatrices)[bone->GetBoneId()] = m_globalInverseRoot * globalTransform * bone->GetOffsetMatrix();
+				if (it->second == m_rootBoneId && m_bIgnoreRootMotion && m_currentAnimation != nullptr)
+				{
+						glm::vec3 scale;
+						glm::quat rot;
+						glm::vec3 skew;
+						glm::vec4 perspective;
+
+						glm::mat4 actualPose =  m_globalInverseRoot * parentTransform * currentPose;
+
+						glm::vec3 current;
+						glm::decompose(actualPose, scale, rot, current, skew, perspective);
+						m_rootMotionRotation = rot;
+						
+						if (m_previousRootMotionTime > timeInSeconds)
+						{
+							glm::mat4 endFinalPose =  m_globalInverseRoot * parentTransform * endPose;
+							glm::mat4 startFinalPose =  m_globalInverseRoot * parentTransform * startPose;
+							glm::vec3 startPos;
+							glm::vec3 endPos;
+							glm::decompose(startFinalPose, scale, rot, startPos, skew, perspective);
+							glm::decompose(endFinalPose, scale, rot, endPos, skew, perspective);
+
+							m_rootMotionDelta = (endPos - m_previousRootBonePosition) + (current - startPos);
+						}
+						else
+						{
+							m_rootMotionDelta = current - m_previousRootBonePosition;
+						}
+
+						m_previousRootBonePosition = current;
+						m_previousRootMotionTime = timeInSeconds;
+						//bindPose = glm::mat4(1.0f);
+						(*m_boneMatrices)[bone->GetBoneId()] = m_globalInverseRoot * globalTransform * bone->GetOffsetMatrix();
+				}
+				else
+				{
+					(*m_boneMatrices)[bone->GetBoneId()] = m_globalInverseRoot * globalTransform * bone->GetOffsetMatrix();
+				}
+
 			}
 		}
 		
@@ -818,6 +875,6 @@ namespace Lemonade
 
 		m_boneIdMap[boneName] = m_boneCount;
 		m_boneCount++;
-		return m_boneCount;
+		return m_boneIdMap[boneName];
 	}
 }

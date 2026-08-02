@@ -111,6 +111,12 @@ namespace Lemonade
 
 	void LRenderBlock::Render()
 	{
+		if (m_bufferDirty)
+		{
+			DumpBufferData();
+			m_bufferDirty = false;
+		}
+
 		if (m_mesh == nullptr || m_material == nullptr)
 		{
 			Logger::Log(Logger::ERROR, "Render block missing critical component, mesh or material.");

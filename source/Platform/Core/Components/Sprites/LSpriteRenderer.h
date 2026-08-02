@@ -9,7 +9,7 @@ namespace Lemonade
     class LEMONADE_API LSpriteRenderer : public LMeshRenderer {
 		friend class LSpriteAnimator;
 	public:
-        LSpriteRenderer() = delete;
+        LSpriteRenderer() = default;
         LSpriteRenderer(CitrusCore::ResourcePtr<Material> material);
 		virtual ~LSpriteRenderer() = default;
 		virtual bool Init() override;

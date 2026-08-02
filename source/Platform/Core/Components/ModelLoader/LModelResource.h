@@ -7,6 +7,7 @@
 #include <Platform/Core/Components/ModelLoader/LModelMesh.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <glm/fwd.hpp>
 #include <memory>
 #include <unordered_map>
 #include <string>
@@ -55,6 +56,14 @@ namespace Lemonade
 		bool m_bGenerateCollider = false;
 		bool m_bAnimationPlaying = false;
 
+		// Ignore root motion will not apply the root bone transform to the model transform.
+		// this is useful as it allows us to apply the root motion ourselves via the root motion delta.
+		bool m_bIgnoreRootMotion = true;
+		float m_previousRootMotionTime = 0.0f;
+		glm::vec3 m_previousRootBonePosition = glm::vec3(0,0,0);
+		glm::vec3 m_rootMotionDelta = glm::vec3(0,0,0);
+		glm::quat m_rootMotionRotation = glm::quat(1,0,0,0);
+
 		LModelMeta m_meta;
 
 		void LoadMeta(){}
@@ -67,6 +76,10 @@ namespace Lemonade
 		void CreateBoneHierarchy();
 		int GetBoneId(std::string boneName, bool insert = false);
 		void Retarget(LModelResource* model);
+		void SetIgnoreRootMotion(bool ignore) { m_bIgnoreRootMotion = ignore; }
+
+		glm::vec3 GetRootMotionDelta() const { return m_rootMotionDelta; }
+		glm::quat GetRootMotionRotation() const { return m_rootMotionRotation; }
 
 		void UpdateAnimation(LAnimation* animation, float timeInSeconds);
 		void UpdateAnimation(LAnimation* animation, const LModelNode& mesh, glm::mat4 parentTransform, float time);
