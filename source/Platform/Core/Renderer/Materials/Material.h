@@ -87,7 +87,8 @@ namespace Lemonade
 		const std::vector<std::string> m_materialShaderTypes = {
 			"fragment", 
 			"vertex", 
-			"geometry"
+			"geometry", 
+			"compute"
 		};
 	};
 }

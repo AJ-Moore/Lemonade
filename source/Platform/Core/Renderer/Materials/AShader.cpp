@@ -14,6 +14,7 @@ namespace Lemonade
 		{"fragment", ShaderType::Fragment},
 		{"vertex", ShaderType::Vertex},
 		{"geometry", ShaderType::Geometry},
+		{"compute", ShaderType::Compute},
 	};
 
 	ShaderType AShader::GetShaderTypeForString(std::string type)
@@ -26,6 +27,7 @@ namespace Lemonade
 			return iterator->second;
 		}
 
+		Logger::Log(Logger::ERROR, "Unsupported shader type");
 		return ShaderType::None;
 	}
 

@@ -20,12 +20,13 @@ namespace Lemonade
         void UpdateBuffer(void* data, uint32_t size){/*Tdododo*/}
         void DumpBuffer();
         void UpdateDescriptors(VkDescriptorSet dstSet, uint32_t bindLocation, bool write = false);
-        LVKBuffer& GetLVKBuffer(uint32_t frame) { return m_buffers.at(frame); }
+        LVKBuffer& GetLVKBuffer(uint32_t frame) { return m_buffers.at(0); }
         VkWriteDescriptorSet GetWrite() { return m_writeDescriptorSet; }
         void SetDirty();
         void SetShaderStage(VkShaderStageFlags flags) { m_shaderStageFlags = flags; }
         VkShaderStageFlags GetShaderStage() const { return m_shaderStageFlags; }
         VkDescriptorType GetDescriptorType(){ return m_descriptorType; }
+        void BindMemoryBarrier(VkCommandBuffer cmd);
     protected:
 		virtual bool Init() override;
 		virtual void Unload() override{}

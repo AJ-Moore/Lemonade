@@ -138,10 +138,42 @@ namespace Lemonade
 			CreateVkPipeline();
 		}
 
+		if (m_vkComputePipeline == VK_NULL_HANDLE)
+		{
+			CreateComputePipeline();
+		}
+
 		SetUniforms();
+
+		// Compute (optional)
+		if (m_vkComputePipeline != VK_NULL_HANDLE)
+		{
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_vkComputePipeline);
+
+			vkCmdBindDescriptorSets(
+				commandBuffer,
+				VK_PIPELINE_BIND_POINT_COMPUTE,
+				m_vkComputePipelineLayout,
+				0,
+				1,
+				&m_descriptorSets[currentFrame],
+				0,
+				nullptr
+			);
+
+			vkCmdDispatch(commandBuffer, m_computeGroupSize.x, m_computeGroupSize.y, m_computeGroupSize.z);
+		}
 	
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_vkPipeline);
 		OnPipelineBound.Invoke(this);
+
+		//if (m_vkComputePipeline != VK_NULL_HANDLE)
+		//{
+		//	for (auto& buffer : m_uniformBuffers)
+		//	{
+		//		buffer->BindMemoryBarrier(commandBuffer);
+		//	}
+		//}
 
 		vkCmdBindDescriptorSets(commandBuffer,
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -488,8 +520,8 @@ namespace Lemonade
 
 		for (auto& buffer : m_uniformBuffers)
 		{
-			buffer->UpdateDescriptors(m_descriptorSets[currentFrame], bindLocation++, true);
 			buffer->DumpBuffer();
+			buffer->UpdateDescriptors(m_descriptorSets[currentFrame], bindLocation++, true);
 			//writes.push_back(buffer->GetWrite());
 		}
 
@@ -594,7 +626,7 @@ namespace Lemonade
 		uboLayoutBinding.binding = bindLocation++;
 		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		uboLayoutBinding.descriptorCount = 1; 
-		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
 		uboLayoutBinding.pImmutableSamplers = nullptr;   
 		bindings.push_back(uboLayoutBinding);
 
@@ -731,6 +763,56 @@ namespace Lemonade
 
 		Logger::Log(Logger::ERROR, "Unable to get primitive mode defaulting to triangle list.");
 		return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	}
+
+	void LRenderBlock::CreateComputePipeline()
+	{
+		LShaderProgram* shaderProgram = static_cast<LShaderProgram*>(m_material->GetResource()->GetShader().get());
+
+		if (shaderProgram == nullptr)
+		{
+			Logger::Log(Logger::ERROR, "No shader found.");
+			return;
+		}
+
+		const LVulkanDevice& device = GraphicsServices::GetContext()->GetVulkanDevice();
+
+		VkPipelineLayoutCreateInfo layoutInfo{};
+		layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+		layoutInfo.setLayoutCount = 1;
+		layoutInfo.pSetLayouts = &m_vkDescriptorSetLayout;
+
+		layoutInfo.pushConstantRangeCount = 0;
+
+		vkCreatePipelineLayout(
+			device.GetVkDevice(),
+			&layoutInfo,
+			nullptr,
+			&m_vkComputePipelineLayout
+		);
+
+		VkComputePipelineCreateInfo info{};
+		info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+
+		auto computerShaderInfo = shaderProgram->GetComputeShaderInfo();
+
+		if (computerShaderInfo == nullptr)
+		{
+			return;
+		}
+
+		info.stage = *computerShaderInfo;
+		info.layout = m_vkComputePipelineLayout;
+
+		vkCreateComputePipelines(
+			device.GetVkDevice(),
+			VK_NULL_HANDLE,
+			1,
+			&info,
+			nullptr,
+			&m_vkComputePipeline
+		);
 	}
 
 	void LRenderBlock::CreateVkPipeline() 

@@ -70,6 +70,10 @@ namespace Lemonade
 
         /// Should be called after rendering scene.
         UpdateDeferredData(renderingData);
+
+        // this should proably be more optimal
+        m_deferredBuffer->SetDirty();
+        m_lightignBuffer->SetDirty();
         
         m_gBuffer.BeginRenderPass();
         m_gBuffer.setClearColour(glm::vec4(0,0,0, 0));

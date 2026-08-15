@@ -12,11 +12,13 @@ namespace Lemonade {
         virtual void Bind() override{}
 
         std::vector<VkPipelineShaderStageCreateInfo>& GetShaderCreateInfo() { return m_shaderCreateInfos; }
+        VkPipelineShaderStageCreateInfo* GetComputeShaderInfo();
         virtual void AddShader(CitrusCore::ResourcePtr<AShader> shader) override;
     protected:
         virtual bool Init() override{ return true; }
     private:
         void UpdateVkPipelineShaders();
         std::vector<VkPipelineShaderStageCreateInfo> m_shaderCreateInfos;
+        std::vector<VkPipelineShaderStageCreateInfo> m_shaderComputeCreateInfos;
     };
 }

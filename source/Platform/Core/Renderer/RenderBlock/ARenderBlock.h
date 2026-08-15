@@ -49,6 +49,7 @@ namespace Lemonade
 		void SetMesh(std::shared_ptr<Mesh> Mesh) { m_mesh = Mesh; }
 		void SetDirty() { m_bufferDirty = true; }
 		PrimitiveMode GetDrawMode() const { return m_primitiveMode; }
+		void SetComputeGroupSize(glm::ivec3 size) { m_computeGroupSize = size; }
 
 		CitrusCore::Event<ARenderBlock*> OnPipelineBound;
 
@@ -105,5 +106,8 @@ namespace Lemonade
 
 		/// Additional descriptors
 		CitrusCore::IndexedVector<CitrusCore::UID, std::shared_ptr<LBinding>> m_additionalBindings;
+
+		/// Compute group sizes for compute dispatch
+		glm::ivec3 m_computeGroupSize = glm::ivec3(1,1,1);
 	};
 }

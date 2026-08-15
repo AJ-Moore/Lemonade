@@ -67,6 +67,10 @@ namespace Lemonade
                 return shaderc_fragment_shader;
             case Lemonade::ShaderType::Vertex:
                 return shaderc_vertex_shader;
+            case Lemonade::ShaderType::Geometry:
+                return shaderc_geometry_shader;
+            case Lemonade::ShaderType::Compute:
+                return shaderc_compute_shader;
             default:
                 throw std::runtime_error("Unsupported shader type");
         }

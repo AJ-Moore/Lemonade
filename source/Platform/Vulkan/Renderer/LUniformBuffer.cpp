@@ -40,7 +40,7 @@ namespace Lemonade
             allocInfo.memoryTypeIndex = device.FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
             if (vkAllocateMemory(device.GetVkDevice(), &allocInfo, nullptr, &buffer.VKDeviceMemory) != VK_SUCCESS) {
-                throw std::runtime_error("failed to allocate bone buffer memory!");
+                throw std::runtime_error("failed to allocate uniform buffer memory!");
             }
 
             vkBindBufferMemory(device.GetVkDevice(), buffer.Buffer, buffer.VKDeviceMemory, 0);
@@ -79,6 +79,42 @@ namespace Lemonade
         }
     }
 
+    void LUniformBuffer::BindMemoryBarrier(VkCommandBuffer cmd) 
+    {
+        if (GetBufferType() == LBufferType::Storage)
+        {
+            uint32_t currentFrame = GraphicsServices::GetWindowManager()->GetActiveWindow()->GetCurrentFrame();
+            LVKBuffer& buffer = GetLVKBuffer(currentFrame);
+
+            VkBufferMemoryBarrier bufferBarrier{
+                .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+
+                .srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT,
+                .dstAccessMask = VK_ACCESS_SHADER_READ_BIT,
+
+                .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+
+                .buffer = buffer.Buffer,
+                .offset = 0,
+                .size = VK_WHOLE_SIZE,
+            };
+
+            vkCmdPipelineBarrier(
+                cmd,
+
+                VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT,
+
+                0,
+
+                0, nullptr,
+                1, &bufferBarrier,
+                0, nullptr
+            );
+        }
+    }
+
     void LUniformBuffer::DumpBuffer()
     {
         uint32_t currentFrame = GraphicsServices::GetWindowManager()->GetActiveWindow()->GetCurrentFrame();
@@ -89,6 +125,7 @@ namespace Lemonade
             buffer.DataCPUMapped = static_cast<void*>(this->GetData());
             buffer.DataSize = GetSize();
             std::memcpy(buffer.DataGPUMapped, buffer.DataCPUMapped, buffer.DataSize);
+            buffer.Dirty = false;
         }
     }
 

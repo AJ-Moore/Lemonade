@@ -1,6 +1,7 @@
 #pragma once
 
 #include <LCommon.h>
+#include <glm/fwd.hpp>
 
 #ifdef RENDERER_VULKAN
 #include <Containers/IndexedVector.h>
@@ -118,6 +119,7 @@ namespace Lemonade
 	private: 
 		void SetUniforms();
 		void CreateVkPipeline();
+		void CreateComputePipeline();
 		void CreateVkDescriptors();
 		std::vector<LVKBuffer> m_vertexDataUniformBuffers;
 		std::vector<LVKBuffer> m_boneMatBuffer;
@@ -129,10 +131,12 @@ namespace Lemonade
 
 		// VK Pipeline
 		VkPipeline m_vkPipeline = VK_NULL_HANDLE;
+		VkPipeline m_vkComputePipeline = VK_NULL_HANDLE;
 
 		// Shader Stage
 		VertexData m_vertexData;
 		VkPipelineLayout m_vkPipelineLayout = VK_NULL_HANDLE;
+		VkPipelineLayout m_vkComputePipelineLayout = VK_NULL_HANDLE;
 		VkDescriptorSetLayout m_vkDescriptorSetLayout = VK_NULL_HANDLE;
 		VkDescriptorPool m_vkDescriptorPool = VK_NULL_HANDLE;
 
