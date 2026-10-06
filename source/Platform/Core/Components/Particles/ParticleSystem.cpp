@@ -10,6 +10,22 @@
 
 namespace Lemonade
 {
+    LParticleSystem::LParticleSystem()
+    {
+        SetName("ParticleSystem");
+        RegisterProperty<LParticleSystem, &LParticleSystem::m_particleCount>(this);
+        RegisterProperty<LParticleSystem, &LParticleSystem::m_emissionShape>(this);
+        RegisterProperty<LParticleSystem, &LParticleSystem::m_emissionAngle>(this);
+        RegisterProperty<LParticleSystem, &LParticleSystem::m_emissionAngleVariance>(this);
+        RegisterProperty<LParticleSystem, &LParticleSystem::m_emissionRadius>(this);
+        RegisterProperty<LParticleSystem, &LParticleSystem::m_emissionDirection>(this);
+        RegisterProperty<LParticleSystem, &LParticleSystem::m_gravity>(this);
+        RegisterProperty<LParticleSystem, &LParticleSystem::m_initialSize>(this);
+        RegisterProperty<LParticleSystem, &LParticleSystem::m_initialColor>(this);
+        RegisterProperty<LParticleSystem, &LParticleSystem::m_initialVelocity>(this);
+        RegisterProperty<LParticleSystem, &LParticleSystem::m_particleLifetime>(this);
+    }
+
     bool LParticleSystem::Init()
     {
         if (!Lemonade::LMeshRenderer::Init())
@@ -17,34 +33,33 @@ namespace Lemonade
             return false;
         }
 
-        int particleCount = 1000;
         int threadCount = 256;
 
-        m_particles.resize(particleCount);
+        m_particles.resize(m_particleCount);
         m_emitters.resize(1);
 
         auto material = Lemonade::GraphicsServices::GetGraphicsResources()->GetMaterialHandle("Assets/Materials/particle.mat.json");
         SetMaterial(material);
-        m_particleDataBuffer = std::make_shared<Lemonade::LUniformBuffer>(Lemonade::LBufferType::Uniform, &m_particleData, sizeof(ParticleData));
+        m_particleDataBuffer = std::make_shared<Lemonade::LUniformBuffer>(Lemonade::LBufferType::Uniform, &m_particleData, sizeof(ParticleData), m_particleDataBufferLocation);
         m_particleDataBuffer->SetShaderStage(VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_COMPUTE_BIT);
         m_renderBlock->AddUniformBuffer(m_particleDataBuffer);
 
-        m_particlesBuffer = std::make_shared<Lemonade::LUniformBuffer>(Lemonade::LBufferType::Storage, (void*)m_particles.data(), sizeof(Particle) * m_particles.size());
+        m_particlesBuffer = std::make_shared<Lemonade::LUniformBuffer>(Lemonade::LBufferType::Storage, (void*)m_particles.data(), sizeof(Particle) * m_particles.size(), m_particlesBufferLocation);
         m_particlesBuffer->SetShaderStage(VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_COMPUTE_BIT);
         m_renderBlock->AddUniformBuffer(m_particlesBuffer);
 
-        m_emitterBuffer = std::make_shared<Lemonade::LUniformBuffer>(Lemonade::LBufferType::Storage, (void*)m_emitters.data(), sizeof(Emitter) * m_emitters.size());
+        m_emitterBuffer = std::make_shared<Lemonade::LUniformBuffer>(Lemonade::LBufferType::Storage, (void*)m_emitters.data(), sizeof(Emitter) * m_emitters.size(), m_emitterBufferLocation);
         m_emitterBuffer->SetShaderStage(VK_SHADER_STAGE_COMPUTE_BIT);
         m_renderBlock->AddUniformBuffer(m_emitterBuffer);
 
         std::shared_ptr<std::vector<glm::vec3>> vertices = std::make_shared<std::vector<glm::vec3>>();
-        vertices->resize(particleCount);
+        vertices->resize(m_particleCount);
 
         m_mesh = std::make_shared<Lemonade::Mesh>();
         SetMesh(m_mesh);
         SetDrawMode(Lemonade::PrimitiveMode::POINTS);
         m_mesh->SetVertices(vertices);
-        m_renderBlock->SetComputeGroupSize(glm::ivec3(std::ceil(static_cast<float>(particleCount)/ threadCount),1,1));
+        m_renderBlock->SetComputeGroupSize(glm::ivec3(std::ceil(static_cast<float>(m_particleCount)/ threadCount),1,1));
 
         return true;
     }
@@ -58,6 +73,17 @@ namespace Lemonade
     void LParticleSystem::UpdateParticleDataBuffer()
     {
         LCamera* activeCamera = GraphicsServices::GetRenderer()->GetActiveCamera();
+
+        m_particleData.EmissionShape = (uint32_t)m_emissionShape.Get();
+        m_particleData.EmissionAngle = m_emissionAngle;
+        m_particleData.EmissionAngleVariance = m_emissionAngleVariance;
+        m_particleData.EmissionRadius = m_emissionRadius;
+        m_particleData.EmissionDirection = m_emissionDirection;
+        m_particleData.Gravity = m_gravity;
+        m_particleData.InitialSize = m_initialSize;
+        m_particleData.InitialColor = m_initialColor;
+        m_particleData.InitialVelocity = m_initialVelocity;
+        m_particleData.Lifetime = m_particleLifetime;
 
         m_particleData.Time = Lemonade::GraphicsServices::GetTime()->GetTimeElapsed();
         m_particleData.DeltaTime = Lemonade::GraphicsServices::GetTime()->GetDeltaTime();

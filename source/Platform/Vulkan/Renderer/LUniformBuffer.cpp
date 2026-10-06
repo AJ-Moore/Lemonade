@@ -52,7 +52,7 @@ namespace Lemonade
         return true;
     }
 
-    void LUniformBuffer::UpdateDescriptors(VkDescriptorSet dstSet, uint32_t bindLocation, bool write)
+    void LUniformBuffer::UpdateDescriptors(VkDescriptorSet dstSet, bool write)
     {
         uint32_t currentFrame = GraphicsServices::GetWindowManager()->GetActiveWindow()->GetCurrentFrame();
         LVKBuffer& buffer = GetLVKBuffer(currentFrame);
@@ -66,7 +66,7 @@ namespace Lemonade
         m_writeDescriptorSet = {};
         m_writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         m_writeDescriptorSet.dstSet = dstSet;
-        m_writeDescriptorSet.dstBinding = bindLocation;
+        m_writeDescriptorSet.dstBinding = GetBindLocation();
         m_writeDescriptorSet.dstArrayElement = 0;
         m_writeDescriptorSet.descriptorType = GetBufferType() == LBufferType::Uniform ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         m_writeDescriptorSet.descriptorCount = 1;

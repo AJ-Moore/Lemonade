@@ -15,11 +15,11 @@ namespace Lemonade
         friend class ARenderBlock;
     public:
         LUniformBuffer() = delete; 
-        LUniformBuffer(LBufferType type, void* dataPtr, uint32_t size) : Lemonade::AUniformBuffer(type, dataPtr, size){}
+        LUniformBuffer(LBufferType type, void* dataPtr, uint32_t size, uint32_t bindLocation) : Lemonade::AUniformBuffer(type, dataPtr, size, bindLocation){}
 
         void UpdateBuffer(void* data, uint32_t size){/*Tdododo*/}
         void DumpBuffer();
-        void UpdateDescriptors(VkDescriptorSet dstSet, uint32_t bindLocation, bool write = false);
+        void UpdateDescriptors(VkDescriptorSet dstSet, bool write = false);
         LVKBuffer& GetLVKBuffer(uint32_t frame) { return m_buffers.at(0); }
         VkWriteDescriptorSet GetWrite() { return m_writeDescriptorSet; }
         void SetDirty();

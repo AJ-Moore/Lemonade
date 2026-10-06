@@ -25,7 +25,7 @@ namespace Lemonade
         m_gBuffer.SetColourAttachments(1, false);
 		m_geometryTarget.SetColourAttachments(4, false);
         m_geometryTarget.AddDepthAttachment();
-        m_deferredBuffer = std::make_shared<LUniformBuffer>(LBufferType::Uniform, &m_deferredData, sizeof(DeferredData));
+        m_deferredBuffer = std::make_shared<LUniformBuffer>(LBufferType::Uniform, &m_deferredData, sizeof(DeferredData), m_deferredBufferBindLocation);
         m_deferredBuffer->SetShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT);
         m_deferredPass.GetRenderBlock()->AddUniformBuffer(m_deferredBuffer);
         // Explicily specify Shadow map binding.
@@ -43,6 +43,17 @@ namespace Lemonade
 
     void GeometryPass::UpdateDeferredData(const LRenderingData& renderingData)
     {
+        if (m_lightignBuffer != nullptr)
+        {
+            // ID changed we need to update the light buffer used by deferred pass.
+            if (m_lightignBuffer->GetUID() != renderingData.RenderInput->LightBuffer->GetUID())
+            {
+                m_deferredPass.GetRenderBlock()->RemoveUniformBuffer(m_lightignBuffer->GetUID());
+                m_lightignBuffer = renderingData.RenderInput->LightBuffer;
+                m_deferredPass.GetRenderBlock()->AddUniformBuffer(m_lightignBuffer);
+            }
+        }
+
         // Lighting data per scene, not updated until after scene is rendered... 
         if (m_lightignBuffer == nullptr)
         {

@@ -49,8 +49,8 @@ namespace Lemonade
 
 	private:
 	    std::unordered_map<int, std::shared_ptr<LBone>> m_skeleton;
-        std::shared_ptr<LModelNode> m_root;
-		std::shared_ptr<LModelData> m_modelData;
+        std::shared_ptr<LModelNode> m_root = nullptr;
+		std::shared_ptr<LModelData> m_modelData = nullptr;
 		uint m_customFlags = 0;
 		std::string m_filePath;
 		bool m_bGenerateCollider = false;

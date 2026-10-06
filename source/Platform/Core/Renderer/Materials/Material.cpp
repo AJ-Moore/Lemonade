@@ -1,4 +1,4 @@
-#include "Util/Logger.h"
+#include <Util/Logger.h>
 #include <Platform/Core/Renderer/Materials/Material.h>
 #include <Platform/Core/Renderer/Materials/AShader.h>
 #include <Platform/Core/Renderer/Materials/ATexture.h>
@@ -169,6 +169,16 @@ namespace Lemonade
 					ResourcePtr<AShader> shader = GraphicsServices::GetGraphicsResources()->GetShaderHandle(shaderPath);
 					m_shader->AddShader(shader);
 				}
+			}
+		}
+
+		json::iterator unlit = data.find(m_unlitString);
+
+		if (unlit != data.end())
+		{
+			if (unlit->is_boolean())
+			{
+				m_bUnlit = unlit.value().get<bool>();
 			}
 		}
 

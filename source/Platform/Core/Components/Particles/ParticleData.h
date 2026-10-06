@@ -20,7 +20,7 @@ namespace Lemonade
         glm::vec4 EmissionDirection = { 0, 1, 0, 0 };
         glm::vec4 Gravity = { 0, -0.00f, 0, 0 };
         glm::vec4 InitialVelocity = { 0, 0.2, 0, 0 };
-        glm::vec4 InitialSize = { 0.1, 0.1, 0.1, 0 };
+        glm::vec4 InitialSize = { 1, 1, 1, 0 };
         glm::vec4 InitialColor = { 1, 1, 1, 0 };
         glm::vec4 CameraForward = { 0, 0, 1, 0 };
         glm::vec4 CameraRight = { 1, 0, 0, 0 };

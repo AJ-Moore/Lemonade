@@ -30,5 +30,6 @@ namespace Lemonade {
         LRenderTarget m_gBuffer;
         LRenderLayer m_deferredPass;
         uint32 m_shadowsImageSamplerLocation = 8;
+        uint32 m_deferredBufferBindLocation = 6;
     };
 }

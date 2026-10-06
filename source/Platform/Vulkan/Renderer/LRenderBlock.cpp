@@ -423,7 +423,7 @@ namespace Lemonade
 			m_vertexData.projection = GraphicsServices::GetRenderer()->GetShadowdata().Projection;
 		}
 		
-        m_vertexData.unlit = false;               
+        m_vertexData.unlit = m_material->GetResource()->GetUnlit();               
         m_vertexData.emission = 0;     
 		m_vertexData.baseColour = m_material->GetResource()->GetBaseColour();
 		writes.push_back(uniformBufferWrite);
@@ -455,7 +455,7 @@ namespace Lemonade
 		LSampler* defaultSampler = static_cast<LSampler*>(m_material->GetResource()->GetSamplers().begin()->get());
 		
 		// Needs improvement -> prevents us unecessarily updating the textures every frame.
-		// Bug here currently that causes flashing -> needs investigation
+		// Bug here currently that causes flashing -> needs investigation -> maybe a per frame buffer situation??
 		//if (m_bTextureSamplersDirty)
 		{
 			for (auto& sampler : m_material->GetResource()->GetSamplers())
@@ -521,7 +521,7 @@ namespace Lemonade
 		for (auto& buffer : m_uniformBuffers)
 		{
 			buffer->DumpBuffer();
-			buffer->UpdateDescriptors(m_descriptorSets[currentFrame], bindLocation++, true);
+			buffer->UpdateDescriptors(m_descriptorSets[currentFrame], true);
 			//writes.push_back(buffer->GetWrite());
 		}
 
@@ -775,6 +775,13 @@ namespace Lemonade
 			return;
 		}
 
+		auto computerShaderInfo = shaderProgram->GetComputeShaderInfo();
+
+		if (computerShaderInfo == nullptr)
+		{
+			return;
+		}
+
 		const LVulkanDevice& device = GraphicsServices::GetContext()->GetVulkanDevice();
 
 		VkPipelineLayoutCreateInfo layoutInfo{};
@@ -794,13 +801,6 @@ namespace Lemonade
 
 		VkComputePipelineCreateInfo info{};
 		info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-
-		auto computerShaderInfo = shaderProgram->GetComputeShaderInfo();
-
-		if (computerShaderInfo == nullptr)
-		{
-			return;
-		}
 
 		info.stage = *computerShaderInfo;
 		info.layout = m_vkComputePipelineLayout;

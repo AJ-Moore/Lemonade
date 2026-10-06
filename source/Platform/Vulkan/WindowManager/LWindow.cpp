@@ -49,7 +49,6 @@ namespace Lemonade
 		if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			Logger::Log(Logger::ERROR, "Failed to acquire next image: %d", result);
 		}
-
 		
 		LSDLWindow::Render();	
 	}

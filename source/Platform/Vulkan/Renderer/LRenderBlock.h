@@ -47,7 +47,8 @@ namespace Lemonade
 		virtual ~LRenderBlock() {}
 
 		/// Sets the draw mode used by this block.
-		virtual void SetDrawMode(PrimitiveMode mode);
+		virtual void SetDrawMode(PrimitiveMode mode) override;
+		virtual void SetMaterial(CitrusCore::ResourcePtr<Material> material) override { ARenderBlock::SetMaterial(material); m_bTextureSamplersDirty = true; }
 
 		PrimitiveMode GetDrawMode() const { return (PrimitiveMode)m_primitiveMode; }
 		LVKBuffer GetLVKBuffer(uint32_t currentFrame) { return m_vertexDataUniformBuffers.at(currentFrame); }
@@ -58,22 +59,22 @@ namespace Lemonade
 		bool AddUniformBuffer(std::shared_ptr<LUniformBuffer> buffer);
 	protected:
 		/// Called to perform initialisation 
-		virtual bool Init();
+		virtual bool Init() override;
 
 		/// Called prior to object deletion to perform any unload actions
-		virtual void Unload();
+		virtual void Unload() override;
 
 		/// Called to perform buffer updates
-		virtual void Update();
+		virtual void Update() override;
 
 		/// Called to render the block 
-		virtual void Render();
+		virtual void Render() override;
 
 		/// Dumbs the vertex data to the buffer
-		virtual void DumpBufferData();
+		virtual void DumpBufferData() override;
 
 		/// Dmps the animation buffer data 
-		virtual void DumpAnimationData();
+		virtual void DumpAnimationData() override;
 
 		/// Set/ configure vertex attributes.
 		virtual void SetVertexAttributes();

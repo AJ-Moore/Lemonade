@@ -50,6 +50,7 @@ namespace Lemonade
 		const SamplerMap& GetSamplers() const noexcept { return m_samplers; }
 		glm::vec4 GetBaseColour() const;
 		glm::vec3 GetEmissionColour() const;
+		bool GetUnlit() const { return m_bUnlit; }
 		void SetBaseColour(glm::vec4 colour) { m_baseColour = colour;}
 		void SetEmissiveColour(glm::vec3 colour);
 		TextureStatus GetTextureStatus(TextureType textureType) const;
@@ -72,6 +73,7 @@ namespace Lemonade
 		glm::vec3 m_emissiveColour = glm::vec3(0,0,0);
 		bool m_hasBaseColour = false; 
 		bool m_hasEmissiveColour = false;
+		bool m_bUnlit = false;
 
 		TextureMap m_textures;
 		SamplerMap m_samplers;
@@ -83,6 +85,7 @@ namespace Lemonade
 		const std::string m_materialShaders = "shaders";
 		const std::string m_materialTextures = "textures";
 		const std::string m_baseColourString = "basecolour";
+		const std::string m_unlitString = "unlit";
 
 		const std::vector<std::string> m_materialShaderTypes = {
 			"fragment", 

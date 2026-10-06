@@ -12,6 +12,7 @@ namespace Lemonade
 	public:
 		virtual ~LMeshRenderer(){}
 
+
 		virtual bool Init();
 		virtual void Update();
 		virtual void Render();
